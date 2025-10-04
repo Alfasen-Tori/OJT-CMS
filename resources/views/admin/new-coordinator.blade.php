@@ -45,7 +45,7 @@
                     <div class="form-group">
                         <label for="fname">First Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="fname" name="fname" 
-                            placeholder="e.g. Bonifacio" required>
+                            placeholder="Enter first name" required>
                     </div>
                 </div>
                 
@@ -53,7 +53,7 @@
                     <div class="form-group">
                         <label for="lname">Last Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="lname" name="lname" 
-                            placeholder="e.g. Salvador" required>
+                            placeholder="Enter last name" required>
                     </div>
                 </div>
             </div>
@@ -64,7 +64,7 @@
                     <div class="form-group">
                         <label for="email">Email Address <span class="text-danger">*</span></label>
                         <input type="email" class="form-control" id="email" name="email" 
-                            placeholder="e.g. juan.delacruz@evsu.edu.ph" required>
+                            placeholder="juan.delacruz@evsu.edu.ph" required>
                     </div>
                 </div>
                 
@@ -72,7 +72,7 @@
                     <div class="form-group">
                         <label for="contact">Contact Number <span class="text-danger">*</span></label>
                         <input type="tel" class="form-control" id="contact" name="contact" 
-                            placeholder="e.g. 09507395757" required pattern="[0-9]{11}">
+                            placeholder="09123456789" required pattern="[0-9]{11}">
                     </div>
                 </div>
             </div>
@@ -83,8 +83,10 @@
                     <div class="form-group">
                         <label for="faculty_id">Faculty ID <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="faculty_id" name="faculty_id" 
-                            placeholder="e.g. 2016-70707" required pattern="\d{4}-\d{5}">
-                        <small class="form-text text-muted">Format: XXXX-XXXXX</small>
+                            placeholder="Enter Employee ID" required 
+                            pattern="[A-Za-z]\d{2}\d{2}\d{2}[A-Za-z][A-Za-z]"
+                            maxlength="9">
+                        <!-- <small class="form-text text-muted">Format: FirstInitial+Month+Date+Year+LastInitial+MiddleInitial</small> -->
                     </div>
                 </div>
                 
@@ -134,4 +136,71 @@
     </div>
   </div>
 </section>
+@endsection
+
+@section('scripts')
+<script>
+// Optional: Add real-time validation and formatting for Faculty ID
+document.getElementById('faculty_id').addEventListener('input', function(e) {
+    let value = e.target.value.toUpperCase();
+    
+    // Remove any non-alphanumeric characters
+    value = value.replace(/[^A-Z0-9]/g, '');
+    
+    // Limit to 9 characters
+    if (value.length > 9) {
+        value = value.substring(0, 9);
+    }
+    
+    // Auto-format as user types (optional visual aid)
+    if (value.length >= 1) {
+        // First character should be letter
+        if (!/^[A-Z]/.test(value.charAt(0))) {
+            value = value.substring(1);
+        }
+    }
+    
+    if (value.length >= 3) {
+        // Next 2 characters should be numbers (month)
+        let monthPart = value.substring(1, 3);
+        if (!/^\d{2}$/.test(monthPart)) {
+            value = value.substring(0, 1) + monthPart.replace(/\D/g, '') + value.substring(3);
+        }
+    }
+    
+    if (value.length >= 5) {
+        // Next 2 characters should be numbers (date)
+        let datePart = value.substring(3, 5);
+        if (!/^\d{2}$/.test(datePart)) {
+            value = value.substring(0, 3) + datePart.replace(/\D/g, '') + value.substring(5);
+        }
+    }
+    
+    if (value.length >= 7) {
+        // Next 2 characters should be numbers (year)
+        let yearPart = value.substring(5, 7);
+        if (!/^\d{2}$/.test(yearPart)) {
+            value = value.substring(0, 5) + yearPart.replace(/\D/g, '') + value.substring(7);
+        }
+    }
+    
+    if (value.length >= 8) {
+        // Next character should be letter (last initial)
+        let lastInitial = value.substring(7, 8);
+        if (!/^[A-Z]$/.test(lastInitial)) {
+            value = value.substring(0, 7) + lastInitial.replace(/[^A-Z]/g, '') + value.substring(8);
+        }
+    }
+    
+    if (value.length >= 9) {
+        // Last character should be letter (middle initial)
+        let middleInitial = value.substring(8, 9);
+        if (!/^[A-Z]$/.test(middleInitial)) {
+            value = value.substring(0, 8) + middleInitial.replace(/[^A-Z]/g, '');
+        }
+    }
+    
+    e.target.value = value;
+});
+</script>
 @endsection
