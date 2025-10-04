@@ -85,7 +85,9 @@
                                     $badgeClass = match($status) {
                                         'pending requirements' => 'bg-danger-subtle text-danger',
                                         'ready for deployment' => 'bg-warning-subtle text-warning',
+                                        'processing' => 'bg-info-subtle text-info',
                                         'endorsed' => 'bg-primary-subtle text-primary',
+                                        'deployed' => 'bg-success-subtle text-success',
                                         default => 'bg-secondary'
                                     };
                                 @endphp

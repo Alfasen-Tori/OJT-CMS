@@ -39,7 +39,10 @@
                                         <strong>Status:</strong> 
                                         <span class="badge py-2 px-3 rounded-pill status-badge bg-{{ 
                                             $intern->status == 'endorsed' ? 'primary-subtle text-primary' : 
-                                            ($intern->status == 'ready for deployment' ? 'warning-subtle text-warning' : 'danger-subtle text-danger') 
+                                            ($intern->status == 'ready for deployment' ? 'warning-subtle text-warning' : 
+                                            ($intern->status == 'pending requirements' ? 'danger-subtle text-danger' :
+                                            ($intern->status == 'processing' ? 'info-subtle text-info' :
+                                            ($intern->status == 'deployed' ? 'success-subtle text-success' : 'secondary'))))
                                         }}">
                                             {{ ucfirst($intern->status) }}
                                         </span>
