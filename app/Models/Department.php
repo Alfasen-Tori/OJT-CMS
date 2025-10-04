@@ -31,4 +31,9 @@ class Department extends Model
     {
         return $this->hasMany(Skill::class, 'dept_id', 'dept_id');
     }
+
+    public function college()
+    {
+        return $this->belongsTo(College::class, 'college_id', 'id');
+    }
 }

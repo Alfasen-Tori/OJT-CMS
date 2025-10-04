@@ -97,7 +97,7 @@
                                 value="{{ old('organization_name', $hte->organization_name) }}" required>
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="organization_type" class="form-label">Organization Type*</label>
                             <select class="form-select" id="organization_type" name="organization_type" required>
                                 <option value="" disabled>Select Type</option>
@@ -109,14 +109,14 @@
                             </select>
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <!-- <div class="col-md-3 mb-3">
                             <label for="hte_status" class="form-label">Status*</label>
                             <select class="form-select" id="hte_status" name="hte_status" required>
                                 <option value="" disabled>Select Status</option>
                                 <option value="active" {{ old('hte_status', $hte->status) == 'active' ? 'selected' : '' }}>Active</option>
                                 <option value="new" {{ old('hte_status', $hte->status) == 'new' ? 'selected' : '' }}>New</option>
                             </select>
-                        </div>
+                        </div> -->
                     </div>
                     
                     <!-- DESCRIPTION -->

@@ -43,7 +43,7 @@
           </li>
 
           <li class="nav-item">
-            <a href="{{route('coordinator.deploy')}}" class="nav-link {{ Request::is('coordinator/endorse') ? 'current-page' : '' }}">
+            <a href="{{route('coordinator.endorse')}}" class="nav-link {{ Request::is('coordinator/endorse') ? 'current-page' : '' }}">
               <i class="ph{{ Request::is('coordinator/endorse*') ? '-fill' : '' }} ph-paper-plane-tilt nav-link-i"></i>
               <p>Endorse</p>
             </a>

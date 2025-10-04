@@ -12,6 +12,12 @@ return new class extends Migration
             $table->id('dept_id');
             $table->string('dept_name');
             $table->string('short_name');
+
+            // Relationship: each department belongs to one college
+            $table->foreignId('college_id')
+                  ->constrained('colleges')
+                  ->onDelete('cascade');
+
             $table->timestamps();
         });
     }

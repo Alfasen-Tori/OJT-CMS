@@ -27,15 +27,15 @@
   <div class="container-fluid">
     <div class="container-fluid">
       <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 px-2">
           @if($canManageHTEs)
           <div class="d-flex flex-grow-1 justify-content-end p-0">
-            <button class="btn btn-outline-success d-flex mr-2" id="importBtn">
-              <span class="d-none d-sm-inline mr-1 fw-medium">Import</span>
-              <i class="ph-fill ph-microsoft-excel-logo custom-icons-i"></i>              
-            </button>
+            <!-- <button class="btn btn-outline-success d-flex mr-2" id="importBtn">
+              <span class="d-none d-sm-inline mr-1 fw-medium">Deploy</span>
+              <i class="ph-bold ph-arrow-square-out custom-icons-i"></i>              
+            </button> -->
             <a href="{{ route('coordinator.new_h') }}" class="btn btn-primary d-flex" id="registerBtn">
-              <span>Register</span>
+              <span>Register new</span>
             </a>
           </div>
           @endif

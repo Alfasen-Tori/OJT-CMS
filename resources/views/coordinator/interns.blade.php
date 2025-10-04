@@ -36,7 +36,7 @@
                   </a>
 
                   <a href="{{ route('coordinator.new_i') }}" class="btn btn-primary d-flex">
-                      <span class="fw-medium">Register</span>
+                      <span class="fw-medium">Register new</span>
                   </a>
               </div>
               </div>      

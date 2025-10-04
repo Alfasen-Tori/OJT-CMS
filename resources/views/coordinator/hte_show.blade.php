@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- MOA Preview Modal -->
+    <!-- MOA Preview Modal (Unchanged) -->
     <div class="modal fade" id="moaPreviewModal" tabindex="-1" role="dialog" aria-labelledby="moaPreviewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -35,7 +35,6 @@
                 </div>
                 <div class="modal-footer">
                     @if($hte->moa_path)
-
                     <div class="modal-left mr-auto">
                         <a href="{{ Storage::url($hte->moa_path) }}" class="btn btn-outline-light border-0 rounded-4 text-muted py-2" download><i class="ph-fill ph-download custom-icons-i"></i></a>
                         <button type="button" 
@@ -44,7 +43,6 @@
                             <i class="ph-fill ph-printer custom-icons-i py-2"></i>
                         </button>
                     </div>
-
                     
                     <!-- Toggle MOA Status Button -->
                     <button type="button" class="btn {{ $hte->moa_is_signed === 'yes' ? 'btn-warning' : 'btn-primary' }}" 
@@ -62,7 +60,7 @@
         </div>
     </div>
 
-
+    <!-- HTE Details Section (Unchanged) -->
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card shadow">
@@ -75,7 +73,7 @@
                         <div class="title-right">
                             @if($canManage)
                                 <a href="{{ route('coordinator.edit_h', $hte->id) }}" class="btn btn-outline-light border-0 rounded-4 text-muted"><i class="ph ph-wrench details-icons-i p-0"></i></a>
-                                <a class="btn btn-outline-light border-0 rounded-4 text-muted" data-toggle="modal" data-target="#unregisterModal""><i class="ph ph-trash details-icons-i p-0"></i></a>
+                                <a class="btn btn-outline-light border-0 rounded-4 text-muted" data-toggle="modal" data-target="#unregisterModal"><i class="ph ph-trash details-icons-i p-0"></i></a>
                             @endif
                         </div>
                     </h3>
@@ -83,7 +81,7 @@
                 
                 <div class="card-body">
                     <div class="row">
-                        <!-- HTE Profile Section -->
+                        <!-- HTE Profile Section (Unchanged) -->
                         <div class="col-md-4 d-flex flex-column">
                             <div class="text-center mb-4">
                                 <img src="{{ asset('storage/' . auth()->user()->pic) }}" 
@@ -105,7 +103,8 @@
                                         @else
                                             <span class="small badge bg-danger-subtle text-danger py-2 px-3 rounded-pill" style="font-size: 14px">Missing</span>
                                         @endif
-                                    </li>                                    <li class="mb-2"><strong>ID:</strong> HTE-{{ str_pad($hte->id, 3, '0', STR_PAD_LEFT) }}</li>
+                                    </li>
+                                    <li class="mb-2"><strong>ID:</strong> HTE-{{ str_pad($hte->id, 3, '0', STR_PAD_LEFT) }}</li>
                                     <li class="mb-2"><strong>Type:</strong> {{ ucfirst($hte->type) }}</li>
 
                                     @php
@@ -124,14 +123,14 @@
                                                 </button>
                                             @endif
                                         @else
-                                            <span class="text-muted fw-medium"><i>No file  uploaded.</i></span>
+                                            <span class="text-muted fw-medium"><i>No file uploaded.</i></span>
                                         @endif
                                     </li>
                                 </ul>
                             </div>
                         </div>
                         
-                        <!-- Contact & Details Section -->
+                        <!-- Contact & Details Section (Unchanged) -->
                         <div class="col-md-8">
                             <div class="border p-3 rounded my-3 mt-lg-0 bg-light">
                                 <h5 class="mb-3"><i class="ph-fill ph-identification-card details-icons-i mr-2"></i>Contact Information</h5>
@@ -169,7 +168,7 @@
                             
                             <!-- Description -->
                             <div class="border p-3 rounded bg-light">
-                                <h5 class="mb-3"><i class="ph-fill ph-text-align-left details-icons-i mr-2"></i></i>Description</h5>
+                                <h5 class="mb-3"><i class="ph-fill ph-text-align-left details-icons-i mr-2"></i>Description</h5>
                                 <p>{{ $hte->description ?? 'No description provided' }}</p>
                             </div>
                         </div>
@@ -179,7 +178,7 @@
         </div>
     </div>
     
-    <!-- Interns Table Section -->
+    <!-- Interns Table Section (Updated: Conditional Header Button, Status Badges, Conditional Remove) -->
     <div class="row">
         <div class="col-md-12">
             <div class="card shadow">
@@ -187,10 +186,20 @@
                     <h3 class="card-title mb-0 d-flex align-items-center justify-content-between w-100">
                         <div>
                             <i class="ph-fill ph-user-list custom-icons-i mr-2"></i>
-                            Interns <span class="text-muted fw-light">({{ $endorsedInterns->count() }})</span>
+                            Interns
                         </div>
                         <div>
-                            <a href="" class="btn btn-success"><i class="ph-bold ph-arrow-square-out custom-icons-i mr-2"></i>Deploy</a>
+                            @if($hasEndorsedForDeploy)
+                                <button type="button" class="btn btn-success fw-medium" data-toggle="modal" data-target="#deployModal">
+                                    Deploy<i class="ph-bold ph-arrow-square-out custom-icons-i ml-1"></i>
+                                </button>
+                            @elseif($hasDeployed && $endorsementPath)
+                                <a href="{{ Storage::url($endorsementPath) }}" class="btn btn-primary fw-medium" download="{{ basename($endorsementPath) }}">
+                                    <i class="ph-fill ph-download custom-icons-i mr-1"></i>Download Endorsement Letter
+                                </a>
+                            @else
+                                <span class="text-muted">No interns to deploy</span>
+                            @endif
                         </div>
                     </h3>
                 </div>
@@ -214,37 +223,44 @@
                                     @endphp
                                     <tr id="row-endorsement-{{ $endorsement->id }}">
                                         <td>{{ $intern->student_id ?? 'N/A' }}</td>
-                                        <td>{{ $intern->user->lname}}, {{ $intern->user->fname }}</td>
+                                        <td>{{ $intern->user->lname ?? 'N/A' }}, {{ $intern->user->fname ?? 'N/A' }}</td>
                                         <td>{{ $intern->department->dept_name ?? 'N/A' }}</td>
                                         <td>{{ $intern->year_level ?? 'N/A' }}</td>
                                         <td class="align-middle text">
                                             @php
-                                                $status = strtolower($intern->status);
+                                                $status = strtolower($intern->status ?? 'unknown');
                                                 $badgeClass = match($status) {
                                                     'pending requirements' => 'bg-danger-subtle text-danger',
                                                     'ready for deployment' => 'bg-warning-subtle text-warning',
                                                     'endorsed' => 'bg-primary-subtle text-primary',
+                                                    'processing' => 'bg-info-subtle text-info',
+                                                    'deployed' => 'bg-success-subtle text-success',
                                                     default => 'bg-secondary'
                                                 };
                                             @endphp
-                                            <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill">{{ ucfirst($intern->status) }}</span>
+                                            <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill">{{ ucfirst($intern->status ?? 'Unknown') }}</span>
                                         </td>
                                         <td class="text-center px-2 align-middle">
                                             <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown{{ $intern->id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown{{ $intern->id ?? $loop->index }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     <i class="ph-fill ph-gear custom-icons-i"></i>
                                                 </button>
-                                                <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown{{ $intern->id }}">
-                                                    <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.intern.show', $intern->id) }}">
+                                                <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown{{ $intern->id ?? $loop->index }}">
+                                                    <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.intern.show', $intern->id ?? '') }}">
                                                         <i class="ph ph-eye custom-icons-i mr-2"></i>View
                                                     </a>
-                                                    <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#removeEndorsementModal{{ $intern->id }}">
-                                                        <i class="ph ph-trash custom-icons-i mr-2"></i>Remove
-                                                    </a>
+                                                    
+                                                    <!-- Conditional Remove: Only if status is 'endorsed' -->
+                                                    @if($endorsement->status === 'endorsed')
+                                                        <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#removeEndorsementModal{{ $intern->id }}">
+                                                            <i class="ph ph-trash custom-icons-i mr-2"></i>Remove
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </div>
 
-                                            <!-- Remove Endorsement Modal -->
+                                            <!-- Conditional Remove Endorsement Modal: Only if status is 'endorsed' -->
+                                            @if($endorsement->status === 'endorsed')
                                             <div class="modal fade" id="removeEndorsementModal{{ $intern->id }}" tabindex="-1" role="dialog" aria-labelledby="removeEndorsementModalLabel{{ $intern->id }}" aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
@@ -258,8 +274,8 @@
                                                             </button>
                                                         </div>
                                                         <div class="modal-body text-left">
-                                                            <p>Are you sure you want to remove <strong>{{ $intern->user->fname }} {{ $intern->user->lname }}</strong> from <strong>{{ $hte->organization_name }}</strong>?</p>
-                                                            <p class="text-warning small"><strong>Warning:</strong> This intern will be unendorsed.</p>
+                                                            <p>Are you sure you want to remove <strong>{{ $intern->user->fname ?? '' }} {{ $intern->user->lname ?? '' }}</strong> from <strong>{{ $hte->organization_name }}</strong>?</p>
+                                                            <p class="text-warning small"><strong>Note:</strong><em>Interns cannot be removed once deployed.</em></p>
                                                         </div>
                                                         <div class="modal-footer bg-light">
                                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -270,11 +286,12 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted">No endorsed interns found.</td>
+                                        <td colspan="6" class="text-center text-muted py-4">No endorsed interns found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -284,36 +301,82 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Unregister Modal -->
-@if($canManage)
-<div class="modal fade" id="unregisterModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title">
-                    <i class="ph-bold ph-warning details-icons-i mr-1"></i>
-                    Confirm Account Deletion
-                </h5>                
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to unregister <strong>{{ $hte->organization_name}}</strong>? This action cannot be undone.</p>
-                <p class="text-danger small"><strong>WARNING:</strong> Any ongoing internships will be affected.</p>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <form action="{{ route('coordinator.hte.destroy', $hte->id) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Unregister</button>
-                </form>
+    <!-- Deploy Confirmation Modal (Updated: List only 'endorsed' interns) -->
+    @if($hasEndorsedForDeploy)
+    <div class="modal fade" id="deployModal" tabindex="-1" role="dialog" aria-labelledby="deployModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light text-dark">
+                    <h5 class="modal-title" id="deployModalLabel">
+                        <i class="ph-bold ph-arrow-square-out details-icons-i mr-1"></i>
+                        Confirm Deployment
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Deploy the following students to <strong>{{ $hte->organization_name }}</strong>?</p>
+                    <ul class="list-unstyled mb-0">
+                        @foreach($endorsedInterns->where('status', 'endorsed') as $endorsement)
+                            @php
+                                $intern = $endorsement->intern;
+                            @endphp
+                            <li class="mb-2">
+                                <img src="{{ asset('storage/' . ($intern->user->pic ?? 'default-avatar.png')) }}" 
+                                     alt="Profile Picture" 
+                                     class="rounded-circle me-2 table-pfp" 
+                                     width="30" height="30">
+                                    {{ $intern->user->lname ?? 'N/A' }}, {{ $intern->user->fname ?? 'N/A' }} ({{ $intern->student_id ?? 'N/A' }})
+                            </li>
+                        @endforeach
+                    </ul>
+                    <p class="text-warning small mt-3"><strong>Note:</strong> This action will mark these interns as deployed and cannot be undone.</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{{ route('coordinator.deploy_htes', $hte->id) }}" method="POST" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-success fw-medium">
+                            <i class="ph-fill ph-check custom-icons-i mr-1"></i>Confirm Deploy
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+    @endif
+
+    <!-- Unregister Modal (Unchanged) -->
+    @if($canManage)
+    <div class="modal fade" id="unregisterModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="ph-bold ph-warning details-icons-i mr-1"></i>
+                        Confirm Account Deletion
+                    </h5>                
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to unregister <strong>{{ $hte->organization_name }}</strong>? This action cannot be undone.</p>
+                    <p class="text-danger small"><strong>WARNING:</strong> Any ongoing internships will be affected.</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{{ route('coordinator.hte.destroy', $hte->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Unregister</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
-@endif
 @endsection

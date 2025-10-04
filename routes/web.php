@@ -93,8 +93,9 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
     Route::put('/htes/{id}', [CoordinatorController::class, 'updateHte'])->name('coordinator.update_h');    
     Route::delete('/htes/{id}', [CoordinatorController::class, 'destroyHTE'])->name('coordinator.hte.destroy');
     Route::delete('/remove-endorsement/{id}', [CoordinatorController::class, 'removeEndorsement'])->name('coordinator.removeEndorsement');
+    Route::post('/htes/{hte}/deploy', [CoordinatorController::class, 'deployHte'])->name('coordinator.deploy_htes');
 
-    Route::get('/endorse', [CoordinatorController::class, 'deploy'])->name('coordinator.deploy');
+    Route::get('/endorse', [CoordinatorController::class, 'endorse'])->name('coordinator.endorse');
     Route::post('/get-recommended-interns', [CoordinatorController::class, 'getRecommendedInterns'])->name('coordinator.getRecommendedInterns');
     Route::post('/endorse', [CoordinatorController::class, 'batchEndorseInterns'])->name('coordinator.batchEndorseInterns');
     Route::post('/endorse/count', [CoordinatorController::class, 'getEndorsedCount'])->name('coordinator.getEndorsedCount');

@@ -58,20 +58,20 @@ class HteSetupMail extends Mailable implements ShouldQueue
     /**
      * Get the message content definition.
      */
-public function content(): Content
-{
-    return new Content(
-        markdown: 'emails.hte-setup',  // Changed from 'view' to 'markdown'
-        with: [
-            'setupLink' => $this->setupLink,
-            'contactName' => $this->contactName,
-            'organizationName' => $this->organizationName,
-            'tempPassword' => $this->tempPassword,
-            'contactEmail' => $this->contactEmail,
-            'hasMoa' => $this->hasMoa,
-        ]
-    );
-}
+    public function content(): Content
+    {
+        return new Content(
+            markdown: 'emails.hte-setup',
+            with: [
+                'setupLink' => $this->setupLink,
+                'contactName' => $this->contactName,
+                'organizationName' => $this->organizationName,
+                'tempPassword' => $this->tempPassword,
+                'contactEmail' => $this->contactEmail,
+                'hasMoa' => $this->hasMoa,
+            ]
+        );
+    }
 
     /**
      * Get the attachments for the message.
@@ -83,8 +83,8 @@ public function content(): Content
         if ($this->hasMoa && file_exists($this->moaAttachmentPath)) {
             return [
                 Attachment::fromPath($this->moaAttachmentPath)
-                    ->as('MOA-Template-' . $this->organizationName . '.pdf')
-                    ->withMime('application/pdf'),
+                    ->as('MOA-Template-' . $this->organizationName . '.docx')
+                    ->withMime('application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
             ];
         }
 
