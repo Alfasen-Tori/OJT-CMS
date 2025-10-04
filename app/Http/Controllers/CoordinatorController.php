@@ -581,10 +581,15 @@ public function showHTE($id)
     }
 
     public function endorse() {
+        $coordinatorDeptId = auth()->user()->coordinator->dept_id;
+        
         $htes = \App\Models\HTE::with('skills')
             ->where('moa_is_signed', 'yes')
-            ->withCount('internsHte') // assumes relation internsHte() defined in HTE model
+            ->withCount('internsHte')
             ->havingRaw('slots > interns_hte_count')
+            ->whereDoesntHave('internsHte.intern', function($query) use ($coordinatorDeptId) {
+                $query->where('dept_id', $coordinatorDeptId);
+            })
             ->get();
 
         return view('coordinator.endorse', compact('htes'));
@@ -597,8 +602,11 @@ public function showHTE($id)
         
         // Get all interns with their skills
         $interns = Intern::with(['user', 'department', 'skills'])
-            ->where('status', '!=', 'endorsed') // Filter out already endorsed interns if needed
+            ->whereIn('status', ['pending requirements', 'ready for deployment'])
+            ->orderByRaw("FIELD(status, 'ready for deployment', 'pending requirements')")
             ->get();
+
+
         
         // Calculate skill matches for each intern
         $internsWithMatches = $interns->map(function($intern) use ($requiredSkillIds) {
