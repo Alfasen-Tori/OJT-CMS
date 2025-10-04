@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use import;
+use Exception;
+
 use App\Models\Hte;
 
 use App\Models\User;
-
 use App\Models\Intern;
 use App\Mail\HteSetupMail;
 use App\Models\InternsHte;
@@ -15,11 +16,14 @@ use Illuminate\Http\Request;
 use App\Mail\InternSetupMail;
 use App\Imports\InternsImport;
 
+
 use Illuminate\Support\Facades\DB;
+use App\Mail\StudentDeploymentMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpWord\TemplateProcessor;
 
     class CoordinatorController extends Controller
     {
@@ -248,100 +252,142 @@ use Maatwebsite\Excel\Facades\Excel;
         return view('coordinator.new-hte');
     }
 
-    public function registerHTE(Request $request)
-    {
-        $validated = $request->validate([
-            'contact_email' => 'required|email|unique:users,email',
-            'contact_first_name' => 'required|string|max:255',
-            'contact_last_name' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
-            'address' => 'required|string|max:255',
-            'organization_name' => 'required|string|max:255',
-            'organization_type' => 'required|in:private,government,ngo,educational,other',
-            'hte_status' => 'required|in:active,new',
-            'description' => 'nullable|string',
-            'coordinator_id' => 'required|exists:coordinators,id'
-        ]);
+public function registerHTE(Request $request)
+{
+    $validated = $request->validate([
+        'contact_email' => 'required|email|unique:users,email',
+        'contact_first_name' => 'required|string|max:255',
+        'contact_last_name' => 'required|string|max:255',
+        'contact_number' => 'required|string|max:20',
+        'address' => 'required|string|max:255',
+        'organization_name' => 'required|string|max:255',
+        'organization_type' => 'required|in:private,government,ngo,educational,other',
+        'hte_status' => 'required|in:active,new',
+        'description' => 'nullable|string',
+        'coordinator_id' => 'required|exists:coordinators,id'
+    ]);
 
-        // Generate temporary password
-        $tempPassword = Str::random(16);
+    $tempPassword = Str::random(16);
 
-        // Create user account with default profile picture
-        $user = User::create([
-            'email' => $validated['contact_email'],
-            'password' => Hash::make($tempPassword),
-            'fname' => $validated['contact_first_name'],
-            'lname' => $validated['contact_last_name'],
-            'contact' => $validated['contact_number'],
-            'pic' => 'profile-pictures/profile.jpg', // Default profile picture
-            'temp_password' => true,
-            'username' => $validated['contact_email'] // HTEs use email as username
-        ]);
+    $user = User::create([
+        'email' => $validated['contact_email'],
+        'password' => Hash::make($tempPassword),
+        'fname' => $validated['contact_first_name'],
+        'lname' => $validated['contact_last_name'],
+        'contact' => $validated['contact_number'],
+        'pic' => 'profile-pictures/profile.jpg',
+        'temp_password' => true,
+        'username' => $validated['contact_email']
+    ]);
 
-        // Create HTE record
-        $hte = Hte::create([
-            'user_id' => $user->id,
-            'status' => $validated['hte_status'],
-            'type' => $validated['organization_type'],
-            'address' => $validated['address'],
-            'description' => $validated['description'],
-            'organization_name' => $validated['organization_name'],
-            'slots' => 0, // Initial slots can be 0, can be updated later
-            'moa_path' => null // Will be set after MOA is uploaded
-        ]);
+    $hte = Hte::create([
+        'user_id' => $user->id,
+        'status' => $validated['hte_status'],
+        'type' => $validated['organization_type'],
+        'address' => $validated['address'],
+        'description' => $validated['description'],
+        'organization_name' => $validated['organization_name'],
+        'slots' => 0,
+        'moa_path' => null
+    ]);
 
-        // Generate activation token
-        $token = Str::random(60);
-        DB::table('password_setup_tokens')->insert([
-            'email' => $user->email,
-            'token' => $token,
-            'created_at' => now()
-        ]);
+    $token = Str::random(60);
+    DB::table('password_setup_tokens')->insert([
+        'email' => $user->email,
+        'token' => $token,
+        'created_at' => now()
+    ]);
 
-        // Send activation email
-        $setupLink = route('password.setup', [
-            'token' => $token, 
-            'role' => 'hte' // New role for HTE
-        ]);
-        $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
-        
-        // Check if we need to attach MOA (for new HTEs)
-        $moaAttachmentPath = null;
-        if ($validated['hte_status'] === 'new') {
-            $moaAttachmentPath = storage_path('app/public/moa-templates/default-moa.pdf');
+    $setupLink = route('password.setup', [
+        'token' => $token,
+        'role' => 'hte'
+    ]);
+    $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
+
+    $moaAttachmentPath = null;
+    $generatedDocxPath = null; // Declare outside if block to track for deletion
+
+    if ($validated['hte_status'] === 'new') {
+        $templatePath = storage_path('app/public/moa-templates/moa-template.docx');
+        $generatedDocxPath = storage_path('app/public/moa-templates/generated-moa-' . $hte->id . '.docx');
+
+        // Fill DOCX template
+        $templateProcessor = new TemplateProcessor($templatePath);
+        $templateProcessor->setValue('organization_name', $validated['organization_name']);
+        $templateProcessor->setValue('address', $validated['address']);
+        $templateProcessor->setValue('contact_name', $contactName);
+        // Add more placeholders as needed
+        $templateProcessor->saveAs($generatedDocxPath);
+
+        if (file_exists($generatedDocxPath)) {
+            $moaAttachmentPath = $generatedDocxPath;
         }
+    }
 
+    // Send email synchronously and delete file only on success
+    try {
         Mail::to($user->email)->send(new HteSetupMail(
             $setupLink,
             $contactName,
             $validated['organization_name'],
             $tempPassword,
             $moaAttachmentPath,
-            $user->email // Add the email address here
+            $user->email
         ));
+
+        // Delete the generated DOCX only if email sent successfully
+        if ($generatedDocxPath && file_exists($generatedDocxPath)) {
+            unlink($generatedDocxPath);
+        }
 
         return redirect()->route('coordinator.htes')
             ->with('success', 'HTE registered successfully. Activation email sent.');
+    } catch (\Exception $e) {
+        // Log the error for debugging
+        
+        // Optional: Delete the file even on failure to avoid leftovers (uncomment if preferred)
+        // if ($generatedDocxPath && file_exists($generatedDocxPath)) {
+        //     unlink($generatedDocxPath);
+        //     \Log::info('Temporary DOCX deleted after email failure: ' . $generatedDocxPath);
+        // }
+
+        return redirect()->route('coordinator.htes')
+            ->with('error', 'HTE registered, but failed to send activation email. Please check logs and retry.');
     }
+}
 
-    public function showHTE($id)
-    {
-        $hte = Hte::with(['user', 'skills', 'skills.department'])
-            ->findOrFail($id);
 
-        // Load interns endorsed for this HTE
-        $endorsedInterns = \App\Models\InternsHte::with('intern.department')
-            ->where('hte_id', $id)
-            ->get();
+public function showHTE($id)
+{
+    $hte = Hte::with(['user', 'skills', 'skills.department'])
+        ->findOrFail($id);
 
-        $endorsedCount = $endorsedInterns->count();
-        $availableSlots = $hte->slots - $endorsedCount;
-        $availableSlots = max(0, $availableSlots); // prevent negative
+    // Load all interns_htes for this HTE (endorsed, deployed, etc.)
+    $endorsedInterns = \App\Models\InternsHte::with(['intern.user', 'intern.department'])
+        ->where('hte_id', $id)
+        ->get();
 
-        $canManage = auth()->user()->coordinator->can_add_hte == 1;
+    $endorsedCount = $endorsedInterns->count();
+    $availableSlots = $hte->slots - $endorsedCount;
+    $availableSlots = max(0, $availableSlots); // prevent negative
 
-        return view('coordinator.hte_show', compact('hte', 'canManage', 'endorsedInterns', 'availableSlots'));
-    }
+    // New: Check for deploy conditions
+    $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
+    $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
+    $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
+
+    $canManage = auth()->user()->coordinator->can_add_hte == 1;
+
+    return view('coordinator.hte_show', compact(
+        'hte', 
+        'canManage', 
+        'endorsedInterns', 
+        'availableSlots', 
+        'hasEndorsedForDeploy', 
+        'hasDeployed', 
+        'endorsementPath'
+    ));
+}
 
 
     public function toggleMoaStatus($id)
@@ -534,14 +580,14 @@ use Maatwebsite\Excel\Facades\Excel;
         }
     }
 
-    public function deploy() {
+    public function endorse() {
         $htes = \App\Models\HTE::with('skills')
             ->where('moa_is_signed', 'yes')
             ->withCount('internsHte') // assumes relation internsHte() defined in HTE model
             ->havingRaw('slots > interns_hte_count')
             ->get();
 
-        return view('coordinator.deploy', compact('htes'));
+        return view('coordinator.endorse', compact('htes'));
     }
 
 
@@ -651,4 +697,255 @@ use Maatwebsite\Excel\Facades\Excel;
             ], 500);
         }
     }
+
+public function deployHTE(Request $request, Hte $hte)
+{
+    Log::info('Deployment started for HTE ID: ' . $hte->id);
+
+    // Create directories if needed
+    $tempDir = storage_path('app/public/temp');
+    if (!file_exists($tempDir)) {
+        if (!mkdir($tempDir, 0755, true)) {
+            Log::error('Failed to create temp directory: ' . $tempDir);
+            return redirect()->back()->with('error', 'Failed to create temporary directory. Check permissions.');
+        }
+        Log::info('Temp directory created: ' . $tempDir);
+    }
+
+    $endorsementDir = storage_path('app/public/endorsement-letters');
+    if (!file_exists($endorsementDir)) {
+        if (!mkdir($endorsementDir, 0755, true)) {
+            Log::error('Failed to create endorsement letters directory: ' . $endorsementDir);
+            return redirect()->back()->with('error', 'Failed to create endorsement letters directory. Check permissions.');
+        }
+        Log::info('Endorsement letters directory created: ' . $endorsementDir);
+    }
+
+    // Fetch endorsed interns
+    $endorsedInterns = InternsHte::where('hte_id', $hte->id)
+        ->where('status', 'endorsed')
+        ->with(['intern.user', 'intern.department'])
+        ->get();
+
+    Log::info('Found ' . $endorsedInterns->count() . ' endorsed interns for HTE: ' . $hte->organization_name);
+
+    if ($endorsedInterns->isEmpty()) {
+        Log::warning('No endorsed interns found for HTE ID: ' . $hte->id);
+        return redirect()->back()->with('error', 'No interns to deploy.');
+    }
+
+    // Get shared data (from current coordinator) with null checks
+    $coordinator = auth()->user()->coordinator;
+    if (!$coordinator) {
+        Log::error('No coordinator record found for user ID: ' . auth()->id());
+        return redirect()->back()->with('error', 'Coordinator data not found. Contact admin.');
+    }
+
+    $department = $coordinator->department;
+    if (!$department) {
+        Log::error('No department found for coordinator ID: ' . $coordinator->id);
+        return redirect()->back()->with('error', 'Department data not found.');
+    }
+
+    $college = $department->college;
+    if (!$college) {
+        Log::error('No college found for department ID: ' . $department->dept_id);
+        return redirect()->back()->with('error', 'College data not found.');
+    }
+
+    $collegeName = $college->name;
+    Log::info('College name resolved: ' . $collegeName);
+
+    // HTE shared data
+    if (!$hte->user) {
+        Log::error('No user found for HTE ID: ' . $hte->id);
+        return redirect()->back()->with('error', 'HTE user data not found.');
+    }
+
+    $hteName = $hte->organization_name;
+    $hteAddress = $hte->address ?? 'No address provided';
+    $repFullname = $hte->user->fname . ' ' . $hte->user->lname;
+    Log::info('HTE data: Name=' . $hteName . ', Address=' . $hteAddress . ', Rep=' . $repFullname);
+
+    Log::info('Placeholder values to replace:');
+    Log::info('- college_name: ' . $collegeName);
+    Log::info('- hte_name: ' . $hteName);
+    Log::info('- hte_address: ' . $hteAddress);
+    Log::info('- rep_fullname: ' . $repFullname);
+
+    // Step 0: Generate SINGLE Endorsement Letter for this HTE (shared, outside loop)
+    $timestamp = now()->format('Ymd-His'); // e.g., 20250924-080107
+    $endorsementFilename = 'endorsement-' . $hte->id . '-' . $timestamp . '.docx';
+    $endorsementFullPath = $endorsementDir . '/' . $endorsementFilename;
+    $endorsementRelativePath = 'endorsement-letters/' . $endorsementFilename; // Shared path for all interns_htes records
+
+    $endorsementTempPath = storage_path('app/public/temp/endorsement-' . $hte->id . '-' . $timestamp . '.docx');
+    $endorsementDebugPath = storage_path('app/public/temp/endorsement-' . $hte->id . '-' . $timestamp . '-debug.docx');
+
+    // Build shared intern list for the letter (formatted string for ${intern_list})
+    $internList = '';
+    foreach ($endorsedInterns as $index => $endorsement) {
+        $intern = $endorsement->intern;
+        if ($intern && $intern->user) {
+            $deptName = $intern->department?->dept_name ?? 'N/A';
+            $internList .= ($index + 1) . '. ' . $intern->user->fname . ' ' . $intern->user->lname . ' (ID: ' . ($intern->student_id ?? 'N/A') . '), ' . $deptName . '; ';
+        }
+    }
+    $internList = rtrim($internList, '; '); // Clean trailing semicolon
+    if (empty($internList)) {
+        $internList = 'No interns listed.';
+    }
+    Log::info('Shared intern list for endorsement: ' . $internList);
+
+    // Get shared semester/year (use first intern's or fallback; assume uniform for HTE)
+    $firstIntern = $endorsedInterns->first()?->intern;
+    $semester = $firstIntern?->semester ?? '1st';
+    $year = $firstIntern?->academic_year ?? date('Y') . '-' . (date('Y') + 1);
+
+    $endorsementSuccess = false;
+    try {
+        $endorsementTemplatePath = storage_path('app/public/document-templates/endorsement-letter-template.docx');
+        Log::info('Endorsement template path: ' . $endorsementTemplatePath);
+        if (!file_exists($endorsementTemplatePath)) {
+            throw new Exception('Endorsement template file not found at: ' . $endorsementTemplatePath);
+        }
+
+        $endorsementProcessor = new TemplateProcessor($endorsementTemplatePath);
+
+        $todayDate = now()->format('F j, Y'); // e.g., "September 24, 2025"
+
+        Log::info('Endorsement placeholders: date=' . $todayDate . ', semester=' . $semester . ', year=' . $year . ', college_name=' . $collegeName . ', hte_address=' . $hteAddress . ', hte_name=' . $hteName . ', rep_fullname=' . $repFullname . ', intern_list=' . substr($internList, 0, 100) . '...');
+
+        // Use setValue() for all placeholders (ensuring hte_name and rep_fullname are set)
+        $endorsementProcessor->setValue('date', $todayDate);
+        $endorsementProcessor->setValue('college_name', $collegeName);
+        $endorsementProcessor->setValue('hte_address', $hteAddress);
+        $endorsementProcessor->setValue('semester', $semester);
+        $endorsementProcessor->setValue('year', $year);
+        $endorsementProcessor->setValue('hte_name', $hteName); // Ensures replacement for ${hte_name}
+        $endorsementProcessor->setValue('rep_fullname', $repFullname); // Ensures replacement for ${rep_fullname}
+        $endorsementProcessor->setValue('intern_list', $internList); // Shared list of all interns
+
+        // Save to temp, create debug, then move to permanent
+        $endorsementProcessor->saveAs($endorsementTempPath);
+        if (!file_exists($endorsementTempPath)) {
+            throw new Exception('Failed to create endorsement temp file for HTE ID: ' . $hte->id);
+        }
+
+        // Create debug copy for verification (check hte_name, rep_fullname, intern_list here)
+        copy($endorsementTempPath, $endorsementDebugPath);
+        Log::info('Shared endorsement debug file created for HTE ' . $hte->id . ': ' . $endorsementDebugPath . ' - Open in Word to verify ${hte_name}, ${rep_fullname}, and ${intern_list}!');
+
+        rename($endorsementTempPath, $endorsementFullPath);
+        Log::info('Shared endorsement saved to permanent location (per HTE): ' . $endorsementFullPath);
+
+        if (!file_exists($endorsementFullPath)) {
+            throw new Exception('Failed to move endorsement to permanent location for HTE ID: ' . $hte->id);
+        }
+
+        $endorsementSuccess = true;
+        Log::info('Endorsement generation successful for HTE ID: ' . $hte->id);
+
+    } catch (Exception $e) {
+        Log::error("Failed to generate shared endorsement letter for HTE ID {$hte->id}: " . $e->getMessage());
+        $endorsementRelativePath = null; // No path to save if failed
+    }
+
+    // Now process per-intern contracts, emails, status updates, and shared endorsement path
+    $successCount = 0;
+    $errorCount = 0;
+
+    foreach ($endorsedInterns as $endorsement) {
+        $intern = $endorsement->intern;
+        if (!$intern) {
+            Log::error('No intern found for endorsement ID: ' . $endorsement->id);
+            $errorCount++;
+            continue;
+        }
+
+        $studentEmail = $intern->user?->email;
+        $studentName = $intern->user?->fname . ' ' . $intern->user?->lname ?? 'Unknown';
+        if (!$studentEmail) {
+            Log::error('No email found for intern ID: ' . $intern->id . ' (' . $studentName . ')');
+            $errorCount++;
+            continue;
+        }
+
+        Log::info('Processing intern contract/email for: ' . $studentName . ' (' . $studentEmail . ')');
+
+        $contractTempPath = storage_path('app/public/temp/contract-' . $intern->id . '-' . Str::random(8) . '.docx');
+
+        try {
+            // Step 1: Generate Student Internship Contract (temp, for email only)
+            $contractTemplatePath = storage_path('app/public/document-templates/student-internship-contract-template.docx');
+            if (!file_exists($contractTemplatePath)) {
+                throw new Exception('Contract template file not found at: ' . $contractTemplatePath);
+            }
+
+            $contractProcessor = new TemplateProcessor($contractTemplatePath);
+            $contractProcessor->setValue('college_name', $collegeName);
+            $contractProcessor->setValue('hte_name', $hteName);
+            $contractProcessor->setValue('hte_address', $hteAddress);
+            $contractProcessor->setValue('rep_fullname', $repFullname);
+
+            $contractProcessor->saveAs($contractTempPath);
+            if (!file_exists($contractTempPath)) {
+                throw new Exception('Failed to create contract file for intern ID: ' . $intern->id);
+            }
+
+            // Step 2: Send email (contract only)
+            Mail::to($studentEmail)->send(new StudentDeploymentMail(
+                $studentName,
+                $hteName,
+                $contractTempPath
+            ));
+            Log::info('Email sent successfully to: ' . $studentEmail);
+
+            // Step 3: Update per-intern statuses
+            $intern->update(['status' => 'processing']);
+            Log::info("Intern status updated to 'processing' for ID: " . $intern->id . " ({$studentName})");
+
+            $endorsement->update(['status' => 'deployed', 'deployed_at' => now()]);
+            Log::info("Pivot status updated to 'deployed' for endorsement ID: " . $endorsement->id);
+
+            // Step 4: Save shared endorsement path to this interns_hte record (if generation succeeded)
+            if ($endorsementSuccess && $endorsementRelativePath) {
+                $endorsement->update(['endorsement_letter_path' => $endorsementRelativePath]);
+                Log::info("Shared endorsement path saved to endorsement ID: " . $endorsement->id . " - Path: " . $endorsementRelativePath);
+            }
+
+            // Step 5: Clean up contract temp
+            unlink($contractTempPath);
+
+            $successCount++;
+            Log::info('Success for ' . $studentName . ' (shared endorsement assigned)');
+
+        } catch (Exception $e) {
+            Log::error("Failed to process contract/email for intern ID {$intern->id} ({$studentName}): " . $e->getMessage());
+            if (file_exists($contractTempPath)) {
+                unlink($contractTempPath);
+            }
+            $errorCount++;
+        }
+    }
+
+    // Step Final: Response
+    Log::info("Deployment summary for HTE {$hte->id}: Success={$successCount}, Errors={$errorCount}, Endorsement Success=" . ($endorsementSuccess ? 'Yes' : 'No'));
+    if ($successCount > 0) {
+        $message = "Deployment processed: {$successCount} intern(s) emailed and set to processing/deployed.";
+        if ($errorCount > 0) {
+            $message .= " {$errorCount} failed (check logs).";
+        }
+        if ($endorsementSuccess) {
+            $message .= " Shared endorsement letter generated and assigned to all.";
+        } else {
+            $message .= " Endorsement letter failed (check logs and template).";
+        }
+        return redirect()->back()->with('success', $message);
+    } else {
+        return redirect()->back()->with('error', 'Deployment failed for all interns. Check logs for details.');
+    }
+}
+
+
 }
