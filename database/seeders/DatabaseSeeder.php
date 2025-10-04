@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create the admin user
         $user = User::create([
-            'email' => 'jessie.paragas@evsu.edu.ph',
+            'email' => 'amadeuz.gravozo@evsu.edu.ph',
             'password' => bcrypt('admin123'), // Hashed
             'fname' => 'Jessie',
             'lname' => 'Paragas',
@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
 
         // Create the admin record linked to the user
         Admin::create([
-            'faculty_id' => '2013-07896',
+            'faculty_id' => 'A090803GL',
             'user_id' => $user->id, // Automatically links to the user above
         ]);
     }

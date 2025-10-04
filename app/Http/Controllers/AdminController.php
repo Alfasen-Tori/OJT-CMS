@@ -40,8 +40,7 @@ class AdminController extends Controller
             'fname' => 'required|string|max:255',
             'lname' => 'required|string|max:255',
             'contact' => 'required|string|max:20',
-            'faculty_id' => 'required|string|unique:coordinators|regex:/^\d{4}-\d{5}$/',
-            'dept_id' => 'required|exists:departments,dept_id',
+            'faculty_id' => 'required|string|unique:coordinators|regex:/^[A-Za-z]\d{2}\d{2}\d{2}[A-Za-z]{2}$/',            'dept_id' => 'required|exists:departments,dept_id',
             'can_add_hte' => 'required|boolean',
         ]);
 
