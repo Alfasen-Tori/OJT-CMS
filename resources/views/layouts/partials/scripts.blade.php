@@ -506,8 +506,14 @@
                         let html = '';
                         response.interns.forEach(intern => {
                             const isIncomplete = intern.status === 'pending requirements';
-                            const statusClass = intern.status === 'ready for deployment' ? 'text-warning bg-warning-subtle' : 
-                                                intern.status === 'endorsed' ? 'text-success' : 'text-danger bg-danger-subtle';
+                            const statusClass = 
+                                intern.status === 'pending requirements' ? 'text-danger bg-danger-subtle' :
+                                intern.status === 'ready for deployment' ? 'text-warning bg-warning-subtle' :
+                                intern.status === 'endorsed' ? 'text-primary bg-primary-subtle' :
+                                intern.status === 'processing' ? 'text-info bg-info-subtle' :
+                                intern.status === 'deployed' ? 'text-success bg-success-subtle' :
+                                'text-secondary bg-secondary-subtle';
+
 
                             let knobColor = intern.match_percentage >= 70 ? '#198754' :
                                             intern.match_percentage >= 40 ? '#ffc107' :
@@ -540,6 +546,7 @@
                         // Initialize DataTable
                         dataTableInstance = $('#internsReccTable').DataTable({
                             paging: true,
+                            order: [],
                             pageLength: 10,
                             lengthChange: true,
                             searching: true,
