@@ -199,11 +199,11 @@
                       
                       <div id="importResults" class="d-none mt-3">
                           <h5>Import Summary</h5>
-                          <div class="alert alert-success">
-                              <strong>Successfully registered:</strong> <span id="successCount">0</span> interns
+                          <div class="alert bg-success-subtle text-success">
+                              <i class="ph ph-check custom-icons-i"></i> Succesfully imported <span id="successCount" class="fw-bold">0</span> interns. 
                           </div>
-                          <div class="alert alert-danger">
-                              <strong>Failed to register:</strong> <span id="failCount">0</span> interns
+                          <div class="alert bg-danger-subtle text-danger">
+                              <i class="ph ph-warning custom-icons-i"></i> Error importing: <span id="failCount" class="fw-bold">0</span> interns.
                           </div>
                           
                           <div id="failDetails" class="d-none">

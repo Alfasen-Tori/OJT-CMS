@@ -768,15 +768,24 @@
                         .removeClass('btn-success')
                         .addClass('btn-primary')
                         .html('Complete')
-                        .prop('disabled', false) // Make sure button is enabled
-                        .off('click') // Remove previous click handlers
-                        .on('click', function() {
+                        .prop('disabled', false)
+                        .off('click')
+                        .on('click', function(e) {
+                            e.preventDefault(); // Prevent form submission
+                            e.stopPropagation(); // Stop event bubbling
+                            
+                            // Close modal immediately
+                            $('#importModal').modal('hide');
+                            
                             // Show success message if any interns were imported
                             if (response.success_count > 0) {
                                 sessionStorage.setItem('importSuccess', response.success_count);
                             }
-                            // Refresh page
-                            window.location.reload();
+                            
+                            // Refresh page after modal is fully hidden
+                            $('#importModal').on('hidden.bs.modal', function() {
+                                window.location.reload();
+                            });
                         });
                 }
             },
@@ -796,14 +805,6 @@
         });
     });
 
-    // Show success message after page reload if needed
-    $(document).ready(function() {
-        const importedCount = sessionStorage.getItem('importSuccess');
-        if (importedCount) {
-            toastr.success(`${importedCount} interns imported successfully`);
-            sessionStorage.removeItem('importSuccess');
-        }
-    });
     // Reset modal when closed
     $('#importModal').on('hidden.bs.modal', function() {
         $('#importForm')[0].reset();
@@ -820,6 +821,11 @@
             .html('Import')
             .off('click')
             .prop('disabled', false);
+            
+        // Restore Close button if it was removed
+        if ($('.modal-footer .btn-secondary').length === 0) {
+            $('.modal-footer').prepend('<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>');
+        }
     });
 
     // Show success message after page reload if needed
