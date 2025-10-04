@@ -118,9 +118,9 @@
                                                  style="width: 50px; height: 50px; object-fit: cover;"
                                                  alt="Coordinator Profile Picture">
                                         </div>
-                                        <div class="flex-grow-1">
+                                        <div class="flex-grow-1 gap-1">
                                             <h6 class="mb-0">{{ $intern->coordinator->user->fname }} {{ $intern->coordinator->user->lname }}</h6>
-                                            <p class="mb-0 text-muted small">{{ $intern->coordinator->department->dept_name }} Department</p>
+                                            <p class="mb-0 text-muted small m-0">College of {{ $intern->coordinator->department->college->name }} • {{ $intern->coordinator->department->dept_name }} Department</p>
                                         </div>
                                     </div>
                                 @else
