@@ -1,0 +1,106 @@
+[USERS]
+id (PK, auto-increment)
+email (unique)
+password
+fname
+lname
+contact
+timestamps
+
+
+[ADMINS]
+id (PK, auto-increment)
+faculty_id (VARCHAR) — unique
+user_id (FK to users.id)
+timestamps
+	
+[COORDINATORS]
+id (PK, auto-increment)
+faculty_id (VARCHAR, e.g. "2013-07896")
+user_id (FK to users.id)
+dept_id (FK to departments.dept_id)
+can_add_hte (Enum:0 = true, 1 = false)
+timestamps
+
+[INTERNS]
+id (PK, auto-increment)
+student_id (VARCHAR, e.g. "2022-09709") — unique
+user_id (FK to users.id)
+dept_id (FK to departments.dept_id)
+coordinator_id (FK from coordinator.id)
+birthdate (date)
+section (ENUM: 'a', 'b', 'c', 'd', 'e', 'f')
+year_level (TINYINT, 1–4)
+academic_year (e.g. "2025–2026")
+semester (ENUM: "1st", "2nd", "Midyear")
+status (ENUM: "pending requirements", "ready for deployment", "endorsed", "processing", "deployed") default is pending requirements for newly added interns
+first_login (tiny int) default = 1
+timestamps
+
+[DEPARTMENTS]
+dept_id (PK, auto-increment)
+dept_name (e.g. "Information Technology")
+short_name (e.g. "BSIT")
+college_id (pk)
+timestamps
+
+[COLLEGES]
+id (pk)
+name
+short_name
+timstamps
+
+[HTES]
+id (PK, auto-increment)
+user_id (FK to users.id)
+organization_name
+status (ENUM: "active", "new")
+type (ENUM: 'private', 'government', 'NGO', 'Educational', 'Other')
+address (TEXT)
+description (TEXT)
+slots (INT)
+moa_path (VARCHAR or TEXT)
+moa_is_signed (Enum: "no", "yes") // default is no
+first_login (tinyint) default = 1
+timestamps	
+
+[SKILLS]
+skill_id
+dept_id (FK)
+name (eg:  web development)
+
+[student_skill] 
+id (PRI)
+intern_id (FK)
+skills_id (FK)
+timestamps
+
+[hte_skill]
+id (PRI)
+hte_id (FK)
+skill_id (FK)
+timestamps
+
+[INTERNS_HTE]
+id (PK, auto-increment)
+intern_id (FK from interns.id)
+hte_id (FK to htes.id)
+status (ENUM: "endorsed", "deployed") — default: "endorsed"
+start_date,
+end_date,
+endorsed_at (timestamp) — when the endorsement happened
+deployed_at (timestamp, nullable) — when deployment happened
+coordinator_id (fk from coordinator id) - this way we can both access who deployed the students to the HTE as well as the department 
+endorsement_letter_path
+timestamps (created_at, updated_at)
+
+
+Name: Amadeus L. Gravoso
+Date Hired: September 8, 2025
+
+A_09_08_03_G_L
+(first letter of first name)_(month hired)_(date hired)_(year hired)_(first letter of last name)_(middle initial)
+
+So an actual Faculty ID would look like "A090803GL"
+
+
