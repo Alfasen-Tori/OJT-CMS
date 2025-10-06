@@ -14,6 +14,7 @@ class InternsHte extends Model
     protected $fillable = [
         'intern_id',
         'hte_id',
+        'coordinator_id',
         'status',
         'endorsed_at',
         'deployed_at',
@@ -38,6 +39,11 @@ class InternsHte extends Model
     public function hte()
     {
         return $this->belongsTo(Hte::class, 'hte_id');
+    }
+
+    public function coordinator()
+    {
+        return $this->belongsTo(Coordinator::class, 'coordinator_id');
     }
 
     // Accessor: duration in weeks (if both dates are set)

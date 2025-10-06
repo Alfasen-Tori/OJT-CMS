@@ -54,6 +54,11 @@ class Coordinator extends Model
         return $this->hasMany(Intern::class);
     }
 
+    public function internsHte()
+    {
+        return $this->hasMany(InternsHte::class, 'coordinator_id');
+    }
+
     /**
      * Accessor for full name
      */
