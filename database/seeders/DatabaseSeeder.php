@@ -31,5 +31,10 @@ class DatabaseSeeder extends Seeder
             'faculty_id' => 'A090803GL',
             'user_id' => $user->id, // Automatically links to the user above
         ]);
+
+        $this->call([
+            SchoolSeeder::class,
+            SkillSeeder::class,
+        ]);
     }
 }
