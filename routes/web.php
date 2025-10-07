@@ -82,7 +82,7 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
     Route::put('/interns/{id}', [CoordinatorController::class, 'updateIntern'])->name('coordinator.update_i');
     Route::delete('/interns/{id}', [CoordinatorController::class, 'destroyIntern'])->name('coordinator.intern.destroy');
 
-
+    Route::post('/interns/{intern}/officially-deploy', [CoordinatorController::class, 'officiallyDeployIntern'])->name('coordinator.intern.officially-deploy');
 
     Route::get('/htes', [CoordinatorController::class, 'htes'])->name('coordinator.htes');
     Route::get('/htes/create', [CoordinatorController::class, 'newHTE'])->name('coordinator.new_h');

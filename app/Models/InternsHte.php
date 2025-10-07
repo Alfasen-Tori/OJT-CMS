@@ -20,6 +20,8 @@ class InternsHte extends Model
         'deployed_at',
         'start_date',
         'end_date',
+        'no_of_hours',
+        'no_of_weeks',
         'endorsement_letter_path',
     ];
 

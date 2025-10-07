@@ -48,8 +48,6 @@
 
     .details-icons-i {
         font-size: 1.4rem;
-        position: relative;
-        top: 2.5px;
     }
 
     .info-box {
