@@ -268,9 +268,9 @@
 
                                                             <!-- Conditional Officially Deploy: Only if interns_hte status is 'deployed' AND intern status is 'processing' -->
                                                             @if($endorsement->status === 'deployed' && $intern->status === 'processing')
-                                                                <form action="{{ route('coordinator.intern.officially-deploy', $intern->id) }}" method="POST" class="m-0 p-0 px-2">
+                                                                <form action="{{ route('coordinator.intern.officially-deploy', $intern->id) }}" method="POST" class="m-0 p-0">
                                                                     @csrf
-                                                                    <button type="submit" class="dropdown-item btn btn-outline-light text-success p-2 w-100 text-left border-0 bg-transparent"> 
+                                                                    <button class="dropdown-item btn btn-outline-light text-success type="submit">
                                                                         <i class="ph ph-rocket-launch custom-icons-i mr-2"></i>Officially Deploy
                                                                     </button>
                                                                 </form>
