@@ -85,22 +85,33 @@ timestamps
 id (PK, auto-increment)
 intern_id (FK from interns.id)
 hte_id (FK to htes.id)
+coordinator_id
 status (ENUM: "endorsed", "deployed") — default: "endorsed"
 start_date,
 end_date,
+no_of_hours, - amount of hours interns are required to render
+no_of_weeks, 
 endorsed_at (timestamp) — when the endorsement happened
 deployed_at (timestamp, nullable) — when deployment happened
 coordinator_id (fk from coordinator id) - this way we can both access who deployed the students to the HTE as well as the department 
 endorsement_letter_path
 timestamps (created_at, updated_at)
 
+[ATTENDANCES]
+id (PK, auto-increment)
+intern_hte_id (FK to interns_hte.id)
+date (DATE)
+time_in (DATETIME, nullable)
+time_out (DATETIME, nullable)
+hours_rendered (DECIMAL(5,2), nullable) — will be used to track progress. internship will be completed when this >= no_of_hours in interns_hte
+timestamps
 
-Name: Amadeus L. Gravoso
-Date Hired: September 8, 2025
-
-A_09_08_03_G_L
-(first letter of first name)_(month hired)_(date hired)_(year hired)_(first letter of last name)_(middle initial)
-
-So an actual Faculty ID would look like "A090803GL"
+[WEEKLY_REPORTS]
+id (PK, auto-increment)
+intern_id (FK to interns.id)
+week_no (TINYINT) — e.g., 1, 2, 3...
+report_path (VARCHAR or TEXT) — uploaded file path
+submitted_at (TIMESTAMP)
+timestamps
 
 
