@@ -1,14 +1,14 @@
-{{-- resources/views/dashboard.blade.php --}}
+@php use App\Models\InternDocument; @endphp
 @extends('layouts.intern')
 
-@section('title', 'Intern | Home')
+@section('title', 'Dashboard')
 
 @section('content')
 <section class="content-header">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="page-header">DASHBOARD</h1>
+        <h1 class="page-header">Dashboard</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
@@ -22,23 +22,226 @@
 
 <section class="content">
   <div class="container-fluid">
-    <!-- Status Header Card -->
-    <div class="card p-3 d-flex flex-column justify-content-center">
-      <h5 class="align-middle w-100 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-md-center gap-2" style="position: relative; top: 4px;">
-        <span class="text-muted align-middle">AY: {{$academic_year}} • {{$semester}} Semester</span>
-        @php
-          $status = strtolower($status);
-          $badgeClass = match($status) {
-            'pending requirements' => 'bg-danger-subtle text-danger',
-            'ready for deployment' => 'bg-warning-subtle text-warning',
-            'endorsed' => 'bg-primary-subtle text-primary border-primary',
-            default => 'bg-secondary'
-          };
-        @endphp
-        <span class="badge {{ $badgeClass }} px-4 py-2 rounded-pill m-0">{{ strtoupper($status) }}</span>
-      </h5>
+
+    {{-- ENHANCED INTERN STATUS CARD --}}
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body">
+        <div class="row align-items-center">
+          {{-- Profile Picture and Basic Info --}}
+          <div class="col-md-8">
+            <div class="d-flex align-items-center">
+              {{-- Profile Picture --}}
+              <div class="me-4">
+                @if(auth()->user()->profile_picture)
+                  <img src="{{ asset('storage/' . auth()->user()->pic) }}" 
+                       alt="Profile Picture" 
+                       class="rounded-circle" 
+                       style="width: 80px; height: 80px; object-fit: cover;">
+                @else
+                  <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                       style="width: 80px; height: 80px;">
+                    <i class="fas fa-user text-muted" style="font-size: 2rem;"></i>
+                  </div>
+                @endif
+              </div>
+              
+              {{-- Intern Information --}}
+              <div class="flex-grow-1">
+                <h4 class="mb-1 fw-bold">{{ auth()->user()->fname }} {{ auth()->user()->lname }}</h4>
+                <p class="mb-2 text-muted">
+                  <i class="fas fa-id-card me-1"></i>
+                  {{ auth()->user()->intern->student_id ?? 'N/A' }}
+                </p>
+                <p class="mb-2">
+                  @php
+                      $intern = auth()->user()->intern;
+                      $section = $intern->section ? strtoupper($intern->section) : '';
+                      $departmentShort = $intern->department->short_name ?? 'BSIT';
+                  @endphp
+                  <span class="badge bg-primary-subtle text-primary px-3 py-2 fw-medium">
+                    <i class="fas fa-users me-1"></i>
+                    {{ $departmentShort }}-{{ $intern->year_level }}{{ $section }}
+                  </span>
+                </p>
+                <small class="text-muted">
+                  <i class="fas fa-calendar-alt me-1"></i>
+                  {{ ucfirst($semester) }} Semester, A.Y. {{ $academic_year }}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          {{-- Status and Badge --}}
+          <div class="col-md-4 text-md-end">
+            @php
+                $intern = auth()->user()->intern;
+                $status = strtolower($intern->status);
+                $badgeClass = match($status) {
+                    'pending requirements' => 'bg-danger-subtle text-danger',
+                    'ready for deployment' => 'bg-warning-subtle text-warning',
+                    'processing' => 'bg-info-subtle text-info',
+                    'endorsed' => 'bg-primary-subtle text-primary',
+                    'deployed' => 'bg-success-subtle text-success',
+                    'completed' => 'bg-dark-subtle text-dark',
+                    default => 'bg-secondary'
+                };
+                
+                $statusIcon = match($status) {
+                    'pending requirements' => 'fas fa-clock',
+                    'ready for deployment' => 'fas fa-check-circle',
+                    'processing' => 'fas fa-cogs',
+                    'endorsed' => 'fas fa-paper-plane',
+                    'deployed' => 'fas fa-briefcase',
+                    'completed' => 'fas fa-graduation-cap',
+                    default => 'fas fa-info-circle'
+                };
+            @endphp
+            
+            <div class="text-sm-end text-start">
+              <span class="badge {{ $badgeClass }} px-4 py-3 rounded-pill fw-bold fs-6">
+                <i class="{{ $statusIcon }} me-2"></i>
+                {{ ucfirst($intern->status) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {{-- Dynamic Status Notes --}}
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="alert 
+              @switch($status)
+                @case('pending requirements') alert-danger @break
+                @case('ready for deployment') alert-warning @break
+                @case('processing') alert-info @break
+                @case('endorsed') alert-primary @break
+                @case('deployed') alert-success @break
+                @case('completed') alert-dark @break
+                @default alert-secondary
+              @endswitch
+              mb-0">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle me-3 fs-5"></i>
+                <div>
+                  <strong class="d-block mb-1">Status Update:</strong>
+                  @switch($status)
+                    @case('pending requirements')
+                      Please submit all pre-deployment requirements to proceed with your internship application.
+                    @break
+                    @case('ready for deployment')
+                      You have successfully submitted all pre-deployment requirements. Please await endorsement from your coordinator.
+                    @break
+                    @case('endorsed')
+                      You have been endorsed to <strong>{{ $hteDetails->organization_name ?? 'the assigned organization' }}</strong>. Please wait for further instructions regarding your deployment.
+                    @break
+                    @case('processing')
+                      Your endorsement is currently being processed. Please download the internship contract sent to your email, have it signed by your legal guardian, and submit the signed copy to your coordinator.
+                    @break
+                    @case('deployed')
+                      Your internship is currently in progress at <strong>{{ $hteDetails->organization_name ?? 'your assigned organization' }}</strong>. Continue to maintain good attendance and complete all required tasks.
+                    @break
+                    @case('completed')
+                      Congratulations! You have successfully completed your internship program. Thank you for your hard work and dedication.
+                    @break
+                    @default
+                      Your internship status is being reviewed. Please check back later for updates.
+                  @endswitch
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
+    {{-- HTE ASSIGNMENT CARD --}}
+    @if(isset($hteDetails))
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light fw-bold">
+          <i class="fas fa-building text-primary me-2"></i>Host Training Establishment (HTE) Assignment
+        </div>
+        <div class="card-body">
+          <h5 class="fw-bold text-primary mb-1">{{ $hteDetails->organization_name }}</h5>
+          <p class="mb-2 text-muted">
+            <i class="fas fa-map-marker-alt me-1"></i>{{ $hteDetails->address }}
+          </p>
+          <p class="mb-0">
+            <span class="badge 
+              {{ $hteDetails->status == 'active' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} px-3 py-2">
+              <i class="fas fa-circle me-1" style="font-size: 0.6rem;"></i>
+              {{ ucfirst($hteDetails->status) }}
+            </span>
+          </p>
+        </div>
+      </div>
+    @endif
+
+    {{-- DOCUMENT REQUIREMENTS CHECKLIST --}}
+    @if(in_array($status, ['pending requirements', 'ready for deployment']))
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0 fw-bold">
+            <i class="fas fa-clipboard-list text-primary me-2"></i>
+            Pre-Deployment Requirements
+          </h5>
+        </div>
+
+        <div class="card-body">
+          {{-- Completion Badge --}}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="fw-medium text-muted">
+              Submission Status:
+              @if($documents->count() >= 9)
+                <span class="badge bg-success-subtle text-success px-3 py-2">
+                  <i class="fas fa-check-circle me-1"></i>Complete ({{ $documents->count() }}/9)
+                </span>
+              @else
+                <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                  <i class="fas fa-exclamation-circle me-1"></i>Incomplete ({{ $documents->count() }}/9)
+                </span>
+              @endif
+            </span>
+
+            <a href="{{ route('intern.docs') }}" class="btn btn-sm btn-outline-primary fw-medium">
+              <i class="fas fa-folder-open me-2"></i>Manage Documents
+            </a>
+          </div>
+
+          {{-- Dynamic Document Checklist --}}
+          <ul class="list-group list-group-flush">
+            @foreach(InternDocument::typeLabels() as $type => $label)
+              @php $document = $documents->where('type', $type)->first(); @endphp
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ $label }}</strong><br>
+                  <small class="text-muted">
+                    @switch($type)
+                        @case('requirements_checklist') Signed checklist of all required documents @break
+                        @case('certificate_of_registration') Current semester registration certificate @break
+                        @case('report_of_grades') Latest official transcript with OJT qualification @break
+                        @case('application_resume') Formal application letter with updated resume @break
+                        @case('medical_certificate') Health clearance from university clinic @break
+                        @case('parent_consent') Notarized consent form from parent/guardian @break
+                        @case('insurance_certificate') Proof of valid insurance coverage @break
+                        @case('pre_deployment_certification') Certification of orientation attendance @break
+                        @case('ojt_fee_reciept') Official receipt of paid internship fee @break
+                    @endswitch
+                  </small>
+                </div>
+                @if($document)
+                  <i class="fas fa-check-circle text-success fs-5" title="Submitted"></i>
+                @else
+                  <i class="fas fa-times-circle text-danger fs-5" title="Pending"></i>
+                @endif
+              </li>
+            @endforeach
+          </ul>
+        </div>
+      </div>
+    @endif
+
+    {{-- PROGRESS AND ATTENDANCE SECTION (Only for deployed interns) --}}
+    @if($status == 'deployed')
     <div class="row">
       <!-- Progress Section -->
       <div class="col-lg-4 col-md-6">
@@ -93,7 +296,7 @@
               <div class="alert alert-info py-2 mb-3">
                 <small>
                   <i class="fas fa-building mr-1"></i>
-                  <strong>Current HTE:</strong> Tech Solutions Inc.
+                  <strong>Current HTE:</strong> {{ $hteDetails->organization_name ?? 'Tech Solutions Inc.' }}
                 </small>
               </div>
             </div>
@@ -182,207 +385,8 @@
         </div>
       </div>
     </div>
+    @endif
 
-    <!-- Original Cards Row -->
-    <div class="row mt-4">
-      <!-- Docs -->
-      <div class="col-lg-4 col-md-6 col-12">
-        <div class="small-box bg-info"> 
-          <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-            <h2 class="fw-medium">{{ $documentCount }} out of 9</h2>
-            <p>Requirements</p>
-          </div>
-          <div class="infobox-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" viewBox="0 0 256 256"><path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,176H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm-8-56V44l44,44Z"></path></svg>
-          </div>
-          <a href="{{route('intern.docs')}}" class="small-box-footer">
-            More info <i class="fas fa-arrow-circle-right"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- My Internship -->
-      <div class="col-lg-4 col-md-6 col-12">
-        <div class="small-box bg-success"> 
-          <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-            <h2 class="fw-medium">0 out of 22</h2>
-            <p>Weekly Reports</p>
-          </div>
-          <div class="infobox-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" viewBox="0 0 256 256"><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM117.66,149.66l-32,32a8,8,0,0,1-11.32,0l-16-16a8,8,0,0,1,11.32-11.32L80,164.69l26.34-26.35a8,8,0,0,1,11.32,11.32Zm0-64-32,32a8,8,0,0,1-11.32,0l-16-16A8,8,0,0,1,69.66,90.34L80,100.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM192,168H144a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Zm0-64H144a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Z"></path></svg>
-          </div>
-          <a href="#" class="small-box-footer">
-            More info <i class="fas fa-arrow-circle-right"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- Attendance Summary -->
-      <div class="col-lg-4 col-md-6 col-12">
-        <div class="small-box bg-warning"> 
-          <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-            <h2 class="fw-medium">84%</h2>
-            <p>Attendance Rate</p>
-          </div>
-          <div class="infobox-icon">
-            <i class="fas fa-user-check box-icon"></i>
-          </div>
-          <a href="#" class="small-box-footer">
-            View Details <i class="fas fa-arrow-circle-right"></i>
-          </a>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
-@endsection
-
-@section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize Progress Chart
-  const progressCtx = document.getElementById('progressChart').getContext('2d');
-  const progressChart = new Chart(progressCtx, {
-    type: 'doughnut',
-    data: {
-      datasets: [{
-        data: [65, 35],
-        backgroundColor: ['#007bff', '#e9ecef'],
-        borderWidth: 0,
-        cutout: '75%'
-      }]
-    },
-    options: {
-      responsive: false,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          enabled: false
-        }
-      }
-    }
-  });
-
-  // Real-time Clock
-  function updateClock() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', { 
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    const dateString = now.toLocaleDateString('en-US', { 
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    
-    document.getElementById('currentTime').textContent = timeString;
-    document.getElementById('currentDate').textContent = dateString;
-  }
-
-  // Update clock every second
-  updateClock();
-  setInterval(updateClock, 1000);
-
-  // Punch In/Out Button Handlers (Static Demo)
-  document.getElementById('punchInBtn').addEventListener('click', function() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', { 
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    this.innerHTML = `
-      <i class="fas fa-check mr-2"></i>
-      <div>Punched In</div>
-      <small class="d-block">${timeString}</small>
-    `;
-    this.classList.remove('btn-success');
-    this.classList.add('btn-outline-success');
-    
-    document.getElementById('punchOutBtn').disabled = false;
-    document.getElementById('todayIn').textContent = timeString;
-    document.getElementById('todayHours').textContent = '0.0';
-  });
-
-  document.getElementById('punchOutBtn').addEventListener('click', function() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', { 
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    this.innerHTML = `
-      <i class="fas fa-check mr-2"></i>
-      <div>Punched Out</div>
-      <small class="d-block">${timeString}</small>
-    `;
-    this.classList.remove('btn-danger');
-    this.classList.add('btn-outline-danger');
-    
-    document.getElementById('todayOut').textContent = timeString;
-    document.getElementById('todayHours').textContent = '8.5'; // Static demo value
-  });
-
-  // Enable buttons for demo (in real app, this would be based on conditions)
-  document.getElementById('punchInBtn').disabled = false;
-});
-</script>
-
-<style>
-.box-icon {
-  width: 60px;
-  height: 60px;
-  fill: rgba(255, 255, 255, 0.8);
-}
-
-.infobox-icon {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.8;
-}
-
-.small-box {
-  position: relative;
-  overflow: hidden;
-}
-
-.small-box .inner {
-  min-height: 120px;
-}
-
-#progressChart {
-  display: block;
-  margin: 0 auto;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.card {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  border: 1px solid rgba(0, 0, 0, 0.125);
-}
-
-.small-box {
-  transition: transform 0.2s;
-}
-
-.small-box:hover {
-  transform: translateY(-2px);
-}
-</style>
 @endsection
