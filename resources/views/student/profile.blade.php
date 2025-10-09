@@ -4,7 +4,7 @@
 
 @section('content')
 <section class="content-header">
-    <div class="container-fluid">
+    <div class="container-fluid px-0 px-sm-2">
         <div class="row mb-2">
             <div class="col-sm-6">
                 <h1 class="page-header">PROFILE MANAGEMENT</h1>
@@ -20,8 +20,8 @@
 </section>
 
 <section class="content">
-    <div class="container-fluid">
-        <div class="card shadow-sm">
+    <div class="container-fluid px-0 px-sm-2">
+        <div class="card shadow-sm ">
             <div class="card-body">
                 <!-- Profile Picture Upload -->
                 <div class="text-center mb-5">
@@ -112,7 +112,7 @@
                         </div>
                     </div>
 
-                    <div class="card-footer d-flex justify-content-end bg-white">
+                    <div class="card-footer d-flex justify-content-end bg-white px-0">
                         <button type="submit" class="btn btn-primary">
                             <i class="ph-fill ph-floppy-disk-back custom-icons-i mr-1"></i>Save Changes
                         </button>

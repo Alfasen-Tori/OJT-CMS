@@ -14,7 +14,7 @@
   @include('layouts.partials.navbar_i')
   @include('layouts.partials.sidebar_i')
 
-  <div class="content-wrapper p-3">
+  <div class="content-wrapper py-3 px-sm-3 px-2">
     @yield('content')
   </div>
 

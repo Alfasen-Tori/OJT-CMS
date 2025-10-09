@@ -28,10 +28,11 @@ $(document).ready(function() {
     initializeDocumentHandlers();
 
     function initializeDocumentHandlers() {
-        // Document Preview
+        // Document Preview - works for both table and card views
         $(document).off('click', '.view-document').on('click', '.view-document', function() {
             const url = $(this).data('url');
-            const title = $(this).closest('tr').find('td:first').text();
+            const title = $(this).closest('tr').find('td:first').text() || 
+                         $(this).closest('.card').find('.card-title').text();
             
             $('#documentTitle').text(title);
             $('#documentFrame').attr('src', url);
@@ -39,22 +40,23 @@ $(document).ready(function() {
             $('#documentModal').modal('show');
         });
 
-        // Document Upload Init
+        // Document Upload Init - works for both table and card views
         $(document).off('click', '.upload-document').on('click', '.upload-document', function() {
             const type = $(this).data('type');
-            const title = $(this).closest('tr').find('td:first').text();
+            const title = $(this).closest('tr').find('td:first').text() || 
+                         $(this).closest('.card').find('.card-title').text();
             
             $('#documentType').val(type);
             $('#uploadModal .modal-title').text('Upload: ' + title);
             $('#uploadModal').modal('show');
         });
 
-        // Document Removal
+        // Document Removal - works for both table and card views
         $(document).off('click', '.remove-document').on('click', '.remove-document', function() {
             if (!confirm('Are you sure you want to remove this document?')) return;
             
             const documentId = $(this).data('id');
-            const row = $(this).closest('tr');
+            const row = $(this).closest('tr, .col-12'); // Support both table row and card
             const documentType = row.data('document-type');
             
             // Show loading state
@@ -67,18 +69,8 @@ $(document).ready(function() {
                 data: { id: documentId },
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 success: function(response) {
-                    // Update the row
-                    row.find('td:eq(2)').html(`
-                        <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill w-100 status-badge">Missing</span>
-                    `);
-                    
-                    row.find('td:eq(3)').html(`
-                        <button class="btn btn-sm btn-outline-success upload-document w-100" 
-                                data-type="${documentType}">
-                            <i class="ph-fill ph-upload custom-icons-i"></i>
-                            <span>Upload</span>
-                        </button>
-                    `);
+                    // Update BOTH table and card views to keep them in sync
+                    updateDocumentUI(documentType, 'remove', response);
                     
                     // Get current count before updating
                     const currentCount = parseInt($('#documentCounter').text());
@@ -87,15 +79,11 @@ $(document).ready(function() {
                     
                     toastr.success(response.message);
                     
-                    // if (response.new_status === 'pending requirements') {
-                    //     toastr.info('Status changed to Incomplete');
-                    // }
-                    
                     initializeDocumentHandlers();
                 },
                 error: function(xhr) {
                     toastr.error('Error removing document: ' + (xhr.responseJSON?.message || 'Unknown error'));
-                    deleteBtn.html('<span>Delete</span><i class="fas fa-trash"></i>').prop('disabled', false);
+                    deleteBtn.html('<i class="ph ph-trash custom-icons-i me-1"></i>Delete').prop('disabled', false);
                 }
             });
         });
@@ -106,8 +94,7 @@ $(document).ready(function() {
         e.preventDefault();
         const formData = new FormData(this);
         const submitBtn = $(this).find('button[type="submit"]');
-        const uploadBtn = $(`button[data-type="${$('#documentType').val()}"]`);
-        const row = uploadBtn.closest('tr');
+        const documentType = $('#documentType').val();
         
         submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
         
@@ -121,32 +108,11 @@ $(document).ready(function() {
             success: function(response) {
                 $('#uploadModal').modal('hide');
                 
-                // Update the row
-                row.find('td:eq(2)').html(`
-                    <span class="badge bg-success-subtle text-success py-2 px-3 rounded-pill w-100">Submitted</span>
-                    <br>
-                    <small>${response.created_at}</small>
-                `);
+                // Clear the form fields
+                $('#uploadForm')[0].reset();
                 
-                row.find('td:eq(3)').html(`
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="ph-fill ph-gear custom-icons-i"></i>
-                                        </button>
-                                        <div class="dropdown-menu dropdown-menu-right py-0 overflow-hidden" aria-labelledby="actionDropdown">
-                                            <button class="dropdown-item btn btn-outline-light view-document w-100 fw-medium border-bottom border-lightgray btn-flat text-dark py-2 " 
-                                                    data-url="${response.file_url}">
-                                                <i class="ph ph-eye custom-icons-i"></i>
-                                                <span>View</span>
-                                            </button>
-                                            <button class="dropdown-item btn btn-outline-light remove-document w-100 fw-medium btn-flat text-danger py-2" 
-                                                    data-id="${response.document_id}">
-                                                <i class="ph ph-trash custom-icons-i"></i>
-                                                <span>Delete</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                `);
+                // Update BOTH table and card views to keep them in sync
+                updateDocumentUI(documentType, 'upload', response);
                 
                 // Get current count before updating
                 const currentCount = parseInt($('#documentCounter').text());
@@ -155,19 +121,107 @@ $(document).ready(function() {
                 
                 toastr.success(response.message);
                 
-                // if (response.new_status === 'ready for deployment') {
-                //     toastr.success('All documents submitted! Status changed to Pending');
-                // }
-                
                 initializeDocumentHandlers();
-                submitBtn.prop('disabled', false).html('<i class="fas fa-upload mr-1"></i> Upload');
+                submitBtn.prop('disabled', false).html('<i class="ph-fill ph-upload custom-icons-i mr-1"></i> Upload');
             },
             error: function(xhr) {
                 toastr.error(xhr.responseJSON?.message || 'Error uploading document');
-                submitBtn.prop('disabled', false).html('<i class="fas fa-upload mr-1"></i> Upload');
+                submitBtn.prop('disabled', false).html('<i class="ph-fill ph-upload custom-icons-i mr-1"></i> Upload');
             }
         });
     });
+
+    // Unified function to update both table and card views
+    function updateDocumentUI(documentType, action, response) {
+        // Update table view
+        const tableRow = $(`tr[data-document-type="${documentType}"]`);
+        if (tableRow.length) {
+            if (action === 'upload') {
+                tableRow.find('td:eq(2)').html(`
+                    <span class="badge bg-success-subtle text-success py-2 px-3 rounded-pill w-100">Submitted</span>
+                    <br>
+                    <small>${response.created_at}</small>
+                `);
+                
+                tableRow.find('td:eq(3)').html(`
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="ph-fill ph-gear custom-icons-i"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right py-0 overflow-hidden" aria-labelledby="actionDropdown">
+                            <button class="dropdown-item btn btn-outline-light view-document w-100 fw-medium border-bottom border-lightgray btn-flat text-dark py-2" 
+                                    data-url="${response.file_url}">
+                                <i class="ph ph-eye custom-icons-i"></i>
+                                <span>View</span>
+                            </button>
+                            <button class="dropdown-item btn btn-outline-light remove-document w-100 fw-medium btn-flat text-danger py-2" 
+                                    data-id="${response.document_id}">
+                                <i class="ph ph-trash custom-icons-i"></i>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                `);
+            } else if (action === 'remove') {
+                tableRow.find('td:eq(2)').html(`
+                    <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill w-100 status-badge">Missing</span>
+                `);
+                
+                tableRow.find('td:eq(3)').html(`
+                    <button class="btn btn-sm btn-outline-success upload-document" 
+                            data-type="${documentType}">
+                        <i class="ph-fill ph-upload custom-icons-i"></i>
+                        <span>Upload</span>
+                    </button>
+                `);
+            }
+        }
+
+        // Update card view
+        const cardElement = $(`.col-12[data-document-type="${documentType}"]`);
+        if (cardElement.length) {
+            const cardBody = cardElement.find('.card-body');
+            if (action === 'upload') {
+                cardBody.find('.badge').removeClass('bg-danger-subtle text-danger')
+                    .addClass('bg-success-subtle text-success')
+                    .text('Submitted')
+                    .next('small').remove(); // Remove any existing date
+                
+                // Add date after badge
+                cardBody.find('.badge').after(`<small class="d-block text-muted">${response.created_at}</small>`);
+                
+                // Replace upload button with view/delete buttons
+                cardBody.find('.btn, .btn-group').replaceWith(`
+                    <div class="btn-group w-100" role="group">
+                        <button class="btn btn-outline-primary view-document flex-fill" 
+                                data-url="${response.file_url}">
+                            <i class="ph ph-eye custom-icons-i me-1"></i>
+                            View
+                        </button>
+                        <button class="btn btn-outline-danger remove-document flex-fill" 
+                                data-id="${response.document_id}">
+                            <i class="ph ph-trash custom-icons-i me-1"></i>
+                            Delete
+                        </button>
+                    </div>
+                `);
+            } else if (action === 'remove') {
+                cardBody.find('.badge').removeClass('bg-success-subtle text-success')
+                    .addClass('bg-danger-subtle text-danger')
+                    .text('Missing')
+                    .next('small').remove(); // Remove date
+                
+                // Replace view/delete buttons with upload button
+                cardBody.find('.btn-group').replaceWith(`
+                    <button class="btn btn-success upload-document w-100" 
+                            data-type="${documentType}">
+                        <i class="ph-fill ph-upload custom-icons-i me-1"></i>
+                        Upload Document
+                    </button>
+                `);
+            }
+        }
+    }
 
     function updateStatusBadge(count) {
         const badge = $('#statusBadge');
