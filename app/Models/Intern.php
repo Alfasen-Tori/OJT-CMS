@@ -47,6 +47,11 @@ class Intern extends Model
         return $this->hasMany(InternDocument::class);
     }
 
+    public function hteAssignment()
+    {
+        return $this->hasOne(InternsHte::class, 'intern_id');
+    }
+
     // Helper method to check specific document
     public function hasDocument(string $type): bool
     {

@@ -56,4 +56,29 @@ class InternsHte extends Model
         }
         return null;
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'intern_hte_id');
+    }
+
+    /**
+     * Calculate total hours rendered
+     */
+    public function getTotalHoursRenderedAttribute()
+    {
+        return $this->attendances()->sum('hours_rendered');
+    }
+
+    /**
+     * Calculate progress percentage
+     */
+    public function getProgressPercentageAttribute()
+    {
+        if ($this->no_of_hours <= 0) {
+            return 0;
+        }
+
+        return min(100, round(($this->total_hours_rendered / $this->no_of_hours) * 100, 2));
+    }
 }

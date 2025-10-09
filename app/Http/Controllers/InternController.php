@@ -12,19 +12,24 @@ use Illuminate\Support\Facades\Storage;
 
 class InternController extends Controller
 {
-    public function dashboard() {
-        if (auth()->user()->intern->first_login) {
+    public function dashboard()
+    {
+        $intern = auth()->user()->intern;
+
+        if ($intern->first_login) {
             return redirect()->route('intern.skills.select');
         }
-        
-        $intern = auth()->user()->intern;
-        $documentCount = $intern->documents()->count(); // Assuming you have a documents relationship
-        
+
+        $documents = $intern->documents; // actual documents collection
+        $internHte = $intern->hteAssignment;
+        $hteDetails = $internHte ? $internHte->hte : null;
+
         return view('student.dashboard', [
             'status' => $intern->status,
             'semester' => $intern->semester,
             'academic_year' => $intern->academic_year,
-            'documentCount' => $documentCount
+            'documents' => $documents,
+            'hteDetails' => $hteDetails
         ]);
     }
 
