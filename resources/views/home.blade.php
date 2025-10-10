@@ -158,7 +158,7 @@
             <div class="col-xxl-5 col-lg-5 col-md-10 mb-5 mb-lg-0">
                 <div class="logo-container p-4 p-lg-5 text-center text-lg-start h-100 d-flex flex-column justify-content-center">
                     <div class="mb-4">
-                        <img src="{{ asset('assets/images/ojtcms_logo2.png') }}" alt="OJT CMS Logo" class="logo-img mb-4">
+                        <img src="{{ asset('assets/images/ojtcms_logo3.png') }}" alt="OJT CMS Logo" class="logo-img mb-4">
                     </div>
                     <div>
                         <h1 class="text-white welcome-text display-4 fw-bold mb-3">OJT Coordination & Management System</h1>
