@@ -2,36 +2,152 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Skill;
-use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Skill;
+use App\Models\Attendance;
+use Illuminate\Http\Request;
 use App\Models\InternDocument;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class InternController extends Controller
 {
-    public function dashboard()
-    {
-        $intern = auth()->user()->intern;
+public function dashboard()
+{
+    $intern = auth()->user()->intern;
 
-        if ($intern->first_login) {
-            return redirect()->route('intern.skills.select');
-        }
-
-        $documents = $intern->documents; // actual documents collection
-        $internHte = $intern->hteAssignment;
-        $hteDetails = $internHte ? $internHte->hte : null;
-
-        return view('student.dashboard', [
-            'status' => $intern->status,
-            'semester' => $intern->semester,
-            'academic_year' => $intern->academic_year,
-            'documents' => $documents,
-            'hteDetails' => $hteDetails
-        ]);
+    if ($intern->first_login) {
+        return redirect()->route('intern.skills.select');
     }
+
+    $internHte = $intern->hteAssignment;
+    $hteDetails = $internHte ? $internHte->hte : null;
+
+    // Get today's attendance (if any)
+    $today = Carbon::today();
+    $attendance = null;
+    if ($internHte) {
+        $attendance = Attendance::where('intern_hte_id', $internHte->id)
+            ->whereDate('date', $today)
+            ->first();
+    }
+
+    return view('student.dashboard', [  // Note: You had 'intern.dashboard' earlier; adjust if needed
+        'status' => $intern->status,
+        'semester' => $intern->semester,
+        'academic_year' => $intern->academic_year,
+        'documents' => $intern->documents,
+        'hteDetails' => $hteDetails,
+        'internHte' => $internHte,
+        'attendance' => $attendance
+    ]);
+}
+
+public function punchIn(Request $request)
+{
+    $request->validate(['student_id' => 'required|string']);
+
+    $intern = auth()->user()->intern;
+
+    if ($intern->student_id !== $request->student_id) {
+        return response()->json(['error' => 'Invalid Student ID. Please try again.'], 401);
+    }
+
+    $internHte = $intern->hteAssignment;
+    if (!$internHte) {
+        return response()->json(['error' => 'No assigned HTE found.'], 400);
+    }
+
+    $today = Carbon::today();
+
+    // Prevent multiple punch-ins for same day
+    $existing = Attendance::where('intern_hte_id', $internHte->id)
+        ->whereDate('date', $today)
+        ->first();
+
+    if ($existing && $existing->time_in) {
+        return response()->json(['error' => 'You already punched in today.'], 400);
+    }
+
+    $attendance = Attendance::create([
+        'intern_hte_id' => $internHte->id,
+        'date' => $today,
+        'time_in' => Carbon::now(),  // UTC/app timezone
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Punch in recorded successfully!',
+        'time_in' => $attendance->time_in->format('h:i A'),  // Formatted for display
+        'time_in_raw' => $attendance->time_in->toDateTimeString(),  // UTC string for JS (e.g., "2024-09-24 01:00:00")
+    ]);
+}
+
+public function punchOut(Request $request)
+{
+    $request->validate(['student_id' => 'required|string']);
+
+    $intern = auth()->user()->intern;
+
+    if ($intern->student_id !== $request->student_id) {
+        return response()->json(['error' => 'Invalid Student ID. Please try again.'], 401);
+    }
+
+    $internHte = $intern->hteAssignment;
+    $today = Carbon::today();
+
+    $attendance = Attendance::where('intern_hte_id', $internHte->id)
+        ->whereDate('date', $today)
+        ->first();
+
+    if (!$attendance || !$attendance->time_in) {
+        return response()->json(['error' => 'You have not punched in today.'], 400);
+    }
+
+    if ($attendance->time_out) {
+        return response()->json(['error' => 'You already punched out today.'], 400);
+    }
+
+    $attendance->time_out = Carbon::now();  // UTC/app timezone
+    $attendance->hours_rendered = round($attendance->time_out->floatDiffInHours($attendance->time_in), 2);
+    $attendance->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Punch out recorded successfully!',
+        'time_in' => $attendance->time_in->format('h:i A'),
+        'time_out' => $attendance->time_out->format('h:i A'),
+        'hours' => $attendance->hours_rendered,
+        'time_in_raw' => $attendance->time_in->toDateTimeString(),  // UTC for JS
+        'time_out_raw' => $attendance->time_out->toDateTimeString(),  // UTC for JS
+    ]);
+}
+
+public function getAttendanceStatus()
+{
+    $internHte = auth()->user()->intern->hteAssignment;
+
+    if (!$internHte) {
+        return response()->json(['error' => 'No assigned HTE found.'], 400);
+    }
+
+    $today = Carbon::today();
+    $attendance = Attendance::where('intern_hte_id', $internHte->id)
+        ->whereDate('date', $today)
+        ->first();
+
+    return response()->json([
+        'attendance' => $attendance ? [
+            'time_in' => optional($attendance->time_in)->format('h:i A'),
+            'time_out' => optional($attendance->time_out)->format('h:i A'),
+            'hours' => $attendance->hours_rendered ?? 0,
+            'time_in_raw' => optional($attendance->time_in)->toDateTimeString(),  // UTC string
+            'time_out_raw' => optional($attendance->time_out)->toDateTimeString(),  // UTC string
+        ] : null
+    ]);
+}
 
     public function updateStatus(Request $request) {
         $request->validate(['status' => 'required|in:ready for deployment,pending requirements']);

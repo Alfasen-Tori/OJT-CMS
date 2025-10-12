@@ -320,31 +320,26 @@
                     </h5>
                 </div>
                 <div class="card-body text-center d-flex flex-column">
-                    <div class="mb-4 flex-shrink-0">
-                        <h4 class="text-muted mb-2" id="currentTime">--:--:--</h4>
-                        <p class="text-muted mb-3" id="currentDate">Loading...</p>
+                    <div class="mb-3 flex-shrink-0">
+                        <h4 class="fw-bold" id="currentTime">--:--:--</h4>
+                        <p class="text-muted mb-3" id="currentDate">Loading date...</p>
                     </div>
 
-                    <!-- Punch In/Out Buttons -->
-                    <div class="row g-2 flex-shrink-0">
-                        <div class="col-6">
-                            <button class="btn btn-success w-100 py-3" id="punchInBtn" disabled>
-                                <i class="fas fa-sign-in-alt me-2"></i>
-                                <div>Punch In</div>
-                                <small class="d-block">--:--</small>
-                            </button>
-                        </div>
-                        <div class="col-6">
-                            <button class="btn btn-danger w-100 py-3" id="punchOutBtn" disabled>
-                                <i class="fas fa-sign-out-alt me-2"></i>
-                                <div>Punch Out</div>
-                                <small class="d-block">--:--</small>
-                            </button>
-                        </div>
+                    <!-- Student ID Input -->
+                    <div id="studentIdWrapper" class="mb-3">
+                        <input type="text" id="studentIdInput" class="form-control text-center"
+                            placeholder="Enter Student ID" maxlength="20" autocomplete="off">
                     </div>
 
-                    <!-- Today's Summary -->
-                    <div class="mt-auto pt-4">
+                    <!-- Punch Controls -->
+                    <div id="attendanceControls">
+                        <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
+                            <i class="fas fa-sign-in-alt me-2"></i> Punch In
+                        </button>
+                    </div>
+
+                    <!-- Summary -->
+                    <div id="attendanceSummary" class="mt-auto pt-4 d-none">
                         <div class="p-3 bg-light rounded">
                             <h6 class="mb-2">Today's Summary</h6>
                             <div class="row text-center">
@@ -363,9 +358,13 @@
                             </div>
                         </div>
                     </div>
+
+                    <input type="hidden" id="internStartDate" value="{{ $internHte->start_date ?? '' }}">
                 </div>
             </div>
         </div>
+
+
 
         <!-- Quick Stats -->
         <div class="col-lg-4 col-md-12 mb-4">
@@ -414,4 +413,146 @@
 
   </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const timeDisplay = document.getElementById('currentTime');
+    const dateDisplay = document.getElementById('currentDate');
+    const punchBtnContainer = document.getElementById('attendanceControls');
+    const summaryCard = document.getElementById('attendanceSummary');
+    const studentIdInput = document.getElementById('studentIdInput');
+    const todayIn = document.getElementById('todayIn');
+    const todayOut = document.getElementById('todayOut');
+    const todayHours = document.getElementById('todayHours');
+    const startDate = new Date(document.getElementById('internStartDate').value);
+
+    // Real-time clock
+    setInterval(() => {
+        const now = new Date();
+        timeDisplay.textContent = now.toLocaleTimeString();
+        dateDisplay.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }, 1000);
+
+    fetchAttendanceStatus();
+
+    function fetchAttendanceStatus() {
+        fetch("{{ route('intern.getAttendanceStatus') }}")
+            .then(res => res.json())
+            .then(data => {
+                const now = new Date();
+                if (now < startDate) {
+                    startCountdown();
+                    return;
+                }
+
+                if (!data.attendance) {
+                    renderPunchIn();
+                } else if (data.attendance.time_in && !data.attendance.time_out) {
+                    renderPunchOut(data.attendance.time_in, data.attendance.time_in_raw);
+                } else {
+                    renderSummary(data.attendance);
+                }
+            });
+    }
+
+    function renderPunchIn() {
+        punchBtnContainer.innerHTML = `
+            <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
+                <i class="fas fa-sign-in-alt me-2"></i> Punch In
+            </button>`;
+        summaryCard.classList.add('d-none');
+
+        document.getElementById('punchInBtn').addEventListener('click', function () {
+            const sid = studentIdInput.value.trim();
+            if (!sid) return toastr.warning('Please enter your Student ID.');
+
+            fetch("{{ route('intern.punchIn') }}", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ student_id: sid })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    // Clear student ID input after successful punch in
+                    studentIdInput.value = '';
+                    renderPunchOut(data.time_in, new Date());
+                } else {
+                    toastr.error(data.error || 'Error punching in.');
+                }
+            });
+        });
+    }
+
+    function renderPunchOut(timeIn, timeInRaw) {
+        punchBtnContainer.innerHTML = `
+            <button class="btn btn-danger w-100 py-3 fw-bold" id="punchOutBtn">
+                <i class="fas fa-sign-out-alt me-2"></i> Punch Out
+                <small class="d-block" id="runningTime">Running: 00:00:00</small>
+            </button>`;
+        summaryCard.classList.add('d-none');
+
+        // Clear student ID input when switching to punch out state
+        studentIdInput.value = '';
+
+        // Persisted runtime since DB punch-in
+        const start = new Date(timeInRaw);
+        setInterval(() => {
+            const diff = new Date() - start;
+            const hrs = String(Math.floor(diff / 3600000)).padStart(2, '0');
+            const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+            const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+            document.getElementById('runningTime').textContent = `Running: ${hrs}:${mins}:${secs}`;
+        }, 1000);
+
+        document.getElementById('punchOutBtn').addEventListener('click', function () {
+            const sid = studentIdInput.value.trim();
+            if (!sid) return toastr.warning('Please enter your Student ID.');
+
+            fetch("{{ route('intern.punchOut') }}", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ student_id: sid })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    renderSummary(data);
+                } else {
+                    toastr.error(data.error || 'Error punching out.');
+                }
+            });
+        });
+    }
+
+    function renderSummary(data) {
+        punchBtnContainer.innerHTML = `
+            <button class="btn btn-secondary w-100 py-3 fw-bold" disabled>
+                Attendance Saved
+            </button>`;
+        document.getElementById('studentIdWrapper').classList.add('d-none');
+        todayIn.textContent = data.time_in;
+        todayOut.textContent = data.time_out;
+        todayHours.textContent = data.hours;
+        summaryCard.classList.remove('d-none');
+    }
+
+    function startCountdown() {
+        punchBtnContainer.innerHTML = `<button class="btn btn-secondary w-100 py-3 fw-bold" disabled id="countdownBtn"></button>`;
+        const btn = document.getElementById('countdownBtn');
+        const interval = setInterval(() => {
+            const now = new Date();
+            const diff = startDate - now;
+            if (diff <= 0) { clearInterval(interval); fetchAttendanceStatus(); return; }
+            const d = Math.floor(diff / (1000*60*60*24));
+            const h = Math.floor((diff / (1000*60*60)) % 24);
+            const m = Math.floor((diff / (1000*60)) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+            btn.innerHTML = `Internship starts in<br><strong>${d}d ${h}h ${m}m ${s}s</strong>`;
+        }, 1000);
+    }
+});
+</script>
 @endsection
