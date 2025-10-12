@@ -274,41 +274,6 @@
     {{-- PROGRESS AND ATTENDANCE SECTION (Only for deployed interns) --}}
     @if($status == 'deployed')
     <div class="row">
-        <!-- Progress Section -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 d-flex flex-column">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2 text-primary"></i>
-                        Internship Progress
-                    </h5>
-                </div>
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="position-relative d-inline-block flex-shrink-0">
-                        <canvas id="progressChart" width="200" height="200"></canvas>
-                        <div class="position-absolute top-50 start-50 translate-middle text-center">
-                            <h3 class="mb-0 fw-bold">65%</h3>
-                            <small class="text-muted">Complete</small>
-                        </div>
-                    </div>
-                    <div class="mt-auto pt-4">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <h4 class="fw-bold text-primary mb-1">156</h4>
-                                <small class="text-muted">Hours Rendered</small>
-                            </div>
-                            <div class="col-6">
-                                <h4 class="fw-bold text-success mb-1">240</h4>
-                                <small class="text-muted">Total Required</small>
-                            </div>
-                        </div>
-                        <div class="progress mt-3" style="height: 8px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Time Tracking Section -->
         <div class="col-lg-4 col-md-6 mb-4">
@@ -364,7 +329,41 @@
             </div>
         </div>
 
-
+        <!-- Progress Section -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 d-flex flex-column">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2 text-primary"></i>
+                        Internship Progress
+                    </h5>
+                </div>
+                <div class="card-body text-center d-flex flex-column">
+                    <div class="position-relative d-inline-block flex-shrink-0">
+                        <canvas id="progressChart" width="200" height="200"></canvas>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <h3 class="mb-0 fw-bold">65%</h3>
+                            <small class="text-muted">Complete</small>
+                        </div>
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 class="fw-bold text-primary mb-1">156</h4>
+                                <small class="text-muted">Hours Rendered</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold text-success mb-1">240</h4>
+                                <small class="text-muted">Total Required</small>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Quick Stats -->
         <div class="col-lg-4 col-md-12 mb-4">
@@ -556,3 +555,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endsection
+
+
+
