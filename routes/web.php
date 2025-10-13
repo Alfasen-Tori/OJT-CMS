@@ -108,6 +108,7 @@ Route::middleware(['auth:web', 'intern'])->prefix('intern')->group(function() {
     Route::post('/attendance/punch-in', [InternController::class, 'punchIn'])->name('intern.punchIn');
     Route::post('/attendance/punch-out', [InternController::class, 'punchOut'])->name('intern.punchOut');
     Route::get('/attendance/status', [InternController::class, 'getAttendanceStatus'])->name('intern.getAttendanceStatus');
+    Route::get('/progress', [InternController::class, 'getProgress'])->name('intern.getProgress');
 
     Route::get('/skills', [InternController::class, 'selectSkills'])->name('intern.skills.select');
     Route::post('/skills/store', [InternController::class, 'saveSkills'])->name('intern.skills.store');

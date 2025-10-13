@@ -34,14 +34,56 @@ public function dashboard()
             ->first();
     }
 
-    return view('student.dashboard', [  // Note: You had 'intern.dashboard' earlier; adjust if needed
+    // Calculate progress if deployed
+    $progress = null;
+    if ($intern->status === 'deployed' && $internHte) {
+        $totalRendered = Attendance::where('intern_hte_id', $internHte->id)
+            ->sum('hours_rendered');  // Total hours from all attendances
+
+        $requiredHours = $internHte->no_of_hours ?? 0;
+        $percentage = $requiredHours > 0 ? min(100, round(($totalRendered / $requiredHours) * 100)) : 0;
+
+        $progress = [
+            'total_rendered' => round($totalRendered, 1),
+            'required_hours' => $requiredHours,
+            'percentage' => $percentage
+        ];
+    }
+
+    return view('student.dashboard', [  // Adjust view name if needed (e.g., 'intern.dashboard')
         'status' => $intern->status,
         'semester' => $intern->semester,
         'academic_year' => $intern->academic_year,
         'documents' => $intern->documents,
         'hteDetails' => $hteDetails,
         'internHte' => $internHte,
-        'attendance' => $attendance
+        'attendance' => $attendance,
+        'progress' => $progress  // New: Pass initial progress data
+    ]);
+}
+
+public function getProgress()
+{
+    $intern = auth()->user()->intern;
+    if ($intern->status !== 'deployed') {
+        return response()->json(['error' => 'Not deployed'], 400);
+    }
+
+    $internHte = $intern->hteAssignment;
+    if (!$internHte) {
+        return response()->json(['error' => 'No assigned HTE'], 400);
+    }
+
+    $totalRendered = Attendance::where('intern_hte_id', $internHte->id)
+        ->sum('hours_rendered');
+
+    $requiredHours = $internHte->no_of_hours ?? 0;
+    $percentage = $requiredHours > 0 ? min(100, round(($totalRendered / $requiredHours) * 100)) : 0;
+
+    return response()->json([
+        'total_rendered' => round($totalRendered, 1),
+        'required_hours' => $requiredHours,
+        'percentage' => $percentage
     ]);
 }
 
