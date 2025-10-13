@@ -237,7 +237,7 @@
   left: 0;
   width: 100%;
   background: white;
-  border-radius: 15px 15px 0 0;
+  border-radius: 1rem 1rem 0 0;
   z-index: 1050;
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
