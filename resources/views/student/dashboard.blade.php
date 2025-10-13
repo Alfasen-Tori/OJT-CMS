@@ -4,6 +4,69 @@
 @section('title', 'Dashboard')
 
 @section('content')
+<style>
+.knob-container {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto;
+}
+
+.knob-display {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.knob-bg {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.knob-center {
+    width: 150px;
+    height: 150px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.knob-center h3 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+}
+
+.knob-center small {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.completed-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+</style>
+
 <section class="content-header">
   <div class="container-fluid px-sm-2 px-0">
     <div class="row mb-2">
@@ -274,41 +337,6 @@
     {{-- PROGRESS AND ATTENDANCE SECTION (Only for deployed interns) --}}
     @if($status == 'deployed')
     <div class="row">
-        <!-- Progress Section -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 d-flex flex-column">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2 text-primary"></i>
-                        Internship Progress
-                    </h5>
-                </div>
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="position-relative d-inline-block flex-shrink-0">
-                        <canvas id="progressChart" width="200" height="200"></canvas>
-                        <div class="position-absolute top-50 start-50 translate-middle text-center">
-                            <h3 class="mb-0 fw-bold">65%</h3>
-                            <small class="text-muted">Complete</small>
-                        </div>
-                    </div>
-                    <div class="mt-auto pt-4">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <h4 class="fw-bold text-primary mb-1">156</h4>
-                                <small class="text-muted">Hours Rendered</small>
-                            </div>
-                            <div class="col-6">
-                                <h4 class="fw-bold text-success mb-1">240</h4>
-                                <small class="text-muted">Total Required</small>
-                            </div>
-                        </div>
-                        <div class="progress mt-3" style="height: 8px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Time Tracking Section -->
         <div class="col-lg-4 col-md-6 mb-4">
@@ -319,32 +347,48 @@
                         Time Tracking
                     </h5>
                 </div>
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="mb-4 flex-shrink-0">
-                        <h4 class="text-muted mb-2" id="currentTime">--:--:--</h4>
-                        <p class="text-muted mb-3" id="currentDate">Loading...</p>
+                <div class="card-body text-center d-flex flex-column position-relative">
+                    @php
+                        $hoursCompleted = ($progress['total_rendered'] ?? 0) >= ($progress['required_hours'] ?? 0);
+                    @endphp
+                    
+                    @if($hoursCompleted)
+                        <div class="completed-overlay">
+                            <div class="text-center p-3">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <h5 class="fw-bold text-success">Internship Hours Completed!</h5>
+                                <p class="text-muted mb-0">You have reached the required hours</p>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    <div class="mb-3 flex-shrink-0">
+                        <h4 class="fw-bold" id="currentTime">--:--:--</h4>
+                        <p class="text-muted mb-3" id="currentDate">Loading date...</p>
                     </div>
 
-                    <!-- Punch In/Out Buttons -->
-                    <div class="row g-2 flex-shrink-0">
-                        <div class="col-6">
-                            <button class="btn btn-success w-100 py-3" id="punchInBtn" disabled>
-                                <i class="fas fa-sign-in-alt me-2"></i>
-                                <div>Punch In</div>
-                                <small class="d-block">--:--</small>
-                            </button>
-                        </div>
-                        <div class="col-6">
-                            <button class="btn btn-danger w-100 py-3" id="punchOutBtn" disabled>
-                                <i class="fas fa-sign-out-alt me-2"></i>
-                                <div>Punch Out</div>
-                                <small class="d-block">--:--</small>
-                            </button>
-                        </div>
+                    <!-- Student ID Input -->
+                    <div id="studentIdWrapper" class="mb-3">
+                        <input type="text" id="studentIdInput" class="form-control text-center"
+                            placeholder="Enter Student ID" maxlength="20" autocomplete="off"
+                            @if($hoursCompleted) disabled @endif>
                     </div>
 
-                    <!-- Today's Summary -->
-                    <div class="mt-auto pt-4">
+                    <!-- Punch Controls -->
+                    <div id="attendanceControls">
+                        @if($hoursCompleted)
+                            <button class="btn btn-success w-100 py-3 fw-bold" disabled>
+                                <i class="fas fa-check-circle me-2"></i> Hours Requirement Met
+                            </button>
+                        @else
+                            <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
+                                <i class="fas fa-sign-in-alt me-2"></i> Punch In
+                            </button>
+                        @endif
+                    </div>
+
+                    <!-- Summary -->
+                    <div id="attendanceSummary" class="mt-auto pt-4 d-none">
                         <div class="p-3 bg-light rounded">
                             <h6 class="mb-2">Today's Summary</h6>
                             <div class="row text-center">
@@ -360,6 +404,60 @@
                                     <small class="text-muted d-block">Hours</small>
                                     <strong id="todayHours">0.0</strong>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="internStartDate" value="{{ $internHte->start_date ?? '' }}">
+                    <input type="hidden" id="hoursCompleted" value="{{ $hoursCompleted ? 'true' : 'false' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 d-flex flex-column">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2 text-primary"></i>
+                        Internship Progress
+                    </h5>
+                </div>
+                <div class="card-body text-center d-flex flex-column">
+                    {{-- CSS Knob Chart --}}
+                    <div class="flex-shrink-0 mb-3">
+                        <div class="d-flex justify-content-center align-items-center">
+                            <div class="knob-container">
+                                <div class="knob-display">
+                                    @php
+                                        $percentage = $progress['percentage'] ?? 0;
+                                        $angle = min(360, $percentage * 3.6);
+                                        $color = $percentage >= 100 ? '#28a745' : '#007bff';
+                                    @endphp
+                                    <div class="knob-bg" id="progressKnob" 
+                                        style="background: conic-gradient('{{ $color }}' '{{ $angle }}'deg, #e9ecef 0);">
+                                        <div class="knob-center">
+                                            <h3 class="mb-0 fw-bold" id="progressPercent">{{ $percentage }}%</h3>
+                                            <small class="text-muted" id="progressLabel">
+                                                {{ $percentage >= 100 ? 'Completed!' : 'Complete' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {{-- Hours Display --}}
+                    <div class="mt-auto pt-3">
+                        <div class="row text-center">
+                            <div class="col-6 border-end">
+                                <h4 class="fw-bold text-primary mb-1" id="totalRendered">{{ $progress['total_rendered'] ?? 0 }}</h4>
+                                <small class="text-muted">Hours Rendered</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold text-success mb-1" id="requiredHours">{{ $progress['required_hours'] ?? 0 }}</h4>
+                                <small class="text-muted">Total Required</small>
                             </div>
                         </div>
                     </div>
@@ -414,4 +512,220 @@
 
   </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const timeDisplay = document.getElementById('currentTime');
+    const dateDisplay = document.getElementById('currentDate');
+    const punchBtnContainer = document.getElementById('attendanceControls');
+    const summaryCard = document.getElementById('attendanceSummary');
+    const studentIdInput = document.getElementById('studentIdInput');
+    const todayIn = document.getElementById('todayIn');
+    const todayOut = document.getElementById('todayOut');
+    const todayHours = document.getElementById('todayHours');
+    const startDate = new Date(document.getElementById('internStartDate').value);
+    const hoursCompleted = document.getElementById('hoursCompleted').value === 'true';
+
+    // Real-time clock
+    setInterval(() => {
+        const now = new Date();
+        timeDisplay.textContent = now.toLocaleTimeString();
+        dateDisplay.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }, 1000);
+
+    // Load initial progress (without showing completion toast)
+    updateProgress(false);
+
+    // Only set up attendance tracking if hours are not completed
+    if (!hoursCompleted) {
+        fetchAttendanceStatus();
+    }
+
+    function fetchAttendanceStatus() {
+        if (hoursCompleted) return;
+
+        fetch("{{ route('intern.getAttendanceStatus') }}")
+            .then(res => res.json())
+            .then(data => {
+                const now = new Date();
+                if (now < startDate) {
+                    startCountdown();
+                    return;
+                }
+
+                if (!data.attendance) {
+                    renderPunchIn();
+                } else if (data.attendance.time_in && !data.attendance.time_out) {
+                    renderPunchOut(data.attendance.time_in, data.attendance.time_in_raw);
+                } else {
+                    renderSummary(data.attendance);
+                }
+            });
+    }
+
+    function renderPunchIn() {
+        if (hoursCompleted) return;
+
+        punchBtnContainer.innerHTML = `
+            <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
+                <i class="fas fa-sign-in-alt me-2"></i> Punch In
+            </button>`;
+        summaryCard.classList.add('d-none');
+
+        document.getElementById('punchInBtn').addEventListener('click', function () {
+            const sid = studentIdInput.value.trim();
+            if (!sid) return toastr.warning('Please enter your Student ID.');
+
+            fetch("{{ route('intern.punchIn') }}", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ student_id: sid })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    studentIdInput.value = '';
+                    renderPunchOut(data.time_in, new Date());
+                } else {
+                    toastr.error(data.error || 'Error punching in.');
+                }
+            });
+        });
+    }
+
+    function renderPunchOut(timeIn, timeInRaw) {
+        if (hoursCompleted) return;
+
+        punchBtnContainer.innerHTML = `
+            <button class="btn btn-danger w-100 py-3 fw-bold" id="punchOutBtn">
+                <i class="fas fa-sign-out-alt me-2"></i> Punch Out
+                <small class="d-block" id="runningTime">Running: 00:00:00</small>
+            </button>`;
+        summaryCard.classList.add('d-none');
+        studentIdInput.value = '';
+
+        const start = new Date(timeInRaw);
+        const timeInterval = setInterval(() => {
+            const diff = new Date() - start;
+            const hrs = String(Math.floor(diff / 3600000)).padStart(2, '0');
+            const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+            const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+            document.getElementById('runningTime').textContent = `Running: ${hrs}:${mins}:${secs}`;
+        }, 1000);
+
+        document.getElementById('punchOutBtn').addEventListener('click', function () {
+            const sid = studentIdInput.value.trim();
+            if (!sid) return toastr.warning('Please enter your Student ID.');
+
+            // Clear the running time interval
+            clearInterval(timeInterval);
+
+            fetch("{{ route('intern.punchOut') }}", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ student_id: sid })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    renderSummary(data);
+                    
+                    // Check if hours are now completed after this punch out
+                    if (data.progress_data && data.progress_data.hours_rendered >= data.progress_data.hours_required) {
+                        // Show completion toast and reload
+                        toastr.success('Internship hours completed! 🎉');
+                        setTimeout(() => {
+                            location.reload(); // Reload to show completed state
+                        }, 1500);
+                    } else {
+                        // Update progress without showing completion toast
+                        updateProgress(false);
+                    }
+                } else {
+                    toastr.error(data.error || 'Error punching out.');
+                }
+            });
+        });
+    }
+
+    function renderSummary(data) {
+        if (hoursCompleted) return;
+
+        punchBtnContainer.innerHTML = `
+            <button class="btn btn-secondary w-100 py-3 fw-bold" disabled>
+                Attendance Saved
+            </button>`;
+        document.getElementById('studentIdWrapper').classList.add('d-none');
+        todayIn.textContent = data.time_in;
+        todayOut.textContent = data.time_out;
+        todayHours.textContent = data.hours;
+        summaryCard.classList.remove('d-none');
+    }
+
+    function startCountdown() {
+        if (hoursCompleted) return;
+
+        punchBtnContainer.innerHTML = `<button class="btn btn-secondary w-100 py-3 fw-bold" disabled id="countdownBtn"></button>`;
+        const btn = document.getElementById('countdownBtn');
+        const interval = setInterval(() => {
+            const now = new Date();
+            const diff = startDate - now;
+            if (diff <= 0) { clearInterval(interval); fetchAttendanceStatus(); return; }
+            const d = Math.floor(diff / (1000*60*60*24));
+            const h = Math.floor((diff / (1000*60*60)) % 24);
+            const m = Math.floor((diff / (1000*60)) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+            btn.innerHTML = `Internship starts in<br><strong>${d}d ${h}h ${m}m ${s}s</strong>`;
+        }, 1000);
+    }
+
+    // Update progress using CSS knob
+    function updateProgress(showCompletionToast = false) {
+        fetch("{{ route('intern.getProgress') }}")
+            .then(res => {
+                if (!res.ok) throw new Error('Network error');
+                return res.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.warn('Progress fetch error:', data.error);
+                    return;
+                }
+
+                const percentage = data.percentage;
+                const totalRendered = data.total_rendered;
+                const requiredHours = data.required_hours;
+
+                // Update CSS Knob
+                const knob = document.getElementById('progressKnob');
+                if (knob) {
+                    const color = percentage >= 100 ? '#28a745' : '#007bff';
+                    knob.style.background = `conic-gradient(${color} ${percentage * 3.6}deg, #e9ecef 0)`;
+                }
+
+                // Update center text
+                const progressPercent = document.getElementById('progressPercent');
+                const progressLabel = document.getElementById('progressLabel');
+                if (progressPercent && progressLabel) {
+                    progressPercent.textContent = percentage + '%';
+                    progressLabel.textContent = percentage >= 100 ? 'Completed!' : 'Complete';
+                }
+
+                // Update hours display
+                document.getElementById('totalRendered').textContent = totalRendered;
+                document.getElementById('requiredHours').textContent = requiredHours;
+
+                // Only show completion message if explicitly requested (during punch out)
+                if (percentage >= 100 && showCompletionToast) {
+                    toastr.success('Internship hours completed! 🎉');
+                }
+            })
+            .catch(err => {
+                console.error('Progress update error:', err);
+            });
+    }
+});
+</script>
 @endsection

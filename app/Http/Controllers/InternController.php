@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Skill;
-use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Skill;
+use App\Models\Intern;
+use App\Models\Attendance;
+use App\Models\InternsHte;
+use App\Models\WeeklyReport;
+use Illuminate\Http\Request;
 use App\Models\InternDocument;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,16 +26,172 @@ class InternController extends Controller
             return redirect()->route('intern.skills.select');
         }
 
-        $documents = $intern->documents; // actual documents collection
         $internHte = $intern->hteAssignment;
         $hteDetails = $internHte ? $internHte->hte : null;
 
-        return view('student.dashboard', [
+        // Get today's attendance (if any)
+        $today = Carbon::today();
+        $attendance = null;
+        if ($internHte) {
+            $attendance = Attendance::where('intern_hte_id', $internHte->id)
+                ->whereDate('date', $today)
+                ->first();
+        }
+
+        // Calculate progress if deployed
+        $progress = null;
+        if ($intern->status === 'deployed' && $internHte) {
+            $totalRendered = Attendance::where('intern_hte_id', $internHte->id)
+                ->sum('hours_rendered');  // Total hours from all attendances
+
+            $requiredHours = $internHte->no_of_hours ?? 0;
+            $percentage = $requiredHours > 0 ? min(100, round(($totalRendered / $requiredHours) * 100)) : 0;
+
+            $progress = [
+                'total_rendered' => round($totalRendered, 1),
+                'required_hours' => $requiredHours,
+                'percentage' => $percentage
+            ];
+        }
+
+        return view('student.dashboard', [  // Adjust view name if needed (e.g., 'intern.dashboard')
             'status' => $intern->status,
             'semester' => $intern->semester,
             'academic_year' => $intern->academic_year,
-            'documents' => $documents,
-            'hteDetails' => $hteDetails
+            'documents' => $intern->documents,
+            'hteDetails' => $hteDetails,
+            'internHte' => $internHte,
+            'attendance' => $attendance,
+            'progress' => $progress  // New: Pass initial progress data
+        ]);
+    }
+
+    public function getProgress()
+    {
+        $intern = auth()->user()->intern;
+        if ($intern->status !== 'deployed') {
+            return response()->json(['error' => 'Not deployed'], 400);
+        }
+
+        $internHte = $intern->hteAssignment;
+        if (!$internHte) {
+            return response()->json(['error' => 'No assigned HTE'], 400);
+        }
+
+        $totalRendered = Attendance::where('intern_hte_id', $internHte->id)
+            ->sum('hours_rendered');
+
+        $requiredHours = $internHte->no_of_hours ?? 0;
+        $percentage = $requiredHours > 0 ? min(100, round(($totalRendered / $requiredHours) * 100)) : 0;
+
+        return response()->json([
+            'total_rendered' => round($totalRendered, 1),
+            'required_hours' => $requiredHours,
+            'percentage' => $percentage
+        ]);
+    }
+
+    public function punchIn(Request $request)
+    {
+        $request->validate(['student_id' => 'required|string']);
+
+        $intern = auth()->user()->intern;
+
+        if ($intern->student_id !== $request->student_id) {
+            return response()->json(['error' => 'Invalid Student ID. Please try again.'], 401);
+        }
+
+        $internHte = $intern->hteAssignment;
+        if (!$internHte) {
+            return response()->json(['error' => 'No assigned HTE found.'], 400);
+        }
+
+        $today = Carbon::today();
+
+        // Prevent multiple punch-ins for same day
+        $existing = Attendance::where('intern_hte_id', $internHte->id)
+            ->whereDate('date', $today)
+            ->first();
+
+        if ($existing && $existing->time_in) {
+            return response()->json(['error' => 'You already punched in today.'], 400);
+        }
+
+        $attendance = Attendance::create([
+            'intern_hte_id' => $internHte->id,
+            'date' => $today,
+            'time_in' => Carbon::now(),  // UTC/app timezone
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Punch in recorded successfully!',
+            'time_in' => $attendance->time_in->format('h:i A'),  // Formatted for display
+            'time_in_raw' => $attendance->time_in->toDateTimeString(),  // UTC string for JS (e.g., "2024-09-24 01:00:00")
+        ]);
+    }
+
+    public function punchOut(Request $request)
+    {
+        $request->validate(['student_id' => 'required|string']);
+
+        $intern = auth()->user()->intern;
+
+        if ($intern->student_id !== $request->student_id) {
+            return response()->json(['error' => 'Invalid Student ID. Please try again.'], 401);
+        }
+
+        $internHte = $intern->hteAssignment;
+        $today = Carbon::today();
+
+        $attendance = Attendance::where('intern_hte_id', $internHte->id)
+            ->whereDate('date', $today)
+            ->first();
+
+        if (!$attendance || !$attendance->time_in) {
+            return response()->json(['error' => 'You have not punched in today.'], 400);
+        }
+
+        if ($attendance->time_out) {
+            return response()->json(['error' => 'You already punched out today.'], 400);
+        }
+
+        $attendance->time_out = Carbon::now();  // UTC/app timezone
+        $attendance->hours_rendered = round($attendance->time_out->floatDiffInHours($attendance->time_in), 2);
+        $attendance->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Punch out recorded successfully!',
+            'time_in' => $attendance->time_in->format('h:i A'),
+            'time_out' => $attendance->time_out->format('h:i A'),
+            'hours' => $attendance->hours_rendered,
+            'time_in_raw' => $attendance->time_in->toDateTimeString(),  // UTC for JS
+            'time_out_raw' => $attendance->time_out->toDateTimeString(),  // UTC for JS
+        ]);
+    }
+
+    public function getAttendanceStatus()
+    {
+        $internHte = auth()->user()->intern->hteAssignment;
+
+        if (!$internHte) {
+            return response()->json(['error' => 'No assigned HTE found.'], 400);
+        }
+
+        $today = Carbon::today();
+        $attendance = Attendance::where('intern_hte_id', $internHte->id)
+            ->whereDate('date', $today)
+            ->first();
+
+        return response()->json([
+            'attendance' => $attendance ? [
+                'time_in' => optional($attendance->time_in)->format('h:i A'),
+                'time_out' => optional($attendance->time_out)->format('h:i A'),
+                'hours' => $attendance->hours_rendered ?? 0,
+                'time_in_raw' => optional($attendance->time_in)->toDateTimeString(),  // UTC string
+                'time_out_raw' => optional($attendance->time_out)->toDateTimeString(),  // UTC string
+            ] : null
         ]);
     }
 
@@ -263,8 +425,103 @@ class InternController extends Controller
         ]);
     }
 
-    public function reports(){
-        return view('student.reports');
+    public function reports()
+    {
+        $intern = Intern::where('user_id', Auth::id())->first();
+        
+        if (!$intern) {
+            return view('student.reports')->with('error', 'Intern profile not found.');
+        }
+
+        // Get current internship
+        $internship = InternsHte::where('intern_id', $intern->id)
+            ->where('status', 'deployed')
+            ->first();
+
+        if (!$internship) {
+            return view('student.reports')->with('error', 'No active internship found.');
+        }
+
+        // Generate weekly report entries
+        $this->generateWeeklyReports($intern->id, $internship);
+
+        // Get all weekly reports for this intern
+        $weeklyReports = WeeklyReport::where('intern_id', $intern->id)
+            ->orderBy('week_no', 'asc')
+            ->get();
+
+        // Calculate week information
+        $weekInfo = $this->calculateWeekInformation($internship, $weeklyReports);
+
+        return view('student.reports', compact('weeklyReports', 'weekInfo', 'internship'));
+    }
+
+    private function generateWeeklyReports($internId, $internship)
+    {
+        $startDate = Carbon::parse($internship->start_date);
+        $currentDate = Carbon::now();
+        
+        // Calculate total weeks from start date to current date
+        $totalWeeks = $startDate->diffInWeeks($currentDate) + 1; // +1 to include current week
+        
+        for ($weekNo = 1; $weekNo <= $totalWeeks; $weekNo++) {
+            // Calculate week start and end dates
+            $weekStart = $startDate->copy()->addWeeks($weekNo - 1);
+            $weekEnd = $weekStart->copy()->addDays(4); // Friday (5-day work week)
+            
+            // Check if week has passed (after Saturday)
+            $weekPassed = $currentDate->gt($weekEnd->copy()->addDays(1)); // Saturday
+            
+            // Check if report for this week already exists
+            $existingReport = WeeklyReport::where('intern_id', $internId)
+                ->where('week_no', $weekNo)
+                ->first();
+                
+            if (!$existingReport) {
+                WeeklyReport::create([
+                    'intern_id' => $internId,
+                    'week_no' => $weekNo,
+                    'report_path' => null,
+                    'submitted_at' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    private function calculateWeekInformation($internship, $weeklyReports)
+    {
+        $startDate = Carbon::parse($internship->start_date);
+        $currentDate = Carbon::now();
+        
+        $weekInfo = [];
+        
+        foreach ($weeklyReports as $report) {
+            $weekStart = $startDate->copy()->addWeeks($report->week_no - 1);
+            $weekEnd = $weekStart->copy()->addDays(4); // Friday
+            
+            // Determine status
+            $isCurrentWeek = $currentDate->between($weekStart, $weekEnd);
+            $weekPassed = $currentDate->gt($weekEnd->copy()->addDays(1)); // After Saturday
+            
+            $status = 'upcoming';
+            if ($isCurrentWeek) {
+                $status = 'current';
+            } elseif ($weekPassed) {
+                $status = $report->report_path ? 'submitted' : 'pending';
+            }
+            
+            $weekInfo[$report->week_no] = [
+                'start_date' => $weekStart->format('M d'),
+                'end_date' => $weekEnd->format('M d'),
+                'status' => $status,
+                'is_submitted' => !is_null($report->report_path),
+                'can_submit' => $weekPassed && is_null($report->report_path)
+            ];
+        }
+        
+        return $weekInfo;
     }
 
     public function schedule(){

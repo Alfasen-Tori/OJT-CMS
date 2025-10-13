@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('intern_id')->constrained('interns')->onDelete('cascade');
             $table->tinyInteger('week_no')->comment('Week number e.g., 1, 2, 3...');
-            $table->string('report_path')->comment('File path to the uploaded report');
-            $table->timestamp('submitted_at')->useCurrent();
+            $table->string('report_path')->nullable()->comment('File path to the uploaded report');
+            $table->timestamp('submitted_at')->nullable()->useCurrent();
             $table->timestamps();
 
             // Unique constraint to prevent duplicate reports for same intern and week
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->index(['week_no']);
             $table->index(['submitted_at']);
         });
-    }
+    }   
 
     /**
      * Reverse the migrations.
