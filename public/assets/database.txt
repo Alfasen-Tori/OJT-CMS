@@ -110,8 +110,8 @@ timestamps
 id (PK, auto-increment)
 intern_id (FK to interns.id)
 week_no (TINYINT) — e.g., 1, 2, 3...
-report_path (VARCHAR or TEXT) — uploaded file path
-submitted_at (TIMESTAMP)
+report_path (VARCHAR or TEXT) — uploaded file path, nullable
+submitted_at (TIMESTAMP) nullable
 timestamps
 
 
