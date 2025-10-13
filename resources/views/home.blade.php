@@ -169,10 +169,10 @@
             
             <!-- Login Cards Section - Equal proportion to logo -->
             <div class="col-xxl-5 col-lg-6 col-md-10">
-                <div class="row g-4 justify-content-center">
+                <div class="row g-4 justify-content-center bg-warningr px-2">
                     
                     <!-- Intern Card -->
-                    <div class="col-xl-6 col-md-6 col-10">
+                    <div class="col-xl-6 col-md-6 col-12">
                         <a href="intern/login" class="text-decoration-none">
                             <div class="card login-card" style="--card-color: #0d6efd;">
                                 <div class="card-bg-pattern"></div>
@@ -191,7 +191,7 @@
                     </div>
                     
                     <!-- Coordinator Card -->
-                    <div class="col-xl-6 col-md-6 col-10">
+                    <div class="col-xl-6 col-md-6 col-12">
                         <a href="coordinator/login" class="text-decoration-none">
                             <div class="card login-card" style="--card-color: #198754;">
                                 <div class="card-bg-pattern"></div>
@@ -210,7 +210,7 @@
                     </div>
                     
                     <!-- HTE Card -->
-                    <div class="col-xl-6 col-md-6 col-10">
+                    <div class="col-xl-6 col-md-6 col-12">
                         <a href="hte/login" class="text-decoration-none">
                             <div class="card login-card" style="--card-color: #ffc107;">
                                 <div class="card-bg-pattern"></div>
@@ -229,7 +229,7 @@
                     </div>
                     
                     <!-- Admin Card -->
-                    <div class="col-xl-6 col-md-6 col-10">
+                    <div class="col-xl-6 col-md-6 col-12">
                         <a href="/admin/login" class="text-decoration-none">
                             <div class="card login-card" style="--card-color: #dc3545;">
                                 <div class="card-bg-pattern"></div>
