@@ -1,38 +1,58 @@
 FROM php:8.2-fpm
 
+# Set working directory
+WORKDIR /var/www
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git curl libpng-dev libjpeg-dev libfreetype6-dev \
-    libonig-dev libxml2-dev zip unzip libzip-dev \
-    default-mysql-client nginx
+    git \
+    curl \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    default-mysql-client
 
-# Configure GD extension
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configure GD extension (required for PhpSpreadsheet)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
 # Install PHP extensions
 RUN docker-php-ext-install \
-    pdo_mysql mbstring exif pcntl bcmath gd zip xml dom fileinfo opcache
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    xml \
+    dom \
+    fileinfo \
+    opcache
 
 # Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy application
-COPY . /var/www
-WORKDIR /var/www
+COPY . .
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/sites-available/default
-
-# Copy start script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-# Install dependencies
+# Install dependencies (no dev dependencies for production)
 RUN composer install --no-dev --optimize-autoloader
 
-EXPOSE 80
+# Generate application key if not exists
+RUN php artisan key:generate --force
 
-CMD ["/start.sh"]
+# Expose port 9000
+EXPOSE 9000
+
+CMD ["php-fpm"]
