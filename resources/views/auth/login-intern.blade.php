@@ -178,7 +178,7 @@
         <div class="login-card p-5 col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
             <!-- Logo and Title -->
             <div class="logo-container text-center">
-                <img class="logo-img mb-3" src="{{ asset('assets/images/ojt-cms logo.png') }}" alt="OJT-CMS Logo" height="120">
+                <img class="logo-img mb-3" src="{{ asset('assets/images/OJT-CMS-logo.png') }}" alt="OJT-CMS Logo" height="120">
                 <h2 class="portal-title">OJT-CMS</h2>
                 <p class="text-muted mb-4">Student-Intern Portal</p>
             </div>

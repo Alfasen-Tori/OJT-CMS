@@ -11,7 +11,7 @@
 <body style="background: #900303;">
     <div class="container-fluid p-md-0 p-lg-5 d-flex justify-content-center align-items-center flex-column w-100" style="height: 100vh;">
         <div class="card rounded-4 p-5 d-flex flex-column align-items-center justify-content-center col-12 col-sm-8 col-md-6 col-lg-5" style="background: #fff;">
-            <img class="mb-4" src="{{ asset('assets/images/ojt-cms logo.png') }}" alt="" height="120" style="position: relative; right: 4px">
+            <img class="mb-4" src="{{ asset('assets/images/ojt-cms-logo.png') }}" alt="" height="120" style="position: relative; right: 4px">
             <h3>OJT-CMS</h3>
             <p class="text-muted mb-5">
                 @if($role === 'coordinator')
