@@ -1,30 +1,11 @@
 [phases.setup]
-# php82 includes composer, plus nodejs and npm for frontend builds
-nixPkgs = ["php82", "nodejs_18", "npm", "git"]
+nixPkgs = ["php82", "composer", "nodejs_18", "npm"]
 
 [phases.install]
-cmds = [
-  # Ensure composer is available (PHP82 usually includes it)
-  "php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\"",
-  "php composer-setup.php --install-dir=/usr/local/bin --filename=composer",
-  "php -r \"unlink('composer-setup.php');\"",
-
-  # Install PHP dependencies
-  "composer install --no-dev --optimize-autoloader",
-
-  # Install Node dependencies
-  "npm ci",
-  "npm run build"
-]
+cmds = ["composer install --no-dev --optimize-autoloader", "npm install && npm run build"]
 
 [phases.build]
-cmds = [
-  "php artisan key:generate --force",
-  "php artisan config:cache",
-  "php artisan route:cache",
-  "php artisan view:cache",
-  "php artisan storage:link || true"
-]
+cmds = ["php artisan key:generate", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache"]
 
 [start]
 cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
