@@ -100,6 +100,8 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
     Route::post('/endorse', [CoordinatorController::class, 'batchEndorseInterns'])->name('coordinator.batchEndorseInterns');
     Route::post('/endorse/count', [CoordinatorController::class, 'getEndorsedCount'])->name('coordinator.getEndorsedCount');
 
+    Route::get('/deployments', [CoordinatorController::class, 'deployments'])->name('coordinator.deployments');
+    Route::get('/deployments/data', [CoordinatorController::class, 'getDeploymentsData'])->name('coordinator.deployments.data');
 });
 
 // Protected intern routes

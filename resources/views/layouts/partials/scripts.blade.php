@@ -912,6 +912,40 @@
         });
     </script>
 
+    <!-- Coordinator Deployments Management Table -->
+    <script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#deploymentsTable').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "language": {
+            "emptyTable": "No deployments found.",
+            "search": "_INPUT_",
+            "searchPlaceholder": "Search...",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ deployments",
+            "paginate": {
+            "previous": "«",
+            "next": "»"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": [5] }
+        ],
+        "initComplete": function() {
+            // Hide loading overlay when table is ready
+            $('#tableLoadingOverlay').fadeOut();
+        }
+        });
+    });
+    </script>
+
     <!-- Coordinator: HTE/show - Remove Endorsement -->
     <script>
         $(document).ready(function() {

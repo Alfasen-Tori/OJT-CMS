@@ -23,14 +23,14 @@
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
           <li class="nav-item">
             <a href="{{route('coordinator.dashboard')}}" class="nav-link {{ Request::is('coordinator/dashboard') ? 'current-page' : '' }}">
-              <i class="ph{{ Request::is('coordinator/dashboard') ? '-fill' : '' }} ph-squares-four nav-link-i"></i>
+              <i class="ph{{ Request::is('coordinator/dashboard') ? '-fill' : '' }} ph-squares-four nav-link-i "></i>
               <p>Dashboard</p>
             </a>
           </li>
 
           <li class="nav-item">
             <a href="{{route('coordinator.interns')}}" class="nav-link {{ Request::is('coordinator/interns*') ? 'current-page' : '' }}">
-              <i class="ph{{ Request::is('coordinator/interns*') ? '-fill' : '' }} ph-graduation-cap nav-link-i "></i>                
+              <i class="ph{{ Request::is('coordinator/interns*') ? '-fill' : '' }} ph-graduation-cap nav-link-i"></i>                
               <p>Interns</p>
             </a>
           </li>
@@ -46,6 +46,13 @@
             <a href="{{route('coordinator.endorse')}}" class="nav-link {{ Request::is('coordinator/endorse') ? 'current-page' : '' }}">
               <i class="ph{{ Request::is('coordinator/endorse*') ? '-fill' : '' }} ph-paper-plane-tilt nav-link-i"></i>
               <p>Endorse</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{{route('coordinator.deployments')}}" class="nav-link {{ Request::is('coordinator/deployments') ? 'current-page' : '' }}">
+              <i class="ph{{ Request::is('coordinator/deployments*') ? '-fill' : '' }} ph-briefcase nav-link-i"></i>
+              <p> Deployments</p>
             </a>
           </li>
 

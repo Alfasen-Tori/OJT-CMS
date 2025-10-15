@@ -1,6 +1,6 @@
 @extends('layouts.coordinator')
 
-@section('title', 'Deployment')
+@section('title', 'Endorse')
 
 @section('content')
 <section class="content-header">
@@ -12,7 +12,7 @@
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
           <li class="breadcrumb-item fw-medium">Coordinator</li>
-          <li class="breadcrumb-item active text-muted">Deploy</li>
+          <li class="breadcrumb-item active text-muted">Endorse</li>
         </ol>
       </div>
     </div>
