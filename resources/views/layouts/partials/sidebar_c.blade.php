@@ -50,8 +50,8 @@
           </li>
 
           <li class="nav-item">
-            <a href="{{route('coordinator.deployments')}}" class="nav-link {{ Request::is('coordinator/deployments') ? 'current-page' : '' }}">
-              <i class="ph{{ Request::is('coordinator/deployments*') ? '-fill' : '' }} ph-briefcase nav-link-i"></i>
+            <a href="{{route('coordinator.deployments')}}" class="nav-link {{ Request::is('coordinator/deployment*') ? 'current-page' : '' }}">
+              <i class="ph{{ Request::is('coordinator/deployment*') ? '-fill' : '' }} ph-briefcase nav-link-i"></i>
               <p> Deployments</p>
             </a>
           </li>

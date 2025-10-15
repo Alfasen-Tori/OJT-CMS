@@ -80,7 +80,7 @@
                       <i class="ph-fill ph-gear custom-icons-i"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-                      <a class="dropdown-item btn btn-outline-light text-dark" href="">
+                      <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.deployment.show', $hteId) }}">
                         <i class="ph ph-list custom-icons-i mr-2"></i>Manage
                       </a>
                       <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="">

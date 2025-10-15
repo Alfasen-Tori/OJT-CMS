@@ -524,11 +524,6 @@ public function showHTE($id)
         try {
             $endorsement = \App\Models\InternsHte::findOrFail($id);
 
-            $canManage = auth()->user()->coordinator->can_add_hte == 1;
-            if (!$canManage) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-            }
-
             $intern = $endorsement->intern;
             if ($intern) {
                 $intern->status = 'ready for deployment';
@@ -1034,5 +1029,40 @@ public function deployments() {
         ->groupBy('hte_id');
     
     return view('coordinator.deployments', compact('deployments'));
+}
+
+public function showDeployment($id)
+{
+    $hte = Hte::with(['user', 'skills', 'skills.department'])
+        ->findOrFail($id);
+
+    // Get only the current coordinator's endorsements for this HTE
+    $currentCoordinatorId = auth()->user()->coordinator->id;
+    
+    $endorsedInterns = \App\Models\InternsHte::with(['intern.user', 'intern.department'])
+        ->where('hte_id', $id)
+        ->where('coordinator_id', $currentCoordinatorId) // Only show current coordinator's endorsements
+        ->get();
+
+    $endorsedCount = $endorsedInterns->count();
+    $availableSlots = $hte->slots - $hte->internsHte()->count(); // Total available slots for HTE
+    $availableSlots = max(0, $availableSlots);
+
+    // Check for deploy conditions - only for current coordinator's endorsements
+    $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
+    $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
+    $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
+
+    $canManage = auth()->user()->coordinator->can_add_hte == 1;
+
+    return view('coordinator.deployment_show', compact(
+        'hte', 
+        'canManage', 
+        'endorsedInterns', 
+        'availableSlots', 
+        'hasEndorsedForDeploy', 
+        'hasDeployed', 
+        'endorsementPath'
+    ));
 }
 }
