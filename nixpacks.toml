@@ -1,12 +1,19 @@
 [phases.setup]
-# Use latest stable versions from nixpkgs
-nixPkgs = ["php82", "composer", "nodejs_18", "npm", "git"]
+# php82 includes composer, plus nodejs and npm for frontend builds
+nixPkgs = ["php82", "nodejs_18", "npm", "git"]
 
 [phases.install]
-# Use && to fail fast if something goes wrong
 cmds = [
+  # Ensure composer is available (PHP82 usually includes it)
+  "php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\"",
+  "php composer-setup.php --install-dir=/usr/local/bin --filename=composer",
+  "php -r \"unlink('composer-setup.php');\"",
+
+  # Install PHP dependencies
   "composer install --no-dev --optimize-autoloader",
-  "npm ci",           # faster than 'npm install' for CI/CD
+
+  # Install Node dependencies
+  "npm ci",
   "npm run build"
 ]
 
@@ -20,5 +27,4 @@ cmds = [
 ]
 
 [start]
-# Serve the app on the port provided by the platform
 cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
