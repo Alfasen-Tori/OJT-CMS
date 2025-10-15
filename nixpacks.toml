@@ -1,6 +1,6 @@
 [phases.setup]
 # Explicitly use current PHP and Node versions
-nixPkgs = ["php82", "composer", "nodejs_18", "npm"]
+nixPkgs = ["php82" "phpPackages.composer" "nodejs_18" "npm"]
 
 [phases.install]
 cmds = [
