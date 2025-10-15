@@ -1,5 +1,7 @@
-# Use official PHP 8.2 image with CLI and extensions needed by Laravel
-FROM php:8.2-cli
+# ----------------------------
+# Stage 1: Build stage
+# ----------------------------
+FROM php:8.2-cli AS builder
 
 # Set working directory
 WORKDIR /var/www/html
@@ -10,8 +12,16 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     libzip-dev \
-    zip \
-    && docker-php-ext-install zip pdo pdo_mysql
+    libpng-dev \
+    libxml2-dev \
+    libonig-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    libicu-dev \
+    libpq-dev \
+    libcurl4-openssl-dev \
+    pkg-config \
+    && docker-php-ext-install zip pdo_mysql bcmath gd intl xml xsl pcntl sockets
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -20,13 +30,16 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-# Copy app files
-COPY . .
+# Copy composer files first (for caching)
+COPY composer.json composer.lock ./
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Install Node dependencies and build assets
+# Copy the rest of the app
+COPY . .
+
+# Build frontend assets if needed
 RUN npm install
 RUN npm run build
 
@@ -37,6 +50,27 @@ RUN php artisan route:cache
 RUN php artisan view:cache
 RUN php artisan storage:link || true
 
-# Expose port and set default command
+# ----------------------------
+# Stage 2: Production stage
+# ----------------------------
+FROM php:8.2-cli
+
+WORKDIR /var/www/html
+
+# Copy PHP extensions from builder
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+
+# Copy app from builder
+COPY --from=builder /var/www/html /var/www/html
+
+# Copy Composer from builder
+COPY --from=builder /usr/local/bin/composer /usr/local/bin/composer
+
+# Set permissions for storage and bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Expose port
 EXPOSE 8000
+
+# Default command
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
