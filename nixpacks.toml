@@ -1,15 +1,11 @@
 [phases.setup]
-# Explicitly use current PHP and Node versions
 nixPkgs = ["php82", "composer", "nodejs_18", "npm"]
 
 [phases.install]
-cmds = [
-  "composer install --no-dev --optimize-autoloader",
-  "npm install",
-  "npm run build"
-]
+cmds = ["composer install --no-dev --optimize-autoloader", "npm install && npm run build"]
 
 [phases.build]
+<<<<<<< HEAD:nixpacks.toml
 cmds = [
   "php artisan key:generate --force",
   "php artisan config:cache",
@@ -19,6 +15,9 @@ cmds = [
   "php artisan migrate --force",
   "php artisan db:seed --force"
 ]
+=======
+cmds = ["php artisan key:generate", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache"]
+>>>>>>> parent of b251fb5 (gg2):nixpacls.toml
 
 
 [start]
