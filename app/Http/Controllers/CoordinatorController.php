@@ -594,58 +594,60 @@ public function showHTE($id)
         return view('coordinator.endorse', compact('htes'));
     }
 
-    public function getRecommendedInterns(Request $request) {
-        $hteId = $request->input('hte_id');
-        $requiredSkillIds = $request->input('required_skills', []);
-        
-        // Get all interns with their skills
-        $interns = Intern::with(['user', 'department', 'skills'])
-            ->whereIn('status', ['pending requirements', 'ready for deployment'])
-            ->orderByRaw("FIELD(status, 'ready for deployment', 'pending requirements')")
-            ->get();
+public function getRecommendedInterns(Request $request) {
+    $hteId = $request->input('hte_id');
+    $requiredSkillIds = $request->input('required_skills', []);
+    
+    // Get current coordinator's ID
+    $currentCoordinatorId = auth()->user()->coordinator->id;
+    
+    // Get only interns that the current coordinator registered/added
+    $interns = Intern::with(['user', 'department', 'skills'])
+        ->where('coordinator_id', $currentCoordinatorId) // Only coordinator's interns
+        ->whereIn('status', ['pending requirements', 'ready for deployment'])
+        ->orderByRaw("FIELD(status, 'ready for deployment', 'pending requirements')")
+        ->get();
 
-
+    // Calculate skill matches for each intern
+    $internsWithMatches = $interns->map(function($intern) use ($requiredSkillIds) {
+        $internSkills = $intern->skills->pluck('skill_id')->toArray();
         
-        // Calculate skill matches for each intern
-        $internsWithMatches = $interns->map(function($intern) use ($requiredSkillIds) {
-            $internSkills = $intern->skills->pluck('skill_id')->toArray();
-            
-            // Find matching skills
-            $matchingSkills = array_intersect($internSkills, $requiredSkillIds);
-            
-            // Calculate match percentage
-            $matchPercentage = count($requiredSkillIds) > 0 
-                ? round((count($matchingSkills) / count($requiredSkillIds)) * 100) : 0;
-            
-            // Get skill names for display
-            $matchingSkillNames = $intern->skills
-                ->whereIn('skill_id', $matchingSkills)
-                ->pluck('name')
-                ->toArray();
-            
-            return [
-                'id' => $intern->id,
-                'student_id' => $intern->student_id,
-                'fname' => $intern->user->fname,
-                'lname' => $intern->user->lname,
-                'department' => $intern->department->short_name,
-                'status' => $intern->status,
-                'matching_skills' => $matchingSkillNames,
-                'match_percentage' => $matchPercentage,
-                'total_matches' => count($matchingSkills)
-            ];
-        });
+        // Find matching skills
+        $matchingSkills = array_intersect($internSkills, $requiredSkillIds);
         
-        // Sort by match percentage (descending) and then by total matches (descending)
-        $sortedInterns = $internsWithMatches->sortByDesc(function($intern) {
-            return [$intern['match_percentage'], $intern['total_matches']];
-        })->values()->all();
+        // Calculate match percentage
+        $matchPercentage = count($requiredSkillIds) > 0 
+            ? round((count($matchingSkills) / count($requiredSkillIds)) * 100) : 0;
         
-        return response()->json([
-            'success' => true,
-            'interns' => $sortedInterns
-        ]);
-    }
+        // Get skill names for display
+        $matchingSkillNames = $intern->skills
+            ->whereIn('skill_id', $matchingSkills)
+            ->pluck('name')
+            ->toArray();
+        
+        return [
+            'id' => $intern->id,
+            'student_id' => $intern->student_id,
+            'fname' => $intern->user->fname,
+            'lname' => $intern->user->lname,
+            'department' => $intern->department->short_name,
+            'status' => $intern->status,
+            'matching_skills' => $matchingSkillNames,
+            'match_percentage' => $matchPercentage,
+            'total_matches' => count($matchingSkills)
+        ];
+    });
+    
+    // Sort by match percentage (descending) and then by total matches (descending)
+    $sortedInterns = $internsWithMatches->sortByDesc(function($intern) {
+        return [$intern['match_percentage'], $intern['total_matches']];
+    })->values()->all();
+    
+    return response()->json([
+        'success' => true,
+        'interns' => $sortedInterns
+    ]);
+}
 
     public function getEndorsedCount(Request $request)
     {
