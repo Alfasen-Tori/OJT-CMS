@@ -1,9 +1,10 @@
 [phases.setup]
-# Explicitly use current PHP and Node versions
-nixPkgs = ["php82", "php82Packages.composer", "nodejs_18", "npm"]
+nixPkgs = ["php82", "nodejs_18", "npm"]
 
 [phases.install]
 cmds = [
+  "curl -sS https://getcomposer.org/installer | php",
+  "mv composer.phar /usr/local/bin/composer",
   "composer install --no-dev --optimize-autoloader",
   "npm install",
   "npm run build"
