@@ -25,11 +25,15 @@
 @php
     $currentCoordinatorId = auth()->user()->coordinator->id;
     $myDeployments = $endorsedInterns->where('status', 'deployed');
+    $myProcessing = $endorsedInterns->where('status', 'processing');
     $hasDeploymentDetails = $myDeployments->isNotEmpty();
+    $hasProcessingDetails = $myProcessing->isNotEmpty();
     
     $deploymentDetails = $hasDeploymentDetails ? $myDeployments->first() : null;
+    $processingDetails = $hasProcessingDetails ? $myProcessing->first() : null;
     $totalMyStudents = $endorsedInterns->count();
     $deployedCount = $myDeployments->count();
+    $processingCount = $myProcessing->count();
     $endorsedCount = $endorsedInterns->where('status', 'endorsed')->count();
 @endphp
 
@@ -77,6 +81,67 @@
                     <div class="col-md-2">
                         <div class="bg-success-subtle rounded-pill px-3 py-2 text-center">
                             <span class="fw-bold text-success">DEPLOYED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                @if($hte->address)
+                <div class="mt-3 pt-3 border-top">
+                    <div class="d-flex align-items-center">
+                        <i class="ph ph-map-pin text-muted me-2"></i>
+                        <span class="text-dark">{{ $hte->address }}</span>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+@elseif($hasProcessingDetails)
+<!-- Processing State -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info-subtle rounded p-2 me-3">
+                        <i class="ph ph-hourglass-medium text-info fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Processing Deployment</h5>
+                        <p class="text-muted mb-0">Internship details being finalized</p>
+                    </div>
+                </div>
+                
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="border-start border-3 border-success ps-3">
+                            <small class="text-muted fw-medium">START DATE</small>
+                            <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($processingDetails->start_date)->format('M j, Y') }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-start border-3 border-warning ps-3">
+                            <small class="text-muted fw-medium">ESTIMATED COMPLETION DATE</small>
+                            <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($processingDetails->end_date)->format('M j, Y') }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border-start border-3 border-info ps-3">
+                            <small class="text-muted fw-medium">HOURS</small>
+                            <div class="fw-bold text-dark fs-6">{{ $processingDetails->no_of_hours }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border-start border-3 border-primary ps-3">
+                            <small class="text-muted fw-medium">STUDENTS</small>
+                            <div class="fw-bold text-dark fs-6">{{ $processingCount }}/{{ $totalMyStudents }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="bg-info-subtle rounded-pill px-3 py-2 text-center">
+                            <span class="fw-bold text-info">PROCESSING</span>
                         </div>
                     </div>
                 </div>
@@ -183,9 +248,13 @@
                 </div>
                 <div>
                     @if($hasEndorsedForDeploy)
-                        <button type="button" class="btn btn-success fw-medium" data-toggle="modal" data-target="#deployModal">
-                            Deploy<i class="ph-fill ph-rocket-launch custom-icons-i ml-1"></i>
+                        <button type="button" class="btn btn-info fw-medium" data-toggle="modal" data-target="#deployModal">
+                            Initiate Deployment<i class="ph-fill ph-rocket-launch custom-icons-i ml-1"></i>
                         </button>
+                    @elseif($isProcessing)
+                        <a href="" class="btn btn-success fw-medium">
+                            <i class="ph-fill ph-seal-check custom-icons-i mr-1"></i>Officially Deploy
+                        </a>
                     @elseif($hasDeployed && $endorsementPath)
                         <a href="{{ Storage::url($endorsementPath) }}" class="btn btn-primary fw-medium" download="{{ basename($endorsementPath) }}">
                             <i class="ph-fill ph-download custom-icons-i mr-1"></i>Download Endorsement Letter
@@ -250,7 +319,7 @@
                                                 @endif
 
                                                 <!-- Conditional Officially Deploy: Only if interns_hte status is 'deployed' AND intern status is 'processing' -->
-                                                @if($endorsement->status === 'deployed' && $intern->status === 'processing')
+                                                @if($endorsement->status === 'processing' && $intern->status === 'processing')
                                                     <form action="{{ route('coordinator.intern.officially-deploy', $intern->id) }}" method="POST" class="m-0 p-0">
                                                         @csrf
                                                         <button class="dropdown-item btn btn-outline-light text-success" type="submit">
@@ -268,7 +337,7 @@
                                                 <div class="modal-content">
                                                     <div class="modal-header bg-light text-dark">
                                                         <h5 class="modal-title" id="removeEndorsementModalLabel{{ $intern->id }}">
-                                                            <i class="ph-bold ph-warning details-icons-i mr-1"></i>
+                                                            <i class="ph-bold ph-warning details-icons-i mr-1 mt-2"></i>
                                                             Cancel Endorsement
                                                         </h5>
                                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -310,7 +379,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-light text-dark">
                     <h5 class="modal-title" id="deployModalLabel">
-                        <i class="ph-bold ph-arrow-square-out details-icons-i mr-1"></i>
+                        <i class="ph-bold ph-question details-icons-i mr-1"></i>
                         Confirm Deployment
                     </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -376,7 +445,7 @@
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-success fw-medium" id="confirmDeployBtn" disabled>
-                            <i class="ph-fill ph-check custom-icons-i mr-1"></i>Confirm Deploy
+                            Deploy
                         </button>
                     </div>
                 </form>

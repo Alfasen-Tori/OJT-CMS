@@ -59,8 +59,16 @@
                 $firstEndorsement = $endorsements->first();
                 $hte = $firstEndorsement->hte;
                 $studentCount = $endorsements->count();
-                $status = $endorsements->contains('status', 'deployed') ? 'deployed' : 'endorsed';
-                $statusClass = $status === 'deployed' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary';
+               $status = $endorsements->contains('status', 'deployed') ? 'deployed' 
+                          : ($endorsements->contains('status', 'processing') ? 'processing' 
+                          : 'endorsed');
+                          
+                $statusClass = match($status) {
+                    'deployed' => 'bg-success-subtle text-success',
+                    'processing' => 'bg-info-subtle text-info',
+                    'endorsed' => 'bg-primary-subtle text-primary',
+                    default => 'bg-secondary-subtle text-secondary'
+                };
               @endphp
               <tr>
                 <td class="align-middle">HTE-{{ str_pad($hteId, 3, '0', STR_PAD_LEFT) }}</td>

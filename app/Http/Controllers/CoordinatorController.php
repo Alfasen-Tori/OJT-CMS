@@ -947,7 +947,7 @@ public function getRecommendedInterns(Request $request) {
                 Log::info("Intern status updated to 'processing' for ID: " . $intern->id . " ({$studentName})");
 
                 $endorsement->update([
-                    'status' => 'deployed', 
+                    'status' => 'processing', 
                     'deployed_at' => now(),
                     'start_date' => $startDate->format('Y-m-d'),
                     'end_date' => $endDate,
@@ -1053,6 +1053,7 @@ public function showDeployment($id)
     // Check for deploy conditions - only for current coordinator's endorsements
     $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
     $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
+    $isProcessing = $endorsedInterns->where('status', 'processing')->isNotEmpty();
     $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
 
     $canManage = auth()->user()->coordinator->can_add_hte == 1;
@@ -1064,6 +1065,7 @@ public function showDeployment($id)
         'availableSlots', 
         'hasEndorsedForDeploy', 
         'hasDeployed', 
+        'isProcessing',
         'endorsementPath'
     ));
 }
