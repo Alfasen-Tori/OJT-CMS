@@ -14,7 +14,7 @@ class CreateInternsHteTable extends Migration
             $table->foreignId('hte_id')->constrained('htes')->onDelete('cascade');
             
             // Internship workflow status
-            $table->enum('status', ['endorsed', 'deployed', 'completed'])->default('endorsed');
+            $table->enum('status', ['endorsed', 'processing',  'deployed', 'completed'])->default('endorsed');
             
             // Workflow timestamps
             $table->timestamp('endorsed_at')->useCurrent();
