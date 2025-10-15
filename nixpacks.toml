@@ -1,9 +1,9 @@
 [phases.setup]
 nixPkgs = [
   "php82", 
-  "php82Packages.composer",  # Use the correct composer package name
-  "nodejs-18", 
-  "npm"
+  "php82Packages.composer",
+  "nodejs-18_x", 
+  "nodePackages.npm"
 ]
 
 [phases.install]
