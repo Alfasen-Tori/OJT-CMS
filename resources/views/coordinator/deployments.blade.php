@@ -82,24 +82,32 @@
                 <td class="align-middle text-center">
                   <span class="fw-bold">{{ $studentCount }}</span>
                 </td>
-                <td class="text-center px-2 align-middle">
-                  <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="ph-fill ph-gear custom-icons-i"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-                      <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.deployment.show', $hteId) }}">
-                        <i class="ph ph-list custom-icons-i mr-2"></i>Manage
-                      </a>
-                      <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="">
-                        <i class="ph ph-x custom-icons-i mr-2"></i>Cancel
-                      </a>
-                      <a class="dropdown-item btn btn-outline-light text-primary" href="">
-                        <i class="ph ph-rocket-launch custom-icons-i mr-2"></i>Quick Deploy
-                      </a>
-                    </div>
-                  </div>
-                </td>
+<td class="text-center px-2 align-middle">
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="ph-fill ph-gear custom-icons-i"></i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
+            <a class="dropdown-item btn btn-outline-light text-dark border-bottom border-lightgray" href="{{ route('coordinator.deployment.show', $hteId) }}">
+                <i class="ph ph-list custom-icons-i mr-2"></i>Manage
+            </a>
+            
+            <!-- Cancel Option: Only show when status is endorsed -->
+            @if($status === 'endorsed')
+            <a class="dropdown-item btn btn-outline-light text-dark" href="">
+                <i class="ph ph-x custom-icons-i mr-2"></i>Cancel
+            </a>
+            @endif
+
+            <!-- Quick Deploy Option: Only show when status is processing -->
+            @if($status === 'processing')
+            <a class="dropdown-item btn btn-outline-light text-primary" href="">
+                <i class="ph ph-rocket-launch custom-icons-i mr-2"></i>Quick Deploy
+            </a>
+            @endif
+        </div>
+    </div>
+</td>
               </tr>
             @endforeach
           </tbody>
