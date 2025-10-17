@@ -313,7 +313,7 @@ public function registerHTE(Request $request)
 
     if ($validated['hte_status'] === 'new') {
         $templatePath = public_path('moa-templates/moa-template.docx');
-        $generatedDocxPath = storage_path('app/public/moa-templates/generated-moa-' . $hte->id . '.docx');
+        $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
 
         // Fill DOCX template
         $templateProcessor = new TemplateProcessor($templatePath);
