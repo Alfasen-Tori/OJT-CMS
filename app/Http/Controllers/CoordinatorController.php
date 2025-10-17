@@ -306,21 +306,19 @@ public function registerHTE(Request $request)
         'token' => $token,
         'role' => 'hte'
     ]);
-    $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
 
+    $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
     $moaAttachmentPath = null;
-    $generatedDocxPath = null; // Declare outside if block to track for deletion
+    $generatedDocxPath = null;
 
     if ($validated['hte_status'] === 'new') {
         $templatePath = public_path('moa-templates/moa-template.docx');
         $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
 
-        // Fill DOCX template
-        $templateProcessor = new TemplateProcessor($templatePath);
+        $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
         $templateProcessor->setValue('organization_name', $validated['organization_name']);
         $templateProcessor->setValue('address', $validated['address']);
         $templateProcessor->setValue('contact_name', $contactName);
-        // Add more placeholders as needed
         $templateProcessor->saveAs($generatedDocxPath);
 
         if (file_exists($generatedDocxPath)) {
@@ -328,9 +326,8 @@ public function registerHTE(Request $request)
         }
     }
 
-    // Send email synchronously and delete file only on success
     try {
-        Mail::to($user->email)->send(new HteSetupMail(
+        Mail::to($user->email)->send(new \App\Mail\HteSetupMail(
             $setupLink,
             $contactName,
             $validated['organization_name'],
@@ -339,26 +336,38 @@ public function registerHTE(Request $request)
             $user->email
         ));
 
-        // Delete the generated DOCX only if email sent successfully
         if ($generatedDocxPath && file_exists($generatedDocxPath)) {
             unlink($generatedDocxPath);
         }
 
         return redirect()->route('coordinator.htes')
             ->with('success', 'HTE registered successfully. Activation email sent.');
+
     } catch (\Exception $e) {
-        // Log the error for debugging
-        
-        // Optional: Delete the file even on failure to avoid leftovers (uncomment if preferred)
-        // if ($generatedDocxPath && file_exists($generatedDocxPath)) {
-        //     unlink($generatedDocxPath);
-        //     \Log::info('Temporary DOCX deleted after email failure: ' . $generatedDocxPath);
-        // }
+        // Log the full exception for detailed debugging
+        Log::error('HTE email failed: ' . $e->getMessage(), [
+            'exception' => $e,
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        // Optionally show full error only if in debug mode
+        if (config('app.debug')) {
+            return response()->json([
+                'error' => 'HTE email failed.',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => explode("\n", $e->getTraceAsString()),
+            ], 500);
+        }
 
         return redirect()->route('coordinator.htes')
             ->with('error', 'HTE registered, but failed to send activation email. Please check logs and retry.');
     }
 }
+
 
 
 public function showHTE($id)
