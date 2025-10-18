@@ -82,8 +82,6 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
     Route::put('/interns/{id}', [CoordinatorController::class, 'updateIntern'])->name('coordinator.update_i');
     Route::delete('/interns/{id}', [CoordinatorController::class, 'destroyIntern'])->name('coordinator.intern.destroy');
 
-    Route::post('/interns/{intern}/officially-deploy', [CoordinatorController::class, 'officiallyDeployIntern'])->name('coordinator.intern.officially-deploy');
-
     Route::get('/htes', [CoordinatorController::class, 'htes'])->name('coordinator.htes');
     Route::get('/htes/create', [CoordinatorController::class, 'newHTE'])->name('coordinator.new_h');
     Route::post('/htes', [CoordinatorController::class, 'registerHTE'])->name('coordinator.register_h');
@@ -103,6 +101,7 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
     Route::get('/deployments', [CoordinatorController::class, 'deployments'])->name('coordinator.deployments');
     Route::get('/deployment/{id}', [CoordinatorController::class, 'showDeployment'])->name('coordinator.deployment.show'); 
     Route::delete('/deployment/cancel-endorsement/{internHte}', [CoordinatorController::class, 'cancelEndorsement'])->name('coordinator.deployment.cancel-endorsement');
+    Route::put('/deployment/officially-deploy/{internHte}', [CoordinatorController::class, 'officiallyDeploy'])->name('coordinator.deployment.officially-deploy');
 });
 
 // Protected intern routes

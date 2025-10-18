@@ -871,7 +871,7 @@ public function getRecommendedInterns(Request $request) {
 
         $endorsementSuccess = false;
         try {
-            $endorsementTemplatePath = storage_path('app/public/document-templates/endorsement-letter-template.docx');
+            $endorsementTemplatePath = public_path('document-templates/endorsement-letter-template.docx');
             Log::info('Endorsement template path: ' . $endorsementTemplatePath);
             if (!file_exists($endorsementTemplatePath)) {
                 throw new Exception('Endorsement template file not found at: ' . $endorsementTemplatePath);
@@ -944,7 +944,7 @@ public function getRecommendedInterns(Request $request) {
 
             try {
                 // Step 1: Generate Student Internship Contract (temp, for email only)
-                $contractTemplatePath = storage_path('app/public/document-templates/student-internship-contract-template.docx');
+                $contractTemplatePath = public_path('document-templates/student-internship-contract-template.docx');
                 if (!file_exists($contractTemplatePath)) {
                     throw new Exception('Contract template file not found at: ' . $contractTemplatePath);
                 }
@@ -1023,29 +1023,31 @@ public function getRecommendedInterns(Request $request) {
         }
     }
 
-    public function officiallyDeployIntern(Request $request, Intern $intern)
-    {
-        // Optional: Add authorization (e.g., ensure coordinator belongs to intern's dept)
-        // if ($intern->coordinator_id !== auth()->user()->coordinator->id) {
-        //     return redirect()->back()->with('error', 'Unauthorized action.');
-        // }
-        if ($intern->status !== 'processing') {
-            Log::warning('Attempt to officially deploy intern not in processing status: ID ' . $intern->id . ', Current Status: ' . $intern->status);
-            return redirect()->back()->with('error', 'Intern must be in "processing" status to officially deploy.');
-        }
-        // Check for active deployment (interns_hte status = 'deployed')
-        $deployment = InternsHte::where('intern_id', $intern->id)
-            ->where('status', 'deployed')
-            ->first();
-        if (!$deployment) {
-            Log::warning('No active deployment found for intern ID: ' . $intern->id);
-            return redirect()->back()->with('error', 'No active deployment found for this intern. Cannot officially deploy.');
-        }
-        // Update intern status
-        $intern->update(['status' => 'deployed']);
-        Log::info('Intern officially deployed: ID ' . $intern->id . ', Name: ' . $intern->user->fname . ' ' . $intern->user->lname . ', HTE ID: ' . $deployment->hte_id);
-        return redirect()->back()->with('success', 'Intern "' . ($intern->user->fname . ' ' . $intern->user->lname) . '" has been officially deployed.');
+public function officiallyDeploy($internHteId)
+{
+    try {
+        // Find the intern_hte record
+        $internHte = InternsHte::findOrFail($internHteId);
+        
+        // Update intern_hte status to "deployed" and set deployed_at timestamp
+        $internHte->update([
+            'status' => 'deployed',
+            'deployed_at' => now()
+        ]);
+        
+        // Update the intern status to "deployed"
+        Intern::where('id', $internHte->intern_id)->update([
+            'status' => 'deployed'
+        ]);
+        
+        return redirect()->back()->with('success', 'Intern successfully deployed! Status has been updated to "Deployed".');
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return redirect()->back()->with('error', 'Endorsement record not found.');
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'An error occurred while deploying the intern: ' . $e->getMessage());
     }
+}
 
 public function deployments() {
     $coordinatorId = auth()->user()->coordinator->id;

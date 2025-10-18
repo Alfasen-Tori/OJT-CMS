@@ -255,9 +255,9 @@
                             Initiate Deployment<i class="ph-fill ph-rocket-launch custom-icons-i ml-1"></i>
                         </button>
                     @elseif($isProcessing)
-                        <a href="" class="btn btn-success fw-medium">
-                            <i class="ph-fill ph-seal-check custom-icons-i mr-1"></i>Officially Deploy
-                        </a>
+                        <button class="btn btn-success fw-medium" data-toggle="modal" data-target="#officiallyDeployModal">
+                            <i class="ph-fill ph-seal-check custom-icons-i mr-1" ></i>Officially Deploy
+                        </button>
                     @elseif($hasDeployed && $endorsementPath)
                         <a href="{{ Storage::url($endorsementPath) }}" class="btn btn-primary fw-medium" download="{{ basename($endorsementPath) }}">
                             <i class="ph-fill ph-download custom-icons-i mr-1"></i>Download Endorsement Letter
@@ -319,16 +319,6 @@
                                                     <a class="dropdown-item border-lightgray border-top rounded-0 btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#removeEndorsementModal{{ $intern->id }}">
                                                         <i class="ph ph-trash custom-icons-i mr-2"></i>Remove
                                                     </a>
-                                                @endif
-
-                                                <!-- Conditional Officially Deploy: Only if interns_hte status is 'deployed' AND intern status is 'processing' -->
-                                                @if($endorsement->status === 'processing' && $intern->status === 'processing')
-                                                    <form action="{{ route('coordinator.intern.officially-deploy', $intern->id) }}" method="POST" class="m-0 p-0">
-                                                        @csrf
-                                                        <button class="dropdown-item btn btn-outline-light text-success" type="submit">
-                                                            <i class="ph ph-rocket-launch custom-icons-i mr-2"></i>Officially Deploy
-                                                        </button>
-                                                    </form>
                                                 @endif
                                             </div>
                                         </div>
@@ -489,6 +479,40 @@
         </div>
     </div>
     @endif
+
+    <!-- Cancel Endorsement Modal -->
+    <div class="modal fade" id="officiallyDeployModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="ph-bold ph-seal-check details-icons-i mr-1"></i>
+                        Officially Deploy
+                    </h5>                
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Officially deploy the students listed below to <strong>{{ $hte->organization_name }}</strong>. Confirm that you have already submitted the following requirements:</p>
+                    <ul>
+                        <li>Signed Student Internship Contract</li>
+                        <li>Signed Memorandum of Agreement</li>
+                        <li>List of Student Interns</li>
+                    </ul>
+                    <p class="text-danger small"><strong>Important:</strong> Submit the neccesary requirements first before deploying.</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{{ route('coordinator.deployment.officially-deploy', $endorsement->id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('PUT')
+                        <button type="submit" class="btn btn-success">Confirm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <!-- CSS for dynamic + and - toggle (add to your stylesheet or <style> tag) -->
 <style>
