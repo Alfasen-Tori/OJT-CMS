@@ -540,6 +540,32 @@ public function showHTE($id)
         }
     }
 
+    public function cancelEndorsement($internHteId)
+{
+    try {
+        // Find the intern_hte record
+        $internHte = InternsHte::findOrFail($internHteId);
+        
+        // Get the intern ID before deletion
+        $internId = $internHte->intern_id;
+        
+        // Delete the intern_hte record
+        $internHte->delete();
+        
+        // Update the intern status back to "ready for deployment"
+        Intern::where('id', $internId)->update([
+            'status' => 'ready for deployment'
+        ]);
+        
+        return redirect()->back()->with('success', 'Endorsement cancelled successfully. Intern status has been reverted to "Ready for Deployment".');
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return redirect()->back()->with('error', 'Endorsement record not found.');
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
+    }
+}
+
 
     public function showImportForm()
     {

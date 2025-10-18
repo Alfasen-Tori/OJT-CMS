@@ -248,6 +248,9 @@
                 </div>
                 <div>
                     @if($hasEndorsedForDeploy)
+                        <button type="button" class="btn btn-danger fw-medium" data-toggle="modal" data-target="#cancelEndorsementModal">
+                            Cancel Endorsement<i class="ph-bold ph-x-circle custom-icons-i ml-1"></i>
+                        </button>
                         <button type="button" class="btn btn-info fw-medium" data-toggle="modal" data-target="#deployModal">
                             Initiate Deployment<i class="ph-fill ph-rocket-launch custom-icons-i ml-1"></i>
                         </button>
@@ -313,7 +316,7 @@
                                                 
                                                 <!-- Conditional Remove: Only if status is 'endorsed' -->
                                                 @if($endorsement->status === 'endorsed')
-                                                    <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#removeEndorsementModal{{ $intern->id }}">
+                                                    <a class="dropdown-item border-lightgray border-top rounded-0 btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#removeEndorsementModal{{ $intern->id }}">
                                                         <i class="ph ph-trash custom-icons-i mr-2"></i>Remove
                                                     </a>
                                                 @endif
@@ -440,7 +443,7 @@
                             </label>
                         </div>
                         
-                        <p class="text-warning small mt-3"><strong>Note:</strong> This action will mark these interns as deployed and cannot be undone. End date is estimated and may adjust due to class cancellations.</p>
+                        <p class="text-warning small mt-3"><strong>Note:</strong> This action will initiaite the internship deployment process. Cancellelation of endorsements will not be available beyond this point.</p>
                     </div>
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -449,6 +452,39 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Endorsement Modal -->
+    <div class="modal fade" id="cancelEndorsementModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="ph-bold ph-warning details-icons-i mr-1"></i>
+                        Cancel Endorsement
+                    </h5>                
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel the endorsement to <strong>{{ $hte->organization_name }}</strong>? This action will:</p>
+                    <ul>
+                        <li>Remove all student endorsements to this HTE</li>
+                        <li>Revert student status back to "Ready for Deployment"</li>
+                    </ul>
+                    <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{{ route('coordinator.deployment.cancel-endorsement', $endorsement->id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Cancel Endorsement</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -43,7 +43,7 @@
     .custom-icons-i {
         font-size: 1.2rem;
         position: relative;
-        top: 2px;
+        top: 3px;
     }
 
     .details-icons-i {

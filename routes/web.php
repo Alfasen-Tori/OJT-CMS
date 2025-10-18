@@ -102,6 +102,7 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
 
     Route::get('/deployments', [CoordinatorController::class, 'deployments'])->name('coordinator.deployments');
     Route::get('/deployment/{id}', [CoordinatorController::class, 'showDeployment'])->name('coordinator.deployment.show'); 
+    Route::delete('/deployment/cancel-endorsement/{internHte}', [CoordinatorController::class, 'cancelEndorsement'])->name('coordinator.deployment.cancel-endorsement');
 });
 
 // Protected intern routes

@@ -45,7 +45,7 @@
         <table id="deploymentsTable" class="table table-bordered">
           <thead class="table-light">
             <tr>
-              <th width="10%">HTE ID</th>
+              <th width="13%">HTE ID</th>
               <th>Name</th>
               <th>Address</th>
               <th width="12%">Status</th>
@@ -59,7 +59,7 @@
                 $firstEndorsement = $endorsements->first();
                 $hte = $firstEndorsement->hte;
                 $studentCount = $endorsements->count();
-               $status = $endorsements->contains('status', 'deployed') ? 'deployed' 
+                $status = $endorsements->contains('status', 'deployed') ? 'deployed' 
                           : ($endorsements->contains('status', 'processing') ? 'processing' 
                           : 'endorsed');
                           
@@ -73,7 +73,7 @@
               <tr>
                 <td class="align-middle">HTE-{{ str_pad($hteId, 3, '0', STR_PAD_LEFT) }}</td>
                 <td class="align-middle">{{ $hte->organization_name }}</td>
-                <td class="align-middle">{{ Str::limit($hte->address, 50) }}</td>
+                <td class="align-middle small">{{ Str::limit($hte->address, 50) }}</td>
                 <td class="align-middle">
                   <span class="badge {{ $statusClass }} px-3 py-2 rounded-pill text-capitalize">
                     {{ $status }}
@@ -82,32 +82,32 @@
                 <td class="align-middle text-center">
                   <span class="fw-bold">{{ $studentCount }}</span>
                 </td>
-<td class="text-center px-2 align-middle">
-    <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <i class="ph-fill ph-gear custom-icons-i"></i>
-        </button>
-        <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-            <a class="dropdown-item btn btn-outline-light text-dark border-bottom border-lightgray" href="{{ route('coordinator.deployment.show', $hteId) }}">
-                <i class="ph ph-list custom-icons-i mr-2"></i>Manage
-            </a>
-            
-            <!-- Cancel Option: Only show when status is endorsed -->
-            @if($status === 'endorsed')
-            <a class="dropdown-item btn btn-outline-light text-dark" href="">
-                <i class="ph ph-x custom-icons-i mr-2"></i>Cancel
-            </a>
-            @endif
+                <td class="text-center px-2 align-middle">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="ph-fill ph-gear custom-icons-i"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
+                            <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.deployment.show', $hteId) }}">
+                                <i class="ph ph-wrench custom-icons-i mr-2"></i>Manage
+                            </a>
+                            
+                            <!-- Cancel Option: Only show when status is endorsed -->
+                            @if($status === 'endorsed')
+                            <a class="dropdown-item border-lightgray border-top rounded-0 btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#cancelEndorsementModal{{ $hteId }}">
+                                <i class="ph ph-x-circle custom-icons-i mr-2"></i>Cancel Endorsement
+                            </a>
+                            @endif
 
-            <!-- Quick Deploy Option: Only show when status is processing -->
-            @if($status === 'processing')
-            <a class="dropdown-item btn btn-outline-light text-primary" href="">
-                <i class="ph ph-rocket-launch custom-icons-i mr-2"></i>Quick Deploy
-            </a>
-            @endif
-        </div>
-    </div>
-</td>
+                            <!-- Quick Deploy Option: Only show when status is processing -->
+                            @if($status === 'processing')
+                            <a class="dropdown-item border-lightgray border-top rounded-0 btn btn-outline-light text-primary" href="">
+                                <i class="ph ph-seal-check custom-icons-i mr-2"></i>Officially Deploy
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                </td>
               </tr>
             @endforeach
           </tbody>
@@ -116,6 +116,45 @@
     </div>
   </div>
 </section>
+
+<!-- Modals for each HTE -->
+@foreach($deployments as $hteId => $endorsements)
+@php
+    $firstEndorsement = $endorsements->first();
+    $hte = $firstEndorsement->hte;
+@endphp
+<div class="modal fade" id="cancelEndorsementModal{{ $hteId }}" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">
+                    <i class="ph-bold ph-warning details-icons-i mr-1"></i>
+                    Cancel Endorsement
+                </h5>                
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel the endorsement to <strong>{{ $hte->organization_name }}</strong>? This action will:</p>
+                <ul>
+                    <li>Remove all student endorsements to this HTE</li>
+                    <li>Revert student status back to "Ready for Deployment"</li>
+                </ul>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                @foreach($endorsements as $endorsement)
+                <form action="{{ route('coordinator.deployment.cancel-endorsement', $endorsement->id) }}" method="POST" class="d-inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Cancel Endorsement</button>
+                </form>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+@endforeach
 @endsection
-
-
