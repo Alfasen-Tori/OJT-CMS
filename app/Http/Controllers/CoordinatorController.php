@@ -1026,26 +1026,35 @@ public function getRecommendedInterns(Request $request) {
 public function officiallyDeploy($internHteId)
 {
     try {
-        // Find the intern_hte record
+        // Find the intern_hte record to get the HTE ID
         $internHte = InternsHte::findOrFail($internHteId);
         
-        // Update intern_hte status to "deployed" and set deployed_at timestamp
-        $internHte->update([
-            'status' => 'deployed',
-            'deployed_at' => now()
-        ]);
+        // Update all intern_hte records for this HTE that are in processing status
+        $updatedCount = InternsHte::where('hte_id', $internHte->hte_id)
+            ->where('status', 'processing')
+            ->update([
+                'status' => 'deployed',
+                'deployed_at' => now()
+            ]);
         
-        // Update the intern status to "deployed"
-        Intern::where('id', $internHte->intern_id)->update([
-            'status' => 'deployed'
-        ]);
+        // Update corresponding intern statuses using a join
+        if ($updatedCount > 0) {
+            Intern::whereIn('id', function($query) use ($internHte) {
+                $query->select('intern_id')
+                    ->from('interns_hte')
+                    ->where('hte_id', $internHte->hte_id)
+                    ->where('status', 'deployed');
+            })->update([
+                'status' => 'deployed'
+            ]);
+        }
         
-        return redirect()->back()->with('success', 'Intern successfully deployed! Status has been updated to "Deployed".');
+        return redirect()->back()->with('success', "{$updatedCount} intern(s) successfully deployed! Status has been updated to 'Deployed'.");
         
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
         return redirect()->back()->with('error', 'Endorsement record not found.');
     } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'An error occurred while deploying the intern: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'An error occurred while deploying the interns: ' . $e->getMessage());
     }
 }
 
