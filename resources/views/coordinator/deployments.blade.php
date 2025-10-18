@@ -98,13 +98,6 @@
                                 <i class="ph ph-x-circle custom-icons-i mr-2"></i>Cancel Endorsement
                             </a>
                             @endif
-
-                            <!-- Quick Deploy Option: Only show when status is processing -->
-                            @if($status === 'processing')
-                            <a class="dropdown-item border-lightgray border-top rounded-0 btn btn-outline-light text-primary" href="">
-                                <i class="ph ph-seal-check custom-icons-i mr-2"></i>Officially Deploy
-                            </a>
-                            @endif
                         </div>
                     </div>
                 </td>
