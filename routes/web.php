@@ -126,7 +126,7 @@ Route::middleware(['auth:web', 'intern'])->prefix('intern')->group(function() {
     Route::post('/profile/picture', [InternController::class, 'updateProfilePicture'])->name('intern.profile.picture');
     Route::put('/profile/skills', [InternController::class, 'updateSkills'])->name('intern.skills.update');
    
-    Route::get('/reports', [InternController::class, 'reports'])->name('intern.reports');
+    Route::get('/journals', [InternController::class, 'reports'])->name('intern.journals');
     Route::get('/schedule', [InternController::class, 'schedule'])->name('intern.schedule');
 });
 

@@ -36,9 +36,9 @@
           </li>
 
           <li class="nav-item">
-            <a href="{{route('intern.reports')}}" class="nav-link {{ Request::is('intern/reports*') ? 'current-page' : '' }}">
-              <i class="ph{{ Request::is('intern/reports') ? '-fill' : '' }} ph-list-checks nav-link-i"></i>
-              <p>Reports</p>
+            <a href="{{route('intern.journals')}}" class="nav-link {{ Request::is('intern/journals*') ? 'current-page' : '' }}">
+              <i class="ph{{ Request::is('intern/journals') ? '-fill' : '' }} ph-notebook nav-link-i"></i>
+              <p>Weekly Journal</p>
             </a>
           </li>
 
