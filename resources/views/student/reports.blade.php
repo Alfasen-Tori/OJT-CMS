@@ -8,7 +8,7 @@
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="page-header">WEEKLY REPORTS</h1>
+        <h1 class="page-header">WEEKLY JOURNALS</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
@@ -28,7 +28,7 @@
       </div>
     @else
       <!-- Internship Info Card -->
-      <div class="card mb-4">
+      <!-- <div class="card mb-4">
         <div class="card-body">
           <div class="row">
             <div class="col-12 col-md-6">
@@ -44,13 +44,11 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Weekly Reports Section -->
       <div class="row">
-        <div class="col-12">
-          <h5 class="mb-3">Weekly Submissions</h5>
-          
+        <div class="col-12">          
           @if($weeklyReports->isEmpty())
             <div class="alert alert-info text-center">
               <i class="fas fa-info-circle mr-2"></i>
@@ -78,7 +76,7 @@
                         <span class="badge rounded-pill
                           @if($status === 'submitted') bg-success text-success 
                           @elseif($status === 'pending') bg-danger-subtle text-danger 
-                          @elseif($status === 'current') bg-info text-info 
+                          @elseif($status === 'current') bg-info-subtle text-info 
                           @else bg-secondary-subtle text-secondary @endif">
                           
                           @if($status === 'submitted') Submitted
@@ -107,15 +105,15 @@
                           <button class="btn btn-primary btn-sm btn-block upload-report-btn py-2" 
                                   data-week="{{ $report->week_no }}"
                                   data-dates="{{ $weekData['start_date'] ?? '' }} - {{ $weekData['end_date'] ?? '' }}">
-                            <i class="fas fa-upload mr-1"></i> Upload Journal
+                            <i class="ph-fill ph-upload custom-icons-i mr-1"></i> Upload Journal
                           </button>
                         @elseif($status === 'current')
-                          <button class="btn btn-outline-primary btn-sm btn-block py-2" disabled>
-                            <i class="fas fa-clock mr-1"></i> Submit on Saturday
+                          <button class="btn btn-primary btn-sm btn-block py-2" disabled>
+                            <i class="ph-fill ph-clock custom-icons-i mr-1"></i> Opens Saturday
                           </button>
                         @else
                           <button class="btn btn-secondary btn-sm btn-block py-2" disabled>
-                            <i class="fas fa-calendar mr-1"></i> Upload Journal
+                            <i class="ph-fill ph-calendar custom-icons-i mr-1"></i> Opens Next Week
                           </button>
                         @endif
                       </div>
@@ -142,7 +140,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="alert alert-info mb-3">
+        <div class="alert bg-primary-subtle mb-3">
           <strong>Week <span id="modalWeekNumber"></span></strong><br>
           <small id="modalWeekDates"></small>
         </div>
@@ -165,7 +163,7 @@
               <label class="custom-file-label" for="report_file">Choose file...</label>
             </div>
             <small class="form-text text-muted mt-1">
-              Only PDF files are accepted. Maximum file size: 5MB.
+              Maximum file size: 5MB.
             </small>
           </div>
         </form>
@@ -189,14 +187,14 @@
     </button> -->
   </div>
   <div class="offcanvas-body">
-    <div class="alert alert-info mb-3">
+    <div class="alert bg-primary-subtle mb-3">
       <strong>Week <span id="offcanvasWeekNumber"></span></strong><br>
       <small id="offcanvasWeekDates"></small>
     </div>
     
     <form id="uploadReportFormMobile" enctype="multipart/form-data">
       @csrf
-      <input type="hidden" name="week_no_mobile" id="week_no_mobile">
+      <input type="hidden" name="week_no_mobile" id="week_no_mobile" required>
 
       <div class="form-group">
         <label for="report_file_mobile" class="font-weight-bold">Select PDF File</label>
@@ -212,7 +210,7 @@
           <label class="custom-file-label" for="report_file_mobile">Choose file...</label>
         </div>
         <small class="form-text text-muted mt-1">
-          Only PDF files are accepted. Maximum file size: 5MB.
+         Maximum file size: 5MB.
         </small>
       </div>
     </form>
