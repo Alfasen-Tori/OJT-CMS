@@ -71,19 +71,19 @@
                     @elseif($status === 'current') border-primary 
                     @else border-secondary @endif">
                     
-                    <div class="card-body">
+                    <div class="card-body pb-1">
                       <!-- Week Header -->
                       <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="card-title mb-0">Week {{ $report->week_no }}</h6>
-                        <span class="badge 
-                          @if($status === 'submitted') badge-success 
-                          @elseif($status === 'pending') badge-warning 
-                          @elseif($status === 'current') badge-primary 
-                          @else badge-secondary @endif">
+                        <span class="badge rounded-pill
+                          @if($status === 'submitted') bg-success text-success 
+                          @elseif($status === 'pending') bg-danger-subtle text-danger 
+                          @elseif($status === 'current') bg-info text-info 
+                          @else bg-secondary-subtle text-secondary @endif">
                           
                           @if($status === 'submitted') Submitted
-                          @elseif($status === 'pending') Pending
-                          @elseif($status === 'current') Current Week
+                          @elseif($status === 'pending') Missing
+                          @elseif($status === 'current') Ongoing
                           @else Upcoming
                           @endif
                         </span>
@@ -97,25 +97,25 @@
                       <!-- Action Buttons -->
                       <div class="mt-3">
                         @if($status === 'submitted')
-                          <button class="btn btn-outline-success btn-sm btn-block" disabled>
+                          <button class="btn btn-outline-success btn-sm btn-block py-2" disabled>
                             <i class="fas fa-check mr-1"></i> Report Submitted
                           </button>
                           <small class="text-muted d-block mt-1">
                             Submitted: {{ $report->submitted_at ? \Carbon\Carbon::parse($report->submitted_at)->format('M d, Y') : 'N/A' }}
                           </small>
                         @elseif($status === 'pending')
-                          <button class="btn btn-warning btn-sm btn-block upload-report-btn" 
+                          <button class="btn btn-primary btn-sm btn-block upload-report-btn py-2" 
                                   data-week="{{ $report->week_no }}"
                                   data-dates="{{ $weekData['start_date'] ?? '' }} - {{ $weekData['end_date'] ?? '' }}">
-                            <i class="fas fa-upload mr-1"></i> Upload Report
+                            <i class="fas fa-upload mr-1"></i> Upload Journal
                           </button>
                         @elseif($status === 'current')
-                          <button class="btn btn-outline-primary btn-sm btn-block" disabled>
-                            <i class="fas fa-clock mr-1"></i> Submit after Saturday
+                          <button class="btn btn-outline-primary btn-sm btn-block py-2" disabled>
+                            <i class="fas fa-clock mr-1"></i> Submit on Saturday
                           </button>
                         @else
-                          <button class="btn btn-outline-secondary btn-sm btn-block" disabled>
-                            <i class="fas fa-calendar mr-1"></i> Upcoming Week
+                          <button class="btn btn-secondary btn-sm btn-block py-2" disabled>
+                            <i class="fas fa-calendar mr-1"></i> Upload Journal
                           </button>
                         @endif
                       </div>
@@ -147,22 +147,33 @@
           <small id="modalWeekDates"></small>
         </div>
         
-        <form id="uploadReportForm">
+        <form id="uploadReportForm" enctype="multipart/form-data">
           @csrf
           <input type="hidden" name="week_no" id="week_no">
-          
+
           <div class="form-group">
-            <label for="report_file">Select PDF File</label>
-            <input type="file" class="form-control-file" id="report_file" name="report_file" accept=".pdf" required>
-            <small class="form-text text-muted">
+            <label for="report_file" class="font-weight-bold">Select PDF File</label>
+            <div class="custom-file">
+              <input 
+                type="file" 
+                class="custom-file-input" 
+                id="report_file" 
+                name="report_file" 
+                accept=".pdf" 
+                required
+              >
+              <label class="custom-file-label" for="report_file">Choose file...</label>
+            </div>
+            <small class="form-text text-muted mt-1">
               Only PDF files are accepted. Maximum file size: 5MB.
             </small>
           </div>
         </form>
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="submitReportBtn">Upload Report</button>
+        <button type="button" class="btn btn-primary" id="submitReportBtn">Submit</button>
       </div>
     </div>
   </div>
@@ -183,22 +194,42 @@
       <small id="offcanvasWeekDates"></small>
     </div>
     
-    <form id="uploadReportFormMobile">
+    <form id="uploadReportFormMobile" enctype="multipart/form-data">
       @csrf
       <input type="hidden" name="week_no_mobile" id="week_no_mobile">
-      
+
       <div class="form-group">
-        <label for="report_file_mobile">Select PDF File</label>
-        <input type="file" class="form-control-file" id="report_file_mobile" name="report_file_mobile" accept=".pdf" required>
-        <small class="form-text text-muted">
+        <label for="report_file_mobile" class="font-weight-bold">Select PDF File</label>
+        <div class="custom-file">
+          <input 
+            type="file" 
+            class="custom-file-input" 
+            id="report_file_mobile" 
+            name="report_file_mobile" 
+            accept=".pdf" 
+            required
+          >
+          <label class="custom-file-label" for="report_file_mobile">Choose file...</label>
+        </div>
+        <small class="form-text text-muted mt-1">
           Only PDF files are accepted. Maximum file size: 5MB.
         </small>
       </div>
     </form>
+
+    <script>
+      // Update file label text on file select (Bootstrap 4)
+      document.querySelector('.custom-file-input#report_file_mobile')
+        .addEventListener('change', function (e) {
+          const fileName = e.target.files[0]?.name || 'Choose file...';
+          e.target.nextElementSibling.textContent = fileName;
+        });
+    </script>
+
   </div>
   <div class="offcanvas-footer">
     <button type="button" class="btn btn-secondary btn-block mb-2" onclick="closeOffcanvas()">Cancel</button>
-    <button type="button" class="btn btn-primary btn-block" id="submitReportBtnMobile">Upload Report</button>
+    <button type="button" class="btn btn-primary btn-block" id="submitReportBtnMobile">Submit</button>
   </div>
 </div>
 

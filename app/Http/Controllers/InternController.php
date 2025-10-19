@@ -425,104 +425,158 @@ class InternController extends Controller
         ]);
     }
 
-    public function reports()
-    {
-        $intern = Intern::where('user_id', Auth::id())->first();
-        
-        if (!$intern) {
-            return view('student.reports')->with('error', 'Intern profile not found.');
-        }
+public function reports()
+{
+    $intern = Intern::where('user_id', Auth::id())->first();
+    
+    if (!$intern) {
+        return view('student.reports')->with('error', 'Intern profile not found.');
+    }
 
-        // Get current internship
-        $internship = InternsHte::where('intern_id', $intern->id)
-            ->where('status', 'deployed')
+    // Get current internship
+    $internship = InternsHte::where('intern_id', $intern->id)
+        ->where('status', 'deployed')
+        ->first();
+
+    if (!$internship) {
+        return view('student.reports')->with('error', 'No active internship found.');
+    }
+
+    // Calculate total hours rendered
+    $totalHoursRendered = Attendance::where('intern_hte_id', $internship->id)
+        ->sum('hours_rendered');
+
+    // Generate weekly report entries
+    $this->generateWeeklyReports($intern->id, $internship, $totalHoursRendered);
+
+    // Get all weekly reports for this intern
+    $weeklyReports = WeeklyReport::where('intern_id', $intern->id)
+        ->orderBy('week_no', 'asc')
+        ->get();
+
+    // Calculate week information
+    $weekInfo = $this->calculateWeekInformation($internship, $weeklyReports);
+
+    return view('student.reports', compact('weeklyReports', 'weekInfo', 'internship'));
+}
+
+private function generateWeeklyReports($internId, $internship, $totalHoursRendered)
+{
+    $startDate = Carbon::parse($internship->start_date);
+    $currentDate = Carbon::now();
+    $endDate = Carbon::parse($internship->end_date);
+    
+    // Stop generating if internship is completed (hours requirement met)
+    if ($totalHoursRendered >= $internship->no_of_hours) {
+        return;
+    }
+    
+    // Find the Monday of the start date week
+    $firstMonday = $startDate->copy()->startOfWeek(Carbon::MONDAY);
+    
+    // Determine which week number to start from
+    $startWeekNumber = 1;
+    
+    // Calculate how many weeks to generate
+    if ($currentDate->lt($startDate)) {
+        // Start date is in the future - only generate the start week
+        $weeksToGenerate = 1;
+    } else {
+        // Start date has passed - generate current week + 1 upcoming week
+        $currentWeekNumber = $firstMonday->diffInWeeks($currentDate) + 1;
+        $weeksToGenerate = $currentWeekNumber + 1;
+    }
+    
+    // Don't generate weeks beyond the end date
+    $maxWeeks = $firstMonday->diffInWeeks($endDate) + 1;
+    $weeksToGenerate = min($weeksToGenerate, $maxWeeks);
+    
+    // Limit to maximum 52 weeks (1 year) as safety
+    $weeksToGenerate = min($weeksToGenerate, 52);
+    
+    for ($weekNo = $startWeekNumber; $weekNo <= $weeksToGenerate; $weekNo++) {
+        // Calculate week start (Monday) and end (Friday)
+        $weekStart = $firstMonday->copy()->addWeeks($weekNo - 1);
+        $weekEnd = $weekStart->copy()->addDays(4); // Friday
+        
+        // Skip weeks that end before internship start
+        if ($weekEnd->lt($startDate)) {
+            continue;
+        }
+        
+        // Skip weeks that start after internship end date
+        if ($weekStart->gt($endDate)) {
+            continue;
+        }
+        
+        // Check if report for this week already exists
+        $existingReport = WeeklyReport::where('intern_id', $internId)
+            ->where('week_no', $weekNo)
             ->first();
-
-        if (!$internship) {
-            return view('student.reports')->with('error', 'No active internship found.');
-        }
-
-        // Generate weekly report entries
-        $this->generateWeeklyReports($intern->id, $internship);
-
-        // Get all weekly reports for this intern
-        $weeklyReports = WeeklyReport::where('intern_id', $intern->id)
-            ->orderBy('week_no', 'asc')
-            ->get();
-
-        // Calculate week information
-        $weekInfo = $this->calculateWeekInformation($internship, $weeklyReports);
-
-        return view('student.reports', compact('weeklyReports', 'weekInfo', 'internship'));
-    }
-
-    private function generateWeeklyReports($internId, $internship)
-    {
-        $startDate = Carbon::parse($internship->start_date);
-        $currentDate = Carbon::now();
-        
-        // Calculate total weeks from start date to current date
-        $totalWeeks = $startDate->diffInWeeks($currentDate) + 1; // +1 to include current week
-        
-        for ($weekNo = 1; $weekNo <= $totalWeeks; $weekNo++) {
-            // Calculate week start and end dates
-            $weekStart = $startDate->copy()->addWeeks($weekNo - 1);
-            $weekEnd = $weekStart->copy()->addDays(4); // Friday (5-day work week)
             
-            // Check if week has passed (after Saturday)
-            $weekPassed = $currentDate->gt($weekEnd->copy()->addDays(1)); // Saturday
-            
-            // Check if report for this week already exists
-            $existingReport = WeeklyReport::where('intern_id', $internId)
-                ->where('week_no', $weekNo)
-                ->first();
-                
-            if (!$existingReport) {
-                WeeklyReport::create([
-                    'intern_id' => $internId,
-                    'week_no' => $weekNo,
-                    'report_path' => null,
-                    'submitted_at' => null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+        if (!$existingReport) {
+            WeeklyReport::create([
+                'intern_id' => $internId,
+                'week_no' => $weekNo,
+                'report_path' => null,
+                'submitted_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
+}
 
-    private function calculateWeekInformation($internship, $weeklyReports)
-    {
-        $startDate = Carbon::parse($internship->start_date);
-        $currentDate = Carbon::now();
+private function calculateWeekInformation($internship, $weeklyReports)
+{
+    $startDate = Carbon::parse($internship->start_date);
+    $currentDate = Carbon::now();
+    
+    // Find the Monday of the start date week
+    $firstMonday = $startDate->copy()->startOfWeek(Carbon::MONDAY);
+    
+    $weekInfo = [];
+    
+    foreach ($weeklyReports as $report) {
+        // Calculate week start (Monday) and end (Friday)
+        $weekStart = $firstMonday->copy()->addWeeks($report->week_no - 1);
+        $weekEnd = $weekStart->copy()->addDays(4); // Friday
         
-        $weekInfo = [];
-        
-        foreach ($weeklyReports as $report) {
-            $weekStart = $startDate->copy()->addWeeks($report->week_no - 1);
-            $weekEnd = $weekStart->copy()->addDays(4); // Friday
-            
-            // Determine status
-            $isCurrentWeek = $currentDate->between($weekStart, $weekEnd);
-            $weekPassed = $currentDate->gt($weekEnd->copy()->addDays(1)); // After Saturday
-            
-            $status = 'upcoming';
-            if ($isCurrentWeek) {
-                $status = 'current';
-            } elseif ($weekPassed) {
-                $status = $report->report_path ? 'submitted' : 'pending';
-            }
-            
-            $weekInfo[$report->week_no] = [
-                'start_date' => $weekStart->format('M d'),
-                'end_date' => $weekEnd->format('M d'),
-                'status' => $status,
-                'is_submitted' => !is_null($report->report_path),
-                'can_submit' => $weekPassed && is_null($report->report_path)
-            ];
+        // Skip weeks that end before internship start
+        if ($weekEnd->lt($startDate)) {
+            continue;
         }
         
-        return $weekInfo;
+        // Determine status based on your business rules
+        $isCurrentWeek = $currentDate->between($weekStart, $weekEnd);
+        $weekPassed = $currentDate->gt($weekEnd);
+        $isFutureWeek = $currentDate->lt($weekStart);
+        
+        $status = 'upcoming';
+        if ($isCurrentWeek) {
+            $status = 'current';
+        } elseif ($weekPassed) {
+            $status = $report->report_path ? 'submitted' : 'pending';
+        }
+        
+        // Can submit only if week has passed AND report hasn't been submitted
+        $canSubmit = $weekPassed && is_null($report->report_path);
+        
+        $weekInfo[$report->week_no] = [
+            'start_date' => $weekStart->format('M d'),
+            'end_date' => $weekEnd->format('M d'),
+            'full_start_date' => $weekStart->format('Y-m-d'),
+            'full_end_date' => $weekEnd->format('Y-m-d'),
+            'status' => $status,
+            'is_submitted' => !is_null($report->report_path),
+            'can_submit' => $canSubmit,
+            'week_passed' => $weekPassed,
+            'is_future' => $isFutureWeek
+        ];
     }
+    
+    return $weekInfo;
+}
 
     public function schedule(){
         return view('student.schedule');
