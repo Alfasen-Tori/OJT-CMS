@@ -27,24 +27,8 @@
         {{ $error }}
       </div>
     @else
-      <!-- Internship Info Card -->
-      <!-- <div class="card mb-4">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-12 col-md-6">
-              <h6 class="card-title text-muted mb-1">Internship Period</h6>
-              <p class="card-text mb-2">
-                {{ \Carbon\Carbon::parse($internship->start_date)->format('M d, Y') }} - 
-                {{ \Carbon\Carbon::parse($internship->end_date)->format('M d, Y') }}
-              </p>
-            </div>
-            <div class="col-12 col-md-6">
-              <h6 class="card-title text-muted mb-1">Total Hours</h6>
-              <p class="card-text mb-0">{{ $internship->no_of_hours }} hours</p>
-            </div>
-          </div>
-        </div>
-      </div> -->
+      <!-- Success/Error Messages -->
+      <div id="alertContainer"></div>
 
       <!-- Weekly Reports Section -->
       <div class="row">
@@ -74,7 +58,7 @@
                       <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="card-title mb-0">Week {{ $report->week_no }}</h6>
                         <span class="badge rounded-pill
-                          @if($status === 'submitted') bg-success text-success 
+                          @if($status === 'submitted') bg-success-subtle text-success 
                           @elseif($status === 'pending') bg-danger-subtle text-danger 
                           @elseif($status === 'current') bg-info-subtle text-info 
                           @else bg-secondary-subtle text-secondary @endif">
@@ -95,21 +79,30 @@
                       <!-- Action Buttons -->
                       <div class="mt-3">
                         @if($status === 'submitted')
-                          <button class="btn btn-outline-success btn-sm btn-block py-2" disabled>
-                            <i class="fas fa-check mr-1"></i> Report Submitted
-                          </button>
+                          <div class="d-flex gap-1">
+                            <button class="btn btn-outline-primary btn-sm flex-fill preview-report-btn" 
+                                    data-report-id="{{ $report->id }}"
+                                    data-week="{{ $report->week_no }}">
+                              <i class="ph-fill ph-eye custom-icons-i mr-1"></i> View
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm delete-report-btn"
+                                    data-report-id="{{ $report->id }}"
+                                    data-week="{{ $report->week_no }}">
+                              <i class="ph-bold ph-prohibit-inset custom-icons-i"></i>
+                            </button>
+                          </div>
                           <small class="text-muted d-block mt-1">
                             Submitted: {{ $report->submitted_at ? \Carbon\Carbon::parse($report->submitted_at)->format('M d, Y') : 'N/A' }}
                           </small>
                         @elseif($status === 'pending')
-                          <button class="btn btn-primary btn-sm btn-block upload-report-btn py-2" 
+                          <button class="btn btn-success btn-sm btn-block upload-report-btn py-2" 
                                   data-week="{{ $report->week_no }}"
                                   data-dates="{{ $weekData['start_date'] ?? '' }} - {{ $weekData['end_date'] ?? '' }}">
                             <i class="ph-fill ph-upload custom-icons-i mr-1"></i> Upload Journal
                           </button>
                         @elseif($status === 'current')
-                          <button class="btn btn-primary btn-sm btn-block py-2" disabled>
-                            <i class="ph-fill ph-clock custom-icons-i mr-1"></i> Opens Saturday
+                          <button class="btn btn-success btn-sm btn-block py-2" disabled>
+                            <i class="ph-fill ph-clock custom-icons-i mr-1"></i> Opens on Saturday
                           </button>
                         @else
                           <button class="btn btn-secondary btn-sm btn-block py-2" disabled>
@@ -134,7 +127,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Upload Weekly Report</h5>
+        <h5 class="modal-title">Upload Weekly Journal</h5>
         <button type="button" class="close" data-dismiss="modal">
           <span>&times;</span>
         </button>
@@ -177,14 +170,34 @@
   </div>
 </div>
 
+<!-- Preview Report Modal -->
+<div class="modal fade" id="previewReportModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Weekly Journal - Week <span id="previewWeekNumber"></span></h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="previewContainer" class="text-center">
+          <iframe id="pdfPreview" src="" width="100%" height="500px" style="border: none;"></iframe>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-danger" id="deleteReportBtn">Delete Journal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Custom Offcanvas for Mobile -->
 <div class="offcanvas-backdrop" id="offcanvasBackdrop"></div>
 <div class="offcanvas" id="uploadReportOffcanvas">
   <div class="offcanvas-header d-flex align-items-center">
-    <h5 class="offcanvas-title">Upload Weekly Report</h5>
-    <!-- <button type="button" class="close ml-auto" onclick="closeOffcanvas()">
-      <span>&times;</span>
-    </button> -->
+    <h5 class="offcanvas-title">Upload Weekly Journal</h5>
   </div>
   <div class="offcanvas-body">
     <div class="alert bg-primary-subtle mb-3">
@@ -194,7 +207,7 @@
     
     <form id="uploadReportFormMobile" enctype="multipart/form-data">
       @csrf
-      <input type="hidden" name="week_no_mobile" id="week_no_mobile" required>
+      <input type="hidden" name="week_no" id="week_no_mobile">
 
       <div class="form-group">
         <label for="report_file_mobile" class="font-weight-bold">Select PDF File</label>
@@ -203,7 +216,7 @@
             type="file" 
             class="custom-file-input" 
             id="report_file_mobile" 
-            name="report_file_mobile" 
+            name="report_file" 
             accept=".pdf" 
             required
           >
@@ -214,16 +227,6 @@
         </small>
       </div>
     </form>
-
-    <script>
-      // Update file label text on file select (Bootstrap 4)
-      document.querySelector('.custom-file-input#report_file_mobile')
-        .addEventListener('change', function (e) {
-          const fileName = e.target.files[0]?.name || 'Choose file...';
-          e.target.nextElementSibling.textContent = fileName;
-        });
-    </script>
-
   </div>
   <div class="offcanvas-footer">
     <button type="button" class="btn btn-secondary btn-block mb-2" onclick="closeOffcanvas()">Cancel</button>
@@ -266,7 +269,7 @@
   left: 0;
   width: 100%;
   background: white;
-  border-radius: 1rem 1rem 0 0;
+  border-radius: 0.7rem 0.7rem 0 0;
   z-index: 1050;
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -281,19 +284,9 @@
 }
 
 .offcanvas-header {
-  padding: 1.25rem 1.25rem 0.5rem;
+  padding: 1rem 1.25rem 0.5rem;
   border-bottom: 1px solid #dee2e6;
   flex-shrink: 0;
-}
-
-.offcanvas-header .close {
-  font-size: 1.5rem;
-  line-height: 1;
-}
-
-.offcanvas-title {
-  margin-bottom: 0;
-  font-weight: 600;
 }
 
 .offcanvas-body {
@@ -318,13 +311,11 @@
     padding: 0.75rem 1rem;
   }
   
-  /* Prevent body scroll when offcanvas is open */
   body.offcanvas-open {
     overflow: hidden;
   }
 }
 
-/* Desktop - hide offcanvas */
 @media (min-width: 769px) {
   .offcanvas,
   .offcanvas-backdrop {
@@ -353,80 +344,274 @@
 
 <script>
 function isMobile() {
-  return window.innerWidth <= 768;
+    return window.innerWidth <= 768;
 }
 
 function openOffcanvas() {
-  const offcanvas = document.getElementById('uploadReportOffcanvas');
-  const backdrop = document.getElementById('offcanvasBackdrop');
-  const body = document.body;
-  
-  offcanvas.classList.add('show');
-  backdrop.classList.add('show');
-  body.classList.add('offcanvas-open');
-  
-  // Prevent background scroll
-  document.body.style.overflow = 'hidden';
+    const offcanvas = document.getElementById('uploadReportOffcanvas');
+    const backdrop = document.getElementById('offcanvasBackdrop');
+    const body = document.body;
+    
+    offcanvas.classList.add('show');
+    backdrop.classList.add('show');
+    body.classList.add('offcanvas-open');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeOffcanvas() {
-  const offcanvas = document.getElementById('uploadReportOffcanvas');
-  const backdrop = document.getElementById('offcanvasBackdrop');
-  const body = document.body;
-  
-  offcanvas.classList.remove('show');
-  backdrop.classList.remove('show');
-  body.classList.remove('offcanvas-open');
-  
-  // Restore background scroll
-  document.body.style.overflow = '';
+    const offcanvas = document.getElementById('uploadReportOffcanvas');
+    const backdrop = document.getElementById('offcanvasBackdrop');
+    const body = document.body;
+    
+    offcanvas.classList.remove('show');
+    backdrop.classList.remove('show');
+    body.classList.remove('offcanvas-open');
+    document.body.style.overflow = '';
 }
 
-// Close offcanvas when clicking backdrop
-document.getElementById('offcanvasBackdrop').addEventListener('click', closeOffcanvas);
+function updateFileLabel(inputElement) {
+    const fileName = inputElement.files[0]?.name || 'Choose file...';
+    inputElement.nextElementSibling.textContent = fileName;
+}
 
-// Handle upload report button click
+// Show toast notification
+function showToast(message, type = 'success') {
+    const toastType = type === 'success' ? 'success' : 'error';
+    toastr[toastType](message);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.upload-report-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const weekNo = this.getAttribute('data-week');
-      const weekDates = this.getAttribute('data-dates');
-      
-      // Update week information
-      document.getElementById('modalWeekNumber').textContent = weekNo;
-      document.getElementById('modalWeekDates').textContent = weekDates;
-      document.getElementById('offcanvasWeekNumber').textContent = weekNo;
-      document.getElementById('offcanvasWeekDates').textContent = weekDates;
-      
-      document.getElementById('week_no').value = weekNo;
-      document.getElementById('week_no_mobile').value = weekNo;
-      
-      if (isMobile()) {
-        // Use custom offcanvas for mobile
-        openOffcanvas();
-      } else {
-        // Use regular modal for desktop
-        $('#uploadReportModal').modal('show');
-      }
+    let currentReportId = null;
+    let currentWeekNumber = null;
+
+    // File input handlers
+    document.getElementById('report_file')?.addEventListener('change', function() {
+        updateFileLabel(this);
     });
-  });
+    
+    document.getElementById('report_file_mobile')?.addEventListener('change', function() {
+        updateFileLabel(this);
+    });
 
-  // Placeholder for upload functionality
-  document.getElementById('submitReportBtn')?.addEventListener('click', function() {
-    alert('Upload functionality will be implemented in the next phase.');
-  });
+    // Upload report button handlers
+    document.querySelectorAll('.upload-report-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const weekNo = this.getAttribute('data-week');
+            const weekDates = this.getAttribute('data-dates');
+            
+            document.getElementById('modalWeekNumber').textContent = weekNo;
+            document.getElementById('modalWeekDates').textContent = weekDates;
+            document.getElementById('offcanvasWeekNumber').textContent = weekNo;
+            document.getElementById('offcanvasWeekDates').textContent = weekDates;
+            
+            document.getElementById('week_no').value = weekNo;
+            document.getElementById('week_no_mobile').value = weekNo;
+            
+            // Reset forms
+            document.getElementById('uploadReportForm').reset();
+            document.getElementById('uploadReportFormMobile').reset();
+            updateFileLabel(document.getElementById('report_file'));
+            updateFileLabel(document.getElementById('report_file_mobile'));
+            
+            if (isMobile()) {
+                openOffcanvas();
+            } else {
+                $('#uploadReportModal').modal('show');
+            }
+        });
+    });
 
-  document.getElementById('submitReportBtnMobile')?.addEventListener('click', function() {
-    alert('Upload functionality will be implemented in the next phase.');
-    closeOffcanvas();
-  });
+    // Preview report button handlers
+    document.querySelectorAll('.preview-report-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            currentReportId = this.getAttribute('data-report-id');
+            currentWeekNumber = this.getAttribute('data-week');
+            
+            document.getElementById('previewWeekNumber').textContent = currentWeekNumber;
+            document.getElementById('pdfPreview').src = "{{ route('intern.weekly-reports.preview', '') }}/" + currentReportId;
+            
+            $('#previewReportModal').modal('show');
+        });
+    });
 
-  // Close offcanvas with escape key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeOffcanvas();
+    // Delete report button handlers (card buttons)
+    document.querySelectorAll('.delete-report-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const reportId = this.getAttribute('data-report-id');
+            const weekNo = this.getAttribute('data-week');
+            
+            if (confirm(`Are you sure you want to delete your Week ${weekNo} journal?`)) {
+                deleteReport(reportId);
+            }
+        });
+    });
+
+    // Delete button in preview modal
+    document.getElementById('deleteReportBtn')?.addEventListener('click', function() {
+        if (currentReportId && confirm(`Are you sure you want to delete your Week ${currentWeekNumber} journal?`)) {
+            deleteReport(currentReportId);
+            $('#previewReportModal').modal('hide');
+        }
+    });
+
+    // UPLOAD - SIMPLIFIED VERSION
+    document.getElementById('submitReportBtn')?.addEventListener('click', function() {
+        handleUpload('desktop');
+    });
+
+    document.getElementById('submitReportBtnMobile')?.addEventListener('click', function() {
+        handleUpload('mobile');
+    });
+
+    // Close offcanvas handlers
+    document.getElementById('offcanvasBackdrop').addEventListener('click', closeOffcanvas);
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeOffcanvas();
+        }
+    });
+
+    // SIMPLIFIED UPLOAD FUNCTION - ONE FUNCTION FOR BOTH
+    function handleUpload(platform) {
+        console.log('Upload started for platform:', platform);
+        
+        let weekNo, fileInput, submitBtn;
+        
+        if (platform === 'desktop') {
+            weekNo = document.getElementById('week_no').value;
+            fileInput = document.getElementById('report_file');
+            submitBtn = document.getElementById('submitReportBtn');
+        } else {
+            weekNo = document.getElementById('week_no_mobile').value;
+            fileInput = document.getElementById('report_file_mobile');
+            submitBtn = document.getElementById('submitReportBtnMobile');
+        }
+
+        console.log('Week No:', weekNo);
+        console.log('File:', fileInput.files[0]);
+
+        // Validate file
+        if (!fileInput.files[0]) {
+            showToast('Please select a PDF file.', 'error');
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (fileInput.files[0].size > 5 * 1024 * 1024) {
+            showToast('File size must be less than 5MB.', 'error');
+            return;
+        }
+
+        // Validate file type
+        const fileExtension = fileInput.files[0].name.split('.').pop().toLowerCase();
+        if (fileExtension !== 'pdf') {
+            showToast('Only PDF files are allowed.', 'error');
+            return;
+        }
+
+        // Create FormData - SIMPLE AND CLEAN
+        const formData = new FormData();
+        formData.append('week_no', weekNo);
+        formData.append('report_file', fileInput.files[0]);
+        formData.append('_token', "{{ csrf_token() }}");
+
+        console.log('FormData created, sending request...');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="ph-bold ph-circle-notch custom-icons-i spin mr-1"></i> Uploading...';
+
+        // SIMPLE FETCH REQUEST
+        fetch("{{ route('intern.weekly-reports.upload') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Upload response data:', data);
+            if (data.success) {
+                showToast(data.message, 'success');
+                
+                // Close modals/offcanvas
+                if (platform === 'desktop') {
+                    $('#uploadReportModal').modal('hide');
+                } else {
+                    closeOffcanvas();
+                }
+                
+                // Refresh the page after a short delay
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Upload error details:', error);
+            showToast('Error uploading file. Please check console for details and try again.', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Submit';
+        });
     }
-  });
+
+    // Delete report function
+    function deleteReport(reportId) {
+        const deleteButtons = document.querySelectorAll(`.delete-report-btn[data-report-id="${reportId}"]`);
+        deleteButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph-bold ph-circle-notch custom-icons-i spin"></i>';
+        });
+
+        fetch("{{ route('intern.weekly-reports.delete', '') }}/" + reportId, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Delete error:', error);
+            showToast('Error deleting journal. Please try again.', 'error');
+        })
+        .finally(() => {
+            deleteButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph-bold ph-prohibit-inset custom-icons-i"></i>';
+            });
+        });
+    }
+
+    // Add spin class for loading animations
+    const style = document.createElement('style');
+    style.textContent = `
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
 });
 </script>
 @endsection

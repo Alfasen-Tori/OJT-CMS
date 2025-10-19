@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Models\InternDocument;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -576,6 +577,126 @@ private function calculateWeekInformation($internship, $weeklyReports)
     }
     
     return $weekInfo;
+}
+
+public function uploadWeeklyReport(Request $request)
+{
+    $request->validate([
+        'week_no' => 'required|integer',
+        'report_file' => 'required|file|mimes:pdf|max:5120',
+    ]);
+
+    try {
+        $intern = Intern::where('user_id', Auth::id())->firstOrFail();
+        
+        // Check if report already exists for this week
+        $existingReport = WeeklyReport::where('intern_id', $intern->id)
+            ->where('week_no', $request->week_no)
+            ->first();
+
+        if ($existingReport && $existingReport->report_path) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A report already exists for this week. Please delete it first to upload a new one.'
+            ], 400);
+        }
+
+        // Upload file
+        if ($request->hasFile('report_file')) {
+            $file = $request->file('report_file');
+            $fileName = 'weekly_report_' . $intern->student_id . '_week_' . $request->week_no . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('weekly_reports', $fileName, 'public');
+
+            if ($existingReport) {
+                // Update existing record
+                $existingReport->update([
+                    'report_path' => $filePath,
+                    'submitted_at' => now(),
+                ]);
+            } else {
+                // Create new record
+                WeeklyReport::create([
+                    'intern_id' => $intern->id,
+                    'week_no' => $request->week_no,
+                    'report_path' => $filePath,
+                    'submitted_at' => now(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Weekly journal uploaded successfully!'
+            ]);
+        }
+
+    } catch (\Exception $e) {
+        Log::error('Upload error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error uploading file. Please try again.'
+        ], 500);
+    }
+}
+
+public function deleteWeeklyReport($id)
+{
+    try {
+        $intern = Intern::where('user_id', Auth::id())->firstOrFail();
+        $weeklyReport = WeeklyReport::where('id', $id)
+            ->where('intern_id', $intern->id)
+            ->firstOrFail();
+
+        // Delete physical file
+        if ($weeklyReport->report_path && Storage::disk('public')->exists($weeklyReport->report_path)) {
+            Storage::disk('public')->delete($weeklyReport->report_path);
+        }
+
+        // Update database record
+        $weeklyReport->update([
+            'report_path' => null,
+            'submitted_at' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Weekly journal deleted successfully!'
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Delete error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error deleting journal. Please try again.'
+        ], 500);
+    }
+}
+
+public function previewWeeklyReport($id)
+{
+    try {
+        $intern = Intern::where('user_id', Auth::id())->firstOrFail();
+        $weeklyReport = WeeklyReport::where('id', $id)
+            ->where('intern_id', $intern->id)
+            ->firstOrFail();
+
+        if (!$weeklyReport->report_path) {
+            abort(404);
+        }
+
+        $filePath = storage_path('app/public/' . $weeklyReport->report_path);
+        
+        if (!file_exists($filePath)) {
+            abort(404);
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"'
+        ]);
+
+    } catch (\Exception $e) {
+        abort(404);
+    }
 }
 
     public function schedule(){
