@@ -39,12 +39,12 @@
 
 @if($hasDeploymentDetails)
 <!-- Deployed State -->
-<div class="row mb-4">
+<div class="row mb-2">
     <div class="col-md-12">
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center mb-3">
-                    <div class="bg-success-subtle rounded p-2 me-3">
+                    <div class="bg-success-subtle rounded d-flex justify-content-center align-items-center me-2" style="width: 50px; height: 50px;">
                         <i class="ph ph-calendar-check text-success fs-4"></i>
                     </div>
                     <div>
@@ -52,33 +52,34 @@
                         <p class="text-muted mb-0">Internship program in progress</p>
                     </div>
                 </div>
+
                 
                 <div class="row g-4">
-                    <div class="col-md-3">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-success ps-3">
                             <small class="text-muted fw-medium">START DATE</small>
                             <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($deploymentDetails->start_date)->format('M j, Y') }}</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-warning ps-3">
                             <small class="text-muted fw-medium">END DATE</small>
                             <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($deploymentDetails->end_date)->format('M j, Y') }}</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-info ps-3">
                             <small class="text-muted fw-medium">HOURS</small>
                             <div class="fw-bold text-dark fs-6">{{ $deploymentDetails->no_of_hours }}</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-primary ps-3">
                             <small class="text-muted fw-medium">STUDENTS</small>
                             <div class="fw-bold text-dark fs-6">{{ $deployedCount }}/{{ $totalMyStudents }}</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-sm-4 col-12">
                         <div class="bg-success-subtle rounded-pill px-3 py-2 text-center">
                             <span class="fw-bold text-success">DEPLOYED</span>
                         </div>
@@ -105,7 +106,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center mb-3">
-                    <div class="bg-info-subtle rounded p-2 me-3">
+                    <div class="bg-info-subtle rounded d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
                         <i class="ph ph-hourglass-medium text-info fs-4"></i>
                     </div>
                     <div>
@@ -113,33 +114,34 @@
                         <p class="text-muted mb-0">Internship details being finalized</p>
                     </div>
                 </div>
+
                 
                 <div class="row g-4">
-                    <div class="col-md-3">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-success ps-3">
                             <small class="text-muted fw-medium">START DATE</small>
                             <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($processingDetails->start_date)->format('M j, Y') }}</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-warning ps-3">
-                            <small class="text-muted fw-medium">ESTIMATED COMPLETION DATE</small>
+                            <small class="text-muted fw-medium">ESTIMATED END DATE</small>
                             <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($processingDetails->end_date)->format('M j, Y') }}</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-info ps-3">
                             <small class="text-muted fw-medium">HOURS</small>
                             <div class="fw-bold text-dark fs-6">{{ $processingDetails->no_of_hours }}</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-sm-2 col-6">
                         <div class="border-start border-3 border-primary ps-3">
                             <small class="text-muted fw-medium">STUDENTS</small>
                             <div class="fw-bold text-dark fs-6">{{ $processingCount }}/{{ $totalMyStudents }}</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-sm-4 col-6">
                         <div class="bg-info-subtle rounded-pill px-3 py-2 text-center">
                             <span class="fw-bold text-info">PROCESSING</span>
                         </div>
@@ -166,7 +168,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center mb-3">
-                    <div class="bg-primary-subtle rounded p-2 me-3">
+                    <div class="bg-primary-subtle rounded d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
                         <i class="ph ph-clock-countdown text-primary fs-4"></i>
                     </div>
                     <div>
@@ -174,6 +176,7 @@
                         <p class="text-muted mb-0">Interns endorsed and awaiting deployment</p>
                     </div>
                 </div>
+
                 
                 <div class="row g-4">
                     <div class="col-md-4">
