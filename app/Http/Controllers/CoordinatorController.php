@@ -29,8 +29,8 @@ use PhpOffice\PhpWord\TemplateProcessor;
 use Carbon\Carbon;
 
 
-    class CoordinatorController extends Controller
-    {
+class CoordinatorController extends Controller
+{
     public function dashboard() {
         // Get the currently logged-in coordinator
         $coordinator = auth()->user()->coordinator;
@@ -244,8 +244,6 @@ use Carbon\Carbon;
         }
     }
 
-    
-
     // HTE Methods
     public function htes() {
         $htes = Hte::withCount('internsHte')->get();
@@ -256,143 +254,141 @@ use Carbon\Carbon;
         return view('coordinator.new-hte');
     }
 
-public function registerHTE(Request $request)
-{
-    $validated = $request->validate([
-        'contact_email' => 'required|email|unique:users,email',
-        'contact_first_name' => 'required|string|max:255',
-        'contact_last_name' => 'required|string|max:255',
-        'contact_number' => 'required|string|max:20',
-        'address' => 'required|string|max:255',
-        'organization_name' => 'required|string|max:255',
-        'organization_type' => 'required|in:private,government,ngo,educational,other',
-        'hte_status' => 'required|in:active,new',
-        'description' => 'nullable|string',
-        'coordinator_id' => 'required|exists:coordinators,id'
-    ]);
+    public function registerHTE(Request $request)
+    {
+        $validated = $request->validate([
+            'contact_email' => 'required|email|unique:users,email',
+            'contact_first_name' => 'required|string|max:255',
+            'contact_last_name' => 'required|string|max:255',
+            'contact_number' => 'required|string|max:20',
+            'address' => 'required|string|max:255',
+            'organization_name' => 'required|string|max:255',
+            'organization_type' => 'required|in:private,government,ngo,educational,other',
+            'hte_status' => 'required|in:active,new',
+            'description' => 'nullable|string',
+            'coordinator_id' => 'required|exists:coordinators,id'
+        ]);
 
-    $tempPassword = Str::random(16);
+        $tempPassword = Str::random(16);
 
-    $user = User::create([
-        'email' => $validated['contact_email'],
-        'password' => Hash::make($tempPassword),
-        'fname' => $validated['contact_first_name'],
-        'lname' => $validated['contact_last_name'],
-        'contact' => $validated['contact_number'],
-        'pic' => 'profile-pictures/profile.jpg',
-        'temp_password' => true,
-        'username' => $validated['contact_email']
-    ]);
+        $user = User::create([
+            'email' => $validated['contact_email'],
+            'password' => Hash::make($tempPassword),
+            'fname' => $validated['contact_first_name'],
+            'lname' => $validated['contact_last_name'],
+            'contact' => $validated['contact_number'],
+            'pic' => 'profile-pictures/profile.jpg',
+            'temp_password' => true,
+            'username' => $validated['contact_email']
+        ]);
 
-    $hte = Hte::create([
-        'user_id' => $user->id,
-        'status' => $validated['hte_status'],
-        'type' => $validated['organization_type'],
-        'address' => $validated['address'],
-        'description' => $validated['description'],
-        'organization_name' => $validated['organization_name'],
-        'slots' => 0,
-        'moa_path' => null
-    ]);
+        $hte = Hte::create([
+            'user_id' => $user->id,
+            'status' => $validated['hte_status'],
+            'type' => $validated['organization_type'],
+            'address' => $validated['address'],
+            'description' => $validated['description'],
+            'organization_name' => $validated['organization_name'],
+            'slots' => 0,
+            'moa_path' => null
+        ]);
 
-    $token = Str::random(60);
-    DB::table('password_setup_tokens')->insert([
-        'email' => $user->email,
-        'token' => $token,
-        'created_at' => now()
-    ]);
+        $token = Str::random(60);
+        DB::table('password_setup_tokens')->insert([
+            'email' => $user->email,
+            'token' => $token,
+            'created_at' => now()
+        ]);
 
-    $setupLink = route('password.setup', [
-        'token' => $token,
-        'role' => 'hte'
-    ]);
-    $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
+        $setupLink = route('password.setup', [
+            'token' => $token,
+            'role' => 'hte'
+        ]);
+        $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
 
-    $moaAttachmentPath = null;
-    $generatedDocxPath = null; // Declare outside if block to track for deletion
+        $moaAttachmentPath = null;
+        $generatedDocxPath = null; // Declare outside if block to track for deletion
 
-    if ($validated['hte_status'] === 'new') {
-        $templatePath = storage_path('app/public/moa-templates/moa-template.docx');
-        $generatedDocxPath = storage_path('app/public/moa-templates/generated-moa-' . $hte->id . '.docx');
+        if ($validated['hte_status'] === 'new') {
+            $templatePath = storage_path('app/public/moa-templates/moa-template.docx');
+            $generatedDocxPath = storage_path('app/public/moa-templates/generated-moa-' . $hte->id . '.docx');
 
-        // Fill DOCX template
-        $templateProcessor = new TemplateProcessor($templatePath);
-        $templateProcessor->setValue('organization_name', $validated['organization_name']);
-        $templateProcessor->setValue('address', $validated['address']);
-        $templateProcessor->setValue('contact_name', $contactName);
-        // Add more placeholders as needed
-        $templateProcessor->saveAs($generatedDocxPath);
+            // Fill DOCX template
+            $templateProcessor = new TemplateProcessor($templatePath);
+            $templateProcessor->setValue('organization_name', $validated['organization_name']);
+            $templateProcessor->setValue('address', $validated['address']);
+            $templateProcessor->setValue('contact_name', $contactName);
+            // Add more placeholders as needed
+            $templateProcessor->saveAs($generatedDocxPath);
 
-        if (file_exists($generatedDocxPath)) {
-            $moaAttachmentPath = $generatedDocxPath;
+            if (file_exists($generatedDocxPath)) {
+                $moaAttachmentPath = $generatedDocxPath;
+            }
+        }
+
+        // Send email synchronously and delete file only on success
+        try {
+            Mail::to($user->email)->send(new HteSetupMail(
+                $setupLink,
+                $contactName,
+                $validated['organization_name'],
+                $tempPassword,
+                $moaAttachmentPath,
+                $user->email
+            ));
+
+            // Delete the generated DOCX only if email sent successfully
+            if ($generatedDocxPath && file_exists($generatedDocxPath)) {
+                unlink($generatedDocxPath);
+            }
+
+            return redirect()->route('coordinator.htes')
+                ->with('success', 'HTE registered successfully. Activation email sent.');
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            
+            // Optional: Delete the file even on failure to avoid leftovers (uncomment if preferred)
+            // if ($generatedDocxPath && file_exists($generatedDocxPath)) {
+            //     unlink($generatedDocxPath);
+            //     \Log::info('Temporary DOCX deleted after email failure: ' . $generatedDocxPath);
+            // }
+
+            return redirect()->route('coordinator.htes')
+                ->with('error', 'HTE registered, but failed to send activation email. Please check logs and retry.');
         }
     }
 
-    // Send email synchronously and delete file only on success
-    try {
-        Mail::to($user->email)->send(new HteSetupMail(
-            $setupLink,
-            $contactName,
-            $validated['organization_name'],
-            $tempPassword,
-            $moaAttachmentPath,
-            $user->email
+    public function showHTE($id)
+    {
+        $hte = Hte::with(['user', 'skills', 'skills.department'])
+            ->findOrFail($id);
+
+        // Load all interns_htes for this HTE (endorsed, deployed, etc.)
+        $endorsedInterns = \App\Models\InternsHte::with(['intern.user', 'intern.department'])
+            ->where('hte_id', $id)
+            ->get();
+
+        $endorsedCount = $endorsedInterns->count();
+        $availableSlots = $hte->slots - $endorsedCount;
+        $availableSlots = max(0, $availableSlots); // prevent negative
+
+        // New: Check for deploy conditions
+        $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
+        $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
+        $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
+
+        $canManage = auth()->user()->coordinator->can_add_hte == 1;
+
+        return view('coordinator.hte_show', compact(
+            'hte', 
+            'canManage', 
+            'endorsedInterns', 
+            'availableSlots', 
+            'hasEndorsedForDeploy', 
+            'hasDeployed', 
+            'endorsementPath'
         ));
-
-        // Delete the generated DOCX only if email sent successfully
-        if ($generatedDocxPath && file_exists($generatedDocxPath)) {
-            unlink($generatedDocxPath);
-        }
-
-        return redirect()->route('coordinator.htes')
-            ->with('success', 'HTE registered successfully. Activation email sent.');
-    } catch (\Exception $e) {
-        // Log the error for debugging
-        
-        // Optional: Delete the file even on failure to avoid leftovers (uncomment if preferred)
-        // if ($generatedDocxPath && file_exists($generatedDocxPath)) {
-        //     unlink($generatedDocxPath);
-        //     \Log::info('Temporary DOCX deleted after email failure: ' . $generatedDocxPath);
-        // }
-
-        return redirect()->route('coordinator.htes')
-            ->with('error', 'HTE registered, but failed to send activation email. Please check logs and retry.');
     }
-}
-
-
-public function showHTE($id)
-{
-    $hte = Hte::with(['user', 'skills', 'skills.department'])
-        ->findOrFail($id);
-
-    // Load all interns_htes for this HTE (endorsed, deployed, etc.)
-    $endorsedInterns = \App\Models\InternsHte::with(['intern.user', 'intern.department'])
-        ->where('hte_id', $id)
-        ->get();
-
-    $endorsedCount = $endorsedInterns->count();
-    $availableSlots = $hte->slots - $endorsedCount;
-    $availableSlots = max(0, $availableSlots); // prevent negative
-
-    // New: Check for deploy conditions
-    $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
-    $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
-    $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
-
-    $canManage = auth()->user()->coordinator->can_add_hte == 1;
-
-    return view('coordinator.hte_show', compact(
-        'hte', 
-        'canManage', 
-        'endorsedInterns', 
-        'availableSlots', 
-        'hasEndorsedForDeploy', 
-        'hasDeployed', 
-        'endorsementPath'
-    ));
-}
-
 
     public function toggleMoaStatus($id)
     {
@@ -541,31 +537,30 @@ public function showHTE($id)
     }
 
     public function cancelEndorsement($internHteId)
-{
-    try {
-        // Find the intern_hte record
-        $internHte = InternsHte::findOrFail($internHteId);
-        
-        // Get the intern ID before deletion
-        $internId = $internHte->intern_id;
-        
-        // Delete the intern_hte record
-        $internHte->delete();
-        
-        // Update the intern status back to "ready for deployment"
-        Intern::where('id', $internId)->update([
-            'status' => 'ready for deployment'
-        ]);
-        
-        return redirect()->back()->with('success', 'Endorsement cancelled successfully. Intern status has been reverted to "Ready for Deployment".');
-        
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        return redirect()->back()->with('error', 'Endorsement record not found.');
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
+    {
+        try {
+            // Find the intern_hte record
+            $internHte = InternsHte::findOrFail($internHteId);
+            
+            // Get the intern ID before deletion
+            $internId = $internHte->intern_id;
+            
+            // Delete the intern_hte record
+            $internHte->delete();
+            
+            // Update the intern status back to "ready for deployment"
+            Intern::where('id', $internId)->update([
+                'status' => 'ready for deployment'
+            ]);
+            
+            return redirect()->back()->with('success', 'Endorsement cancelled successfully. Intern status has been reverted to "Ready for Deployment".');
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()->with('error', 'Endorsement record not found.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
+        }
     }
-}
-
 
     public function showImportForm()
     {
@@ -620,60 +615,60 @@ public function showHTE($id)
         return view('coordinator.endorse', compact('htes'));
     }
 
-public function getRecommendedInterns(Request $request) {
-    $hteId = $request->input('hte_id');
-    $requiredSkillIds = $request->input('required_skills', []);
-    
-    // Get current coordinator's ID
-    $currentCoordinatorId = auth()->user()->coordinator->id;
-    
-    // Get only interns that the current coordinator registered/added
-    $interns = Intern::with(['user', 'department', 'skills'])
-        ->where('coordinator_id', $currentCoordinatorId) // Only coordinator's interns
-        ->whereIn('status', ['pending requirements', 'ready for deployment'])
-        ->orderByRaw("FIELD(status, 'ready for deployment', 'pending requirements')")
-        ->get();
+    public function getRecommendedInterns(Request $request) {
+        $hteId = $request->input('hte_id');
+        $requiredSkillIds = $request->input('required_skills', []);
+        
+        // Get current coordinator's ID
+        $currentCoordinatorId = auth()->user()->coordinator->id;
+        
+        // Get only interns that the current coordinator registered/added
+        $interns = Intern::with(['user', 'department', 'skills'])
+            ->where('coordinator_id', $currentCoordinatorId) // Only coordinator's interns
+            ->whereIn('status', ['pending requirements', 'ready for deployment'])
+            ->orderByRaw("FIELD(status, 'ready for deployment', 'pending requirements')")
+            ->get();
 
-    // Calculate skill matches for each intern
-    $internsWithMatches = $interns->map(function($intern) use ($requiredSkillIds) {
-        $internSkills = $intern->skills->pluck('skill_id')->toArray();
+        // Calculate skill matches for each intern
+        $internsWithMatches = $interns->map(function($intern) use ($requiredSkillIds) {
+            $internSkills = $intern->skills->pluck('skill_id')->toArray();
+            
+            // Find matching skills
+            $matchingSkills = array_intersect($internSkills, $requiredSkillIds);
+            
+            // Calculate match percentage
+            $matchPercentage = count($requiredSkillIds) > 0 
+                ? round((count($matchingSkills) / count($requiredSkillIds)) * 100) : 0;
+            
+            // Get skill names for display
+            $matchingSkillNames = $intern->skills
+                ->whereIn('skill_id', $matchingSkills)
+                ->pluck('name')
+                ->toArray();
+            
+            return [
+                'id' => $intern->id,
+                'student_id' => $intern->student_id,
+                'fname' => $intern->user->fname,
+                'lname' => $intern->user->lname,
+                'department' => $intern->department->short_name,
+                'status' => $intern->status,
+                'matching_skills' => $matchingSkillNames,
+                'match_percentage' => $matchPercentage,
+                'total_matches' => count($matchingSkills)
+            ];
+        });
         
-        // Find matching skills
-        $matchingSkills = array_intersect($internSkills, $requiredSkillIds);
+        // Sort by match percentage (descending) and then by total matches (descending)
+        $sortedInterns = $internsWithMatches->sortByDesc(function($intern) {
+            return [$intern['match_percentage'], $intern['total_matches']];
+        })->values()->all();
         
-        // Calculate match percentage
-        $matchPercentage = count($requiredSkillIds) > 0 
-            ? round((count($matchingSkills) / count($requiredSkillIds)) * 100) : 0;
-        
-        // Get skill names for display
-        $matchingSkillNames = $intern->skills
-            ->whereIn('skill_id', $matchingSkills)
-            ->pluck('name')
-            ->toArray();
-        
-        return [
-            'id' => $intern->id,
-            'student_id' => $intern->student_id,
-            'fname' => $intern->user->fname,
-            'lname' => $intern->user->lname,
-            'department' => $intern->department->short_name,
-            'status' => $intern->status,
-            'matching_skills' => $matchingSkillNames,
-            'match_percentage' => $matchPercentage,
-            'total_matches' => count($matchingSkills)
-        ];
-    });
-    
-    // Sort by match percentage (descending) and then by total matches (descending)
-    $sortedInterns = $internsWithMatches->sortByDesc(function($intern) {
-        return [$intern['match_percentage'], $intern['total_matches']];
-    })->values()->all();
-    
-    return response()->json([
-        'success' => true,
-        'interns' => $sortedInterns
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'interns' => $sortedInterns
+        ]);
+    }
 
     public function getEndorsedCount(Request $request)
     {
@@ -1023,87 +1018,87 @@ public function getRecommendedInterns(Request $request) {
         }
     }
 
-public function officiallyDeploy($internHteId)
-{
-    try {
-        // Find the intern_hte record to get the HTE ID
-        $internHte = InternsHte::findOrFail($internHteId);
-        
-        // Update all intern_hte records for this HTE that are in processing status
-        $updatedCount = InternsHte::where('hte_id', $internHte->hte_id)
-            ->where('status', 'processing')
-            ->update([
-                'status' => 'deployed',
-                'deployed_at' => now()
-            ]);
-        
-        // Update corresponding intern statuses using a join
-        if ($updatedCount > 0) {
-            Intern::whereIn('id', function($query) use ($internHte) {
-                $query->select('intern_id')
-                    ->from('interns_hte')
-                    ->where('hte_id', $internHte->hte_id)
-                    ->where('status', 'deployed');
-            })->update([
-                'status' => 'deployed'
-            ]);
+    public function officiallyDeploy($internHteId)
+    {
+        try {
+            // Find the intern_hte record to get the HTE ID
+            $internHte = InternsHte::findOrFail($internHteId);
+            
+            // Update all intern_hte records for this HTE that are in processing status
+            $updatedCount = InternsHte::where('hte_id', $internHte->hte_id)
+                ->where('status', 'processing')
+                ->update([
+                    'status' => 'deployed',
+                    'deployed_at' => now()
+                ]);
+            
+            // Update corresponding intern statuses using a join
+            if ($updatedCount > 0) {
+                Intern::whereIn('id', function($query) use ($internHte) {
+                    $query->select('intern_id')
+                        ->from('interns_hte')
+                        ->where('hte_id', $internHte->hte_id)
+                        ->where('status', 'deployed');
+                })->update([
+                    'status' => 'deployed'
+                ]);
+            }
+            
+            return redirect()->back()->with('success', "{$updatedCount} intern(s) successfully deployed! Status has been updated to 'Deployed'.");
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()->with('error', 'Endorsement record not found.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while deploying the interns: ' . $e->getMessage());
         }
-        
-        return redirect()->back()->with('success', "{$updatedCount} intern(s) successfully deployed! Status has been updated to 'Deployed'.");
-        
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        return redirect()->back()->with('error', 'Endorsement record not found.');
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'An error occurred while deploying the interns: ' . $e->getMessage());
     }
-}
 
-public function deployments() {
-    $coordinatorId = auth()->user()->coordinator->id;
-    
-    // Get all HTEs where this coordinator has made endorsements, grouped by HTE
-    $deployments = \App\Models\InternsHte::with(['hte'])
-        ->where('coordinator_id', $coordinatorId)
-        ->get()
-        ->groupBy('hte_id');
-    
-    return view('coordinator.deployments', compact('deployments'));
-}
+    public function deployments() {
+        $coordinatorId = auth()->user()->coordinator->id;
+        
+        // Get all HTEs where this coordinator has made endorsements, grouped by HTE
+        $deployments = \App\Models\InternsHte::with(['hte'])
+            ->where('coordinator_id', $coordinatorId)
+            ->get()
+            ->groupBy('hte_id');
+        
+        return view('coordinator.deployments', compact('deployments'));
+    }
 
-public function showDeployment($id)
-{
-    $hte = Hte::with(['user', 'skills', 'skills.department'])
-        ->findOrFail($id);
+    public function showDeployment($id)
+    {
+        $hte = Hte::with(['user', 'skills', 'skills.department'])
+            ->findOrFail($id);
 
-    // Get only the current coordinator's endorsements for this HTE
-    $currentCoordinatorId = auth()->user()->coordinator->id;
-    
-    $endorsedInterns = \App\Models\InternsHte::with(['intern.user', 'intern.department'])
-        ->where('hte_id', $id)
-        ->where('coordinator_id', $currentCoordinatorId) // Only show current coordinator's endorsements
-        ->get();
+        // Get only the current coordinator's endorsements for this HTE
+        $currentCoordinatorId = auth()->user()->coordinator->id;
+        
+        $endorsedInterns = \App\Models\InternsHte::with(['intern.user', 'intern.department'])
+            ->where('hte_id', $id)
+            ->where('coordinator_id', $currentCoordinatorId) // Only show current coordinator's endorsements
+            ->get();
 
-    $endorsedCount = $endorsedInterns->count();
-    $availableSlots = $hte->slots - $hte->internsHte()->count(); // Total available slots for HTE
-    $availableSlots = max(0, $availableSlots);
+        $endorsedCount = $endorsedInterns->count();
+        $availableSlots = $hte->slots - $hte->internsHte()->count(); // Total available slots for HTE
+        $availableSlots = max(0, $availableSlots);
 
-    // Check for deploy conditions - only for current coordinator's endorsements
-    $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
-    $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
-    $isProcessing = $endorsedInterns->where('status', 'processing')->isNotEmpty();
-    $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
+        // Check for deploy conditions - only for current coordinator's endorsements
+        $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
+        $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
+        $isProcessing = $endorsedInterns->where('status', 'processing')->isNotEmpty();
+        $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
 
-    $canManage = auth()->user()->coordinator->can_add_hte == 1;
+        $canManage = auth()->user()->coordinator->can_add_hte == 1;
 
-    return view('coordinator.deployment_show', compact(
-        'hte', 
-        'canManage', 
-        'endorsedInterns', 
-        'availableSlots', 
-        'hasEndorsedForDeploy', 
-        'hasDeployed', 
-        'isProcessing',
-        'endorsementPath'
-    ));
-}
+        return view('coordinator.deployment_show', compact(
+            'hte', 
+            'canManage', 
+            'endorsedInterns', 
+            'availableSlots', 
+            'hasEndorsedForDeploy', 
+            'hasDeployed', 
+            'isProcessing',
+            'endorsementPath'
+        ));
+    }
 }
