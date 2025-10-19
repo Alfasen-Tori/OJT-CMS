@@ -43,7 +43,16 @@
     .custom-icons-i {
         font-size: 1.2rem;
         position: relative;
-        top: 3px;
+        top: 2px;
+    }
+
+    .spin {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 
     .details-icons-i {

@@ -100,13 +100,13 @@
                             
                             {{-- Student ID --}}
                             <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-id-card text-muted me-2" style="min-width: 16px;"></i>
-                                <span class="text-muted small">{{ auth()->user()->intern->student_id ?? 'N/A' }}</span>
+                                <i class="ph-fill ph-graduation-cap text-muted me-2" style="min-width: 16px;"></i>
+                                <span class="text-muted small fw-bold">{{ auth()->user()->intern->student_id ?? 'N/A' }}</span>
                             </div>
 
                             {{-- Section Info --}}
                             <div class="d-flex align-items-center mb-2 flex-wrap">
-                                <i class="fas fa-users text-muted me-2" style="min-width: 16px;"></i>
+                                <i class="ph-fill ph-chalkboard text-muted me-2" style="min-width: 16px;"></i>
                                 @php
                                     $intern = auth()->user()->intern;
                                     $section = $intern->section ? strtoupper($intern->section) : '';
@@ -119,7 +119,7 @@
 
                             {{-- Academic Info --}}
                             <div class="d-flex align-items-center">
-                                <i class="fas fa-calendar-alt text-muted me-2" style="min-width: 16px;"></i>
+                                <i class="ph-fill ph-calendar-dots text-muted me-2" style="min-width: 16px;"></i>
                                 <small class="text-muted">
                                     {{ ucfirst($semester) }} Semester, A.Y. {{ $academic_year }}
                                 </small>
@@ -130,7 +130,7 @@
 
                 {{-- Status Badge --}}
                 <div class="col-lg-4 col-md-5 mt-3 mt-md-0">
-                    <div class="text-lg-end text-md-end text-start">
+                    <div class="text-lg-end text-md-end text-start text-uppercase">
                         @php
                             $intern = auth()->user()->intern;
                             $status = strtolower($intern->status);
@@ -145,18 +145,18 @@
                             };
                             
                             $statusIcon = match($status) {
-                                'pending requirements' => 'fas fa-clock',
-                                'ready for deployment' => 'fas fa-check-circle',
-                                'processing' => 'fas fa-cogs',
-                                'endorsed' => 'fas fa-paper-plane',
-                                'deployed' => 'fas fa-briefcase',
+                                'pending requirements' => 'ph-fill ph-warning-circle custom-icons-i',
+                                'ready for deployment' => 'ph-fill ph-clock custom-icons-i',
+                                'processing' => 'ph-fill ph-gear-six custom-icons-i',
+                                'endorsed' => 'ph-fill ph-paper-plane-tilt custom-icons-i',
+                                'deployed' => 'ph-fill ph-seal-check custom-icons-i',
                                 'completed' => 'fas fa-graduation-cap',
                                 default => 'fas fa-info-circle'
                             };
                         @endphp
                         
                         <div class="d-inline-block border rounded-pill px-3 py-2 {{ $badgeClass }}">
-                            <i class="{{ $statusIcon }} me-2"></i>
+                            <i class="{{ $statusIcon }} me-1"></i>
                             <span class="fw-bold">{{ ucfirst($intern->status) }}</span>
                         </div>
                     </div>
@@ -178,24 +178,24 @@
                         @endswitch
                         mb-0 py-3">
                         <div class="d-flex align-items-start">
-                            <i class="fas fa-info-circle me-3 mt-1 flex-shrink-0"></i>
+                            <i class="ph-fill ph-info me-3 mt-1 flex-shrink-0"></i>
                             <div class="flex-grow-1">
                                 <strong class="d-block mb-1">Status Update:</strong>
                                 @switch($status)
                                     @case('pending requirements')
-                                        Please submit all pre-deployment requirements to proceed with your internship application.
+                                        Please submit all pre-deployment requirements.
                                     @break
                                     @case('ready for deployment')
-                                        You have successfully submitted all pre-deployment requirements. Please await endorsement from your coordinator.
+                                        Requirements complete. Please await endorsement from your coordinator.
                                     @break
                                     @case('endorsed')
-                                        You have been endorsed to <strong>{{ $hteDetails->organization_name ?? 'the assigned organization' }}</strong>. Please wait for further instructions regarding your deployment.
+                                        Endorsed to <strong>{{ $hteDetails->organization_name ?? 'the assigned organization' }}</strong>. Please stand by.
                                     @break
                                     @case('processing')
-                                        Your endorsement is currently being processed. Please download the internship contract sent to your email, have it signed by your legal guardian, and submit the signed copy to your coordinator.
+                                        Endorsement is being processed. Please sign the internship contract sent to your email and submit the signed copy to your coordinator.
                                     @break
                                     @case('deployed')
-                                        Your internship is currently in progress at <strong>{{ $hteDetails->organization_name ?? 'your assigned organization' }}</strong>. Continue to maintain good attendance and complete all required tasks.
+                                        Internship in progress at <strong>{{ $hteDetails->organization_name ?? 'your assigned organization' }}</strong>.
                                     @break
                                     @case('completed')
                                         Congratulations! You have successfully completed your internship program. Thank you for your hard work and dedication.
@@ -343,7 +343,7 @@
             <div class="card h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-clock me-2 text-success"></i>
+                        <i class="ph-fill ph-clock custom-icons-i me-1 text-success"></i>
                         Time Tracking
                     </h5>
                 </div>
@@ -355,8 +355,8 @@
                     @if($hoursCompleted)
                         <div class="completed-overlay">
                             <div class="text-center p-3">
-                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                                <h5 class="fw-bold text-success">Internship Hours Completed!</h5>
+                                <h2 class="fs-1">🎉</h2>
+                                <h5 class="fw-bold text-success mt-4">Congratulations!</h5>
                                 <p class="text-muted mb-0">You have reached the required hours</p>
                             </div>
                         </div>
@@ -382,7 +382,7 @@
                             </button>
                         @else
                             <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
-                                <i class="fas fa-sign-in-alt me-2"></i> Punch In
+                                <i class="ph-bold ph-sign-in custom-icons-i me-1"></i> Punch In
                             </button>
                         @endif
                     </div>
@@ -419,7 +419,7 @@
             <div class="card h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2 text-primary"></i>
+                        <i class="ph-fill ph-chart-donut custom-icons-i me-1 text-primary"></i>
                         Internship Progress
                     </h5>
                 </div>
@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         punchBtnContainer.innerHTML = `
             <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
-                <i class="fas fa-sign-in-alt me-2"></i> Punch In
+                <i class="ph-bold ph-sign-in custom-icons-i me-1"></i> Punch In
             </button>`;
         summaryCard.classList.add('d-none');
 
@@ -599,7 +599,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         punchBtnContainer.innerHTML = `
             <button class="btn btn-danger w-100 py-3 fw-bold" id="punchOutBtn">
-                <i class="fas fa-sign-out-alt me-2"></i> Punch Out
+                <i class="ph-bold ph-sign-out me-1"></i> Punch Out
                 <small class="d-block" id="runningTime">Running: 00:00:00</small>
             </button>`;
         summaryCard.classList.add('d-none');
@@ -655,6 +655,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         punchBtnContainer.innerHTML = `
             <button class="btn btn-secondary w-100 py-3 fw-bold" disabled>
+                <i class="ph-fill ph-calendar-check custom-icons-i me-1"></i>
                 Attendance Saved
             </button>`;
         document.getElementById('studentIdWrapper').classList.add('d-none');
