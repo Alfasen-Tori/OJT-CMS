@@ -603,7 +603,7 @@ class CoordinatorController extends Controller
     public function endorse() {
         $coordinatorId = auth()->user()->coordinator->id;
         
-        $htes = \App\Models\HTE::with('skills')
+        $htes = \App\Models\Hte::with('skills')
             ->where('moa_is_signed', 'yes')
             ->withCount('internsHte')
             ->havingRaw('slots > interns_hte_count')
