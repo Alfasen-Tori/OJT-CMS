@@ -5,7 +5,9 @@ namespace App\Providers;
 use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use SendGrid\Mail\Mail;
+use SendGrid\Mail\Mail as SendGridMail;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\Email;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,27 +29,38 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Use SendGrid Web API for email sending
+        // Extend Laravel Mailer with SendGrid Web API Transport
         $this->app->resolving(MailManager::class, function ($mailManager) {
             $mailManager->extend('sendgrid', function () {
-                return new class {
-                    public function send($message)
+                return new class implements TransportInterface {
+                    public function send(\Symfony\Component\Mime\RawMessage $message, ?\Symfony\Component\Mailer\Envelope $envelope = null): ?\Symfony\Component\Mailer\SentMessage
                     {
-                        $email = new Mail();
-                        $email->setFrom(
-                            config('mail.from.address'),
-                            config('mail.from.name')
-                        );
+                        $email = new SendGridMail();
 
-                        foreach ($message->getTo() as $address => $name) {
-                            $email->addTo($address, $name);
+                        // Parse Symfony Email message
+                        if ($message instanceof Email) {
+                            $from = $message->getFrom()[0];
+                            $email->setFrom($from->getAddress(), $from->getName());
+
+                            foreach ($message->getTo() as $to) {
+                                $email->addTo($to->getAddress(), $to->getName());
+                            }
+
+                            $email->setSubject($message->getSubject());
+                            $htmlBody = $message->getHtmlBody() ?? $message->getTextBody();
+                            $email->addContent("text/html", $htmlBody);
                         }
 
-                        $email->setSubject($message->getSubject());
-                        $email->addContent("text/html", $message->getBody());
-
+                        // Send via SendGrid API
                         $sendgrid = new \SendGrid(config('services.sendgrid.api_key'));
                         $sendgrid->send($email);
+
+                        return null;
+                    }
+
+                    public function __toString(): string
+                    {
+                        return 'sendgrid';
                     }
                 };
             });
