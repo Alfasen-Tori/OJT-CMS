@@ -1,12 +1,18 @@
 <!-- Phosphour Icons -->
 <script src="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2"></script>
+
 <!-- jQuery -->
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
-    <!-- JQueryKnobCharts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-knob/1.2.13/jquery.knob.min.js"></script>
+
+<!-- JQueryKnobCharts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-knob/1.2.13/jquery.knob.min.js"></script>
 
 <!-- Bootstrap 4 -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTable JS -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
 
 <!-- AdminLTE App -->
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
@@ -306,6 +312,54 @@ $(document).ready(function() {
                 toastr.error(xhr.responseJSON?.message || 'Error updating skills');
             }
         });
+    });
+});
+</script>
+
+<!-- Attendances Table -->
+ <script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#internAttendanceTable').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "order": [[0, 'desc']], // Sort by date descending
+        "language": {
+            "emptyTable": "No attendance records found.",
+            "search": "_INPUT_",
+            "searchPlaceholder": "Search dates, times...",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ records",
+            "infoEmpty": "Showing 0 to 0 of 0 records",
+            "infoFiltered": "(filtered from _MAX_ total records)",
+            "paginate": {
+                "previous": "«",
+                "next": "»"
+            }
+        },
+        "initComplete": function() {
+            // Hide loading overlay when table is ready
+            $('#tableLoadingOverlay').fadeOut();
+            
+            // Move search input to card header
+            const searchInput = $('.dataTables_filter input');
+            const cardHeader = $('.card-header .input-group');
+            
+            if (cardHeader.length) {
+                searchInput.detach().appendTo(cardHeader);
+                searchInput.attr('placeholder', 'Search dates, times...');
+                $('.dataTables_filter').remove();
+            }
+        },
+        "drawCallback": function() {
+            // Update any dynamic content after table redraw
+            console.log('Table redrawn');
+        }
     });
 });
 </script>
