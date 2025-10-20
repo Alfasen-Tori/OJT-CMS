@@ -704,7 +704,7 @@ public function attendances()
     $intern = Intern::where('user_id', Auth::id())->first();
     
     if (!$intern) {
-        return view('intern.attendances')->with('error', 'Intern profile not found.');
+        return view('student.attendances')->with('error', 'Intern profile not found.');
     }
 
     // Get current internship
@@ -713,7 +713,7 @@ public function attendances()
         ->first();
 
     if (!$internship) {
-        return view('intern.attendances')->with('error', 'No active internship found.');
+        return view('student.attendances')->with('error', 'No active internship found.');
     }
 
     // Get attendances for this internship
