@@ -126,12 +126,12 @@ Route::middleware(['auth:web', 'intern'])->prefix('intern')->group(function() {
     Route::post('/profile/picture', [InternController::class, 'updateProfilePicture'])->name('intern.profile.picture');
     Route::put('/profile/skills', [InternController::class, 'updateSkills'])->name('intern.skills.update');
    
-    Route::get('/journals', [InternController::class, 'reports'])->name('intern.journals');
-    Route::post('/journals/upload', [InternController::class, 'uploadWeeklyReport'])->name('intern.weekly-reports.upload');
-    Route::get('/journals/preview/{id}', [InternController::class, 'previewWeeklyReport'])->name('intern.weekly-reports.preview');
-    Route::delete('/journals/delete/{id}', [InternController::class, 'deleteWeeklyReport'])->name('intern.weekly-reports.delete');
+    Route::get('/journal', [InternController::class, 'reports'])->name('intern.journals');
+    Route::post('/journal/upload', [InternController::class, 'uploadWeeklyReport'])->name('intern.weekly-reports.upload');
+    Route::get('/journal/preview/{id}', [InternController::class, 'previewWeeklyReport'])->name('intern.weekly-reports.preview');
+    Route::delete('/journal/delete/{id}', [InternController::class, 'deleteWeeklyReport'])->name('intern.weekly-reports.delete');
 
-    Route::get('/schedule', [InternController::class, 'schedule'])->name('intern.schedule');
+    Route::get('/attendances', [InternController::class, 'attendances'])->name('intern.attendances');
 });
 
 // Protected HTE routes

@@ -188,7 +188,16 @@
         padding-top: 0.5rem;
     }
 
-    #internsTable, #htesTable, #deploymentsTable thead th {
+    #internAttendanceTable_wrapper .row:first-child {
+        padding-top: 1rem;
+    }
+
+    #internAttendanceTable_wrapper .row:last-child {
+        padding-bottom: 1rem;
+        padding-top: 0.5rem;
+    }
+
+    #internsTable, #htesTable, #deploymentsTable, #internAttendanceTable thead th {
         border-right: 1px solid #dee2e6 !important;
     }
 

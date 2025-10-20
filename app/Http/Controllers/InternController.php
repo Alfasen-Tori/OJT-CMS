@@ -699,7 +699,40 @@ public function previewWeeklyReport($id)
     }
 }
 
-    public function attendances(){
-        return view('student.attendance');
+public function attendances()
+{
+    $intern = Intern::where('user_id', Auth::id())->first();
+    
+    if (!$intern) {
+        return view('intern.attendances')->with('error', 'Intern profile not found.');
     }
+
+    // Get current internship
+    $internship = InternsHte::where('intern_id', $intern->id)
+        ->where('status', 'deployed')
+        ->first();
+
+    if (!$internship) {
+        return view('intern.attendances')->with('error', 'No active internship found.');
+    }
+
+    // Get attendances for this internship
+    $attendances = Attendance::where('intern_hte_id', $internship->id)
+        ->orderBy('date', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    // Calculate total hours rendered
+    $totalHoursRendered = $attendances->sum('hours_rendered');
+    $hoursRequired = $internship->no_of_hours;
+    $progressPercentage = $hoursRequired > 0 ? min(100, ($totalHoursRendered / $hoursRequired) * 100) : 0;
+
+    return view('student.attendances', compact(
+        'attendances', 
+        'totalHoursRendered', 
+        'hoursRequired', 
+        'progressPercentage',
+        'internship'
+    ));
+}
 }
