@@ -1,19 +1,19 @@
 {{-- resources/views/student/reports.blade.php --}}
 @extends('layouts.intern')
 
-@section('title', 'Intern | Weekly Reports')
+@section('title', 'Intern | Weekly Journal')
 
 @section('content')
 <section class="content-header">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="page-header">WEEKLY JOURNALS</h1>
+        <h1 class="page-header">WEEKLY JOURNAL</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
           <li class="breadcrumb-item fw-medium">Intern</li>
-          <li class="breadcrumb-item active text-muted">Reports</li>
+          <li class="breadcrumb-item active text-muted">Journal</li>
         </ol>
       </div>
     </div>
@@ -23,7 +23,7 @@
 <section class="content">
   <div class="container-fluid">
     @if(isset($error))
-      <div class="alert alert-warning text-center">
+      <div class="d-flex align-items-center justify-content-center text-muted" style="height: 70vh">
         {{ $error }}
       </div>
     @else
