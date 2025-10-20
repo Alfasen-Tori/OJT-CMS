@@ -44,27 +44,24 @@ class AppServiceProvider extends ServiceProvider
                             $htmlBody = $message->getHtmlBody() ?? $message->getTextBody();
                             $email->addContent("text/html", $htmlBody);
 
-                            // ✅ Attachments
                             foreach ($message->getAttachments() as $attachment) {
-                                // Get attachment metadata
+                                // ✅ Get filename safely
                                 $filename = method_exists($attachment, 'getFilename')
                                     ? $attachment->getFilename()
                                     : ($attachment->getPreparedHeaders()->getHeaderParameter('Content-Disposition', 'filename') ?? 'attachment');
 
-                                $mimeType = $attachment->getContentType();
+                                // ✅ Get MIME type safely
+                                $mimeType = $attachment->getPreparedHeaders()->getHeaderBody('Content-Type') ?? 'application/octet-stream';
 
-                                // Get raw attachment body (binary stream)
+                                // ✅ Get content body (stream or file)
                                 $stream = $attachment->getBody();
                                 $content = '';
 
                                 if (is_resource($stream)) {
-                                    // If it's a resource (file handle)
                                     $content = base64_encode(stream_get_contents($stream));
                                 } elseif (is_string($stream) && file_exists($stream)) {
-                                    // If it's a file path
                                     $content = base64_encode(file_get_contents($stream));
                                 } elseif (is_string($stream)) {
-                                    // If it's a string (already loaded data)
                                     $content = base64_encode($stream);
                                 }
 
