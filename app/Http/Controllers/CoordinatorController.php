@@ -90,7 +90,7 @@ class CoordinatorController extends Controller
             'fname' => $validated['first_name'],
             'lname' => $validated['last_name'],
             'contact' => $validated['contact'],
-            'pic' => 'profile-pictures/profile.jpg', // Default profile picture
+            'pic' => null,
             'temp_password' => true,
             'username' => $validated['student_id']
         ]);

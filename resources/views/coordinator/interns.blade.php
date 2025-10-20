@@ -72,12 +72,12 @@
                         <tr>
                             <td class="align-middle">{{ $intern->student_id }}</td>
                             <td class="align-middle">
-                                <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                                <img src="{{ $intern->user->pic ? asset('storage/' . $intern->user->pic) : asset('profile_pics/profile.jpg') }}" 
                                     alt="Profile Picture" 
                                     class="rounded-circle me-2 table-pfp" 
                                     width="30" height="30">
                                 {{ $intern->user->lname }}, {{ $intern->user->fname }} 
-                            </td>                          
+                            </td>                       
                             <td class="align-middle text-center">BS{{ $intern->department->short_name ?? 'N/A' }} {{ $intern->year_level }}{{ strtoupper($intern->section) }}</td>
                             <td class="align-middle">
                                 @php
