@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'mailjet'),
+    'default' => env('MAIL_MAILER', 'sendgrid'),
 
     /*
     |--------------------------------------------------------------------------
@@ -50,7 +50,6 @@ return [
         ],
         'sendgrid' => [
             'transport' => 'sendgrid',
-            'api_key' => env('MAIL_SENDGRID_API_KEY'),
         ],
         'mailgun' => [
             'transport' => 'mailgun',
