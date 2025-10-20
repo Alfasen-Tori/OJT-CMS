@@ -317,10 +317,19 @@ $(document).ready(function() {
 </script>
 
 <!-- Attendances Table -->
- <script>
+<script>
 $(document).ready(function() {
+    // Hide loading overlay immediately if table is empty
+    const table = $('#internAttendanceTable');
+    const tbody = table.find('tbody');
+    
+    if (tbody.children().length === 0 || tbody.children().length === 1 && tbody.children().first().find('td[colspan]').length > 0) {
+        // Table is empty, hide overlay immediately
+        $('#tableLoadingOverlay').hide();
+    }
+    
     // Initialize DataTable
-    $('#internAttendanceTable').DataTable({
+    const dataTable = table.DataTable({
         "paging": true,
         "lengthChange": true,
         "searching": true,
@@ -328,7 +337,7 @@ $(document).ready(function() {
         "info": true,
         "autoWidth": false,
         "responsive": true,
-        "order": [[0, 'desc']], // Sort by date descending
+        "order": [[0, 'desc']],
         "language": {
             "emptyTable": "No attendance records found.",
             "search": "_INPUT_",
@@ -342,25 +351,37 @@ $(document).ready(function() {
                 "next": "»"
             }
         },
-        "initComplete": function() {
-            // Hide loading overlay when table is ready
+        "initComplete": function(settings, json) {
+            // Hide loading overlay
             $('#tableLoadingOverlay').fadeOut();
             
-            // Move search input to card header
-            const searchInput = $('.dataTables_filter input');
-            const cardHeader = $('.card-header .input-group');
-            
-            if (cardHeader.length) {
-                searchInput.detach().appendTo(cardHeader);
-                searchInput.attr('placeholder', 'Search dates, times...');
-                $('.dataTables_filter').remove();
-            }
-        },
-        "drawCallback": function() {
-            // Update any dynamic content after table redraw
-            console.log('Table redrawn');
+            // Move search input
+            moveSearchInput();
         }
     });
+    
+    function moveSearchInput() {
+        const searchInput = $('.dataTables_filter input');
+        const cardHeader = $('.card-header');
+        
+        if (cardHeader.length && searchInput.length) {
+            // Remove any existing search container
+            cardHeader.find('.table-search-container').remove();
+            
+            // Create new search container
+            cardHeader.append('<div class="table-search-container" style="max-width: 250px; margin-left: auto;"></div>');
+            
+            const searchContainer = cardHeader.find('.table-search-container');
+            searchInput.detach().appendTo(searchContainer);
+            searchInput.attr('placeholder', 'Search dates, times...');
+            $('.dataTables_filter').remove();
+        }
+    }
+    
+    // Final safety net - hide overlay after 2 seconds no matter what
+    setTimeout(function() {
+        $('#tableLoadingOverlay').fadeOut();
+    }, 2000);
 });
 </script>
 
