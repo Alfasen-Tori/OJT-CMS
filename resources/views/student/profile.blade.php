@@ -27,7 +27,7 @@
                 <div class="text-center mb-5">
                     <div class="position-relative d-inline-block">
                         <img id="profileImage" 
-                            src="{{ auth()->user()->pic ? asset('storage/'.auth()->user()->pic) : asset('profile_pics/profile.jpg') }}" 
+                            src="{{ auth()->user()->pic ? asset('storage/' . auth()->user()->pic) : asset('profile_pics/profile.jpg') }}" 
                             class="rounded-circle shadow" 
                             width="150" 
                             height="150" 
