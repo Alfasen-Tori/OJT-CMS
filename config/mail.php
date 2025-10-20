@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'smtp'),
+    'default' => env('MAIL_MAILER', 'mailjet'),
 
     /*
     |--------------------------------------------------------------------------
@@ -54,6 +54,10 @@ return [
         ],
         'mailgun' => [
             'transport' => 'mailgun',
+        ],
+
+        'mailjet' => [
+            'transport' => 'mailjet',
         ],
 
         'postmark' => [
