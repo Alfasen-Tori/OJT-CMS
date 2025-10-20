@@ -15,11 +15,11 @@
         <li class="nav-item dropdown">
             <a class="nav-link d-flex align-items-center" data-toggle="dropdown" href="#" aria-expanded="false">
                 <span class="mr-2 d-none d-sm-inline">{{ Auth::user()->fname }} {{ Auth::user()->lname }}</span>
-                <img src="{{ asset('storage/' . auth()->user()->pic) }}" class="img-circle elevation-2 border border-light" alt="User Image" style="width: 32px; height: 32px; object-fit: cover;">
+                <img src="{{ auth()->user()->pic ? asset('storage/' . auth()->user()->pic) : asset('profile_pics/profile.jpg') }}" class="img-circle elevation-2 border border-light" alt="User Image" style="width: 32px; height: 32px; object-fit: cover;">
             </a>
             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right shadow" style="min-width: 220px;">
                 <div class="px-3 py-2 text-center border-bottom">
-                    <img src="{{ asset('storage/' . auth()->user()->pic) }}" alt="Profile Picture" class="img-circle elevation-2 mb-2" width="60" height="60" alt="Profile Picture">
+                    <img src="{{ auth()->user()->pic ? asset('storage/' . auth()->user()->pic) : asset('profile_pics/profile.jpg') }}" alt="Profile Picture" class="img-circle elevation-2 mb-2" width="60" height="60" alt="Profile Picture">
                     <h6 class="mb-0">{{ Auth::user()->fname }} {{ Auth::user()->lname }}</h6>
                     <small class="text-muted">Student</small>
                 </div>

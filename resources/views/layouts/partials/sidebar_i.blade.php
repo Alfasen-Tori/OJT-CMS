@@ -11,8 +11,7 @@
       <!-- Sidebar user (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="{{ $intern->user->pic ? asset('storage/' . $intern->user->pic) : asset('profile_pics/profile.jpg') }}" class="img-circle elevation-2" alt="User Image">
-        </div>
+          <img src="{{ auth()->user()->pic ? asset('storage/' . auth()->user()->pic) : asset('profile_pics/profile.jpg') }}" class="img-circle elevation-2" alt="User Image">        </div>
         <div class="info">
           <a href="{{route('intern.profile')}}" class="d-block">{{ Auth::user()->fname }} {{ Auth::user()->lname }}</a>
         </div>
