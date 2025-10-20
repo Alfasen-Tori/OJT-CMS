@@ -46,19 +46,33 @@ class AppServiceProvider extends ServiceProvider
 
                             // ✅ Attachments
                             foreach ($message->getAttachments() as $attachment) {
-                                $path = $attachment->getBody();
-                                $filename = $attachment->getName() ?? 'attachment';
+                                // Get attachment metadata
+                                $filename = method_exists($attachment, 'getFilename')
+                                    ? $attachment->getFilename()
+                                    : ($attachment->getPreparedHeaders()->getHeaderParameter('Content-Disposition', 'filename') ?? 'attachment');
+
                                 $mimeType = $attachment->getContentType();
 
-                                // Detect if it's a file path or inline content
-                                if (file_exists($path)) {
-                                    $content = base64_encode(file_get_contents($path));
+                                // Get raw attachment body (binary stream)
+                                $stream = $attachment->getBody();
+                                $content = '';
+
+                                if (is_resource($stream)) {
+                                    // If it's a resource (file handle)
+                                    $content = base64_encode(stream_get_contents($stream));
+                                } elseif (is_string($stream) && file_exists($stream)) {
+                                    // If it's a file path
+                                    $content = base64_encode(file_get_contents($stream));
+                                } elseif (is_string($stream)) {
+                                    // If it's a string (already loaded data)
+                                    $content = base64_encode($stream);
+                                }
+
+                                if (!empty($content)) {
                                     $email->addAttachment($content, $mimeType, $filename);
-                                } else {
-                                    // Fallback for inline attachments
-                                    $email->addAttachment(base64_encode($path), $mimeType, $filename);
                                 }
                             }
+
                         }
 
                         // Send via SendGrid
