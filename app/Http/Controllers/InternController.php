@@ -605,7 +605,7 @@ public function uploadWeeklyReport(Request $request)
         if ($request->hasFile('report_file')) {
             $file = $request->file('report_file');
             $fileName = 'weekly_report_' . $intern->student_id . '_week_' . $request->week_no . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('weekly_reports', $fileName, 'public');
+            $filePath = $file->storeAs('weekly-reports', $fileName, 'public');
 
             if ($existingReport) {
                 // Update existing record
@@ -699,7 +699,7 @@ public function previewWeeklyReport($id)
     }
 }
 
-    public function schedule(){
-        return view('student.schedule');
+    public function attendances(){
+        return view('student.attendance');
     }
 }
