@@ -63,10 +63,9 @@
               <tr>
                 <th width="12%">Student ID</th>
                 <th>Name</th>
+                <th>Department</th>
                 <th>Year Level</th>
                 <th>Section</th>
-                <th>Academic Year</th>
-                <th>Semester</th>
                 <th width="15%">Status</th>
                 <th width="3%">Actions</th>
               </tr>
@@ -74,13 +73,18 @@
             <tbody>
               @foreach($interns as $intern)
               <tr>
-                <td>{{ $intern->student_id }}</td>
-                <td>{{ $intern->user->fname }} {{ $intern->user->lname }}</td>
-                <td class="text-center">{{ $intern->year_level }}</td>
-                <td class="text-center">{{ strtoupper($intern->section) }}</td>
-                <td class="text-center">{{ $intern->academic_year }}</td>
-                <td class="text-center">{{ $intern->semester }}</td>
-                <td class="text-center">
+                <td class="align-middle">{{ $intern->student_id }}</td>
+                <td class="align-middle">
+                    <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                    alt="Profile Picture" 
+                    class="rounded-circle me-2 table-pfp" 
+                    width="30" height="30">
+                    {{ $intern->user->lname }}, {{ $intern->user->fname }} 
+                    </td>         
+                <td class="align-middle">{{ $intern->department->dept_name ?? 'N/A' }}</td>
+                <td class="text-center align-middle">{{ $intern->year_level }}</td>
+                <td class="text-center align-middle">{{ strtoupper($intern->section) }}</td>
+                <td class="text-center align-middle">
                   @php
                     $statusClass = [
                       'pending requirements' => 'bg-warning-subtle text-warning',
