@@ -862,7 +862,7 @@
             }
         },
         "columnDefs": [
-            { "orderable": false, "targets": [4] } // Disable sorting for Actions column
+            { "orderable": false, "targets": [5] } // Disable sorting for Actions column
         ],
         "initComplete": function() {
             // Hide loading overlay when table is ready
