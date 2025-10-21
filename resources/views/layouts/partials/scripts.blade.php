@@ -840,39 +840,102 @@
 
     <!-- Coordinator: Intern Management Table -->
     <script>
-        $(document).ready(function() {
-            // Show loading overlay initially
-            $('#tableLoadingOverlay').show();
-            
-            // Initialize DataTable
-            var table = $('#internsTable').DataTable({
-                "paging": true,
-                "lengthChange": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
-                "responsive": true,
-                "language": {
-                    "emptyTable": "No intern data found.",
-                    "search": "_INPUT_",
-                    "searchPlaceholder": "Search...",
-                    "lengthMenu": "Show _MENU_ entries",
-                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                    "paginate": {
-                        "previous": "«",
-                        "next": "»"
-                    }
-                },
-                "columnDefs": [
-                    { "orderable": false, "targets": [4] }
-                ],
-                "initComplete": function() {
-                    // Hide loading overlay when table is fully initialized
-                    $('#tableLoadingOverlay').fadeOut();
-                }
-            });
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#internsTable').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "language": {
+            "emptyTable": "No intern data found.",
+            "search": "_INPUT_",
+            "searchPlaceholder": "Search...",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ interns",
+            "paginate": {
+            "previous": "«",
+            "next": "»"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": [7] } // Disable sorting for Actions column
+        ],
+        "initComplete": function() {
+            // Hide loading overlay when table is ready
+            $('#tableLoadingOverlay').fadeOut();
+        }
         });
+        
+        // Remove the manual search input
+        $('.card-header input[type="search"]').parent().remove();
+        
+        // Import form handling
+        $('#importForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Show progress
+        $('#importProgress').removeClass('d-none');
+        $('#importSubmit').prop('disabled', true);
+        
+        // Submit form via AJAX
+        const formData = new FormData(this);
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+            // Hide progress
+            $('#importProgress').addClass('d-none');
+            $('#importSubmit').prop('disabled', false);
+            
+            // Show results
+            $('#importResults').removeClass('d-none');
+            $('#successCount').text(response.success_count || 0);
+            $('#failCount').text(response.fail_count || 0);
+            
+            // Show error details if any
+            if (response.errors && response.errors.length > 0) {
+                $('#failDetails').removeClass('d-none');
+                const failDetailsBody = $('#failDetailsBody');
+                failDetailsBody.empty();
+                
+                response.errors.forEach(error => {
+                failDetailsBody.append(`
+                    <tr>
+                    <td>${error.row}</td>
+                    <td>${error.student_id || 'N/A'}</td>
+                    <td>${error.name || 'N/A'}</td>
+                    <td>${error.message}</td>
+                    </tr>
+                `);
+                });
+            }
+            
+            // Reload table if successful imports
+            if (response.success_count > 0) {
+                setTimeout(() => {
+                location.reload();
+                }, 2000);
+            }
+            },
+            error: function(xhr) {
+            // Hide progress
+            $('#importProgress').addClass('d-none');
+            $('#importSubmit').prop('disabled', false);
+            
+            // Show error message
+            alert('Error importing interns. Please try again.');
+            }
+        });
+        });
+    });
     </script>
 
     <!-- Coordinator HTE Management Table -->

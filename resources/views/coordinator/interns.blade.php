@@ -42,113 +42,115 @@
               </div>      
 
 
-            <div class="card-body table-responsive px-3 py-0">
-                <div id="tableLoadingOverlay" 
-                    style="position: absolute; 
-                            width: 100%; 
-                            height: 100%; 
-                            background: rgba(255,255,255,0.85); 
-                            display: flex; 
-                            flex-direction: column;
-                            justify-content: center; 
-                            align-items: center; 
-                            z-index: 1000;
-                            gap: 1rem;">
-                    <i class="ph-bold ph-arrows-clockwise fa-spin fs-3 text-primary"></i>
-                    <span class="text-primary">Loading interns . . .</span>
-                </div>
-                <table id="internsTable" class="table table-bordered mb-0">
-                    <thead class="table-light">
-                    <tr>
-                        <th width="15%">Student ID</th>
-                        <th style="white-space: no-wrap">Name</th>
-                        <th width="5%">Section</th>
-                        <th width="5%">Status</th>
-                        <th width="3%">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($interns as $intern)
-                        <tr>
-                            <td class="align-middle">{{ $intern->student_id }}</td>
-                            <td class="align-middle">
-                                <img src="{{ asset('storage/' . $intern->user->pic) }}" 
-                                    alt="Profile Picture" 
-                                    class="rounded-circle me-2 table-pfp" 
-                                    width="30" height="30">
-                                {{ $intern->user->lname }}, {{ $intern->user->fname }} 
-                            </td>                          
-                            <td class="align-middle text-center">BS{{ $intern->department->short_name ?? 'N/A' }} {{ $intern->year_level }}{{ strtoupper($intern->section) }}</td>
-                            <td class="align-middle">
-                                @php
-                                    $status = strtolower($intern->status);
-                                    $badgeClass = match($status) {
-                                        'pending requirements' => 'bg-danger-subtle text-danger',
-                                        'ready for deployment' => 'bg-warning-subtle text-warning',
-                                        'processing' => 'bg-info-subtle text-info',
-                                        'endorsed' => 'bg-primary-subtle text-primary',
-                                        'deployed' => 'bg-success-subtle text-success',
-                                        default => 'bg-secondary'
-                                    };
-                                @endphp
-                                <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill">{{ ucfirst($intern->status) }}</span>
-                            </td>
-                            <td class="text-center px-2 align-middle">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="ph-fill ph-gear custom-icons-i"></i>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-                                        <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.intern.show', $intern->id) }}">
-                                            <i class="ph ph-eye custom-icons-i mr-2"></i>View
-                                        </a>
-                                        <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('coordinator.edit_i', $intern->id) }}">
-                                            <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
-                                        </a>
-                                        <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#removeModal{{ $intern->id }}">
-                                            <i class="ph ph-trash custom-icons-i mr-2"></i>Unregister
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <!-- Remove Modal -->
-                                <div class="modal fade" id="removeModal{{ $intern->id }}" tabindex="-1" role="dialog">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-light text-white">
-                                                <h5 class="modal-title">
-                                                    <i class="ph-bold ph-warning details-icons-i mr-1"></i>
-                                                    Confirm Account Deletion
-                                                </h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p class="text-left">Are you sure you want to unregister <strong>{{ $intern->user->fname }} {{ $intern->user->lname }}</strong>? This action cannot be undone.</p>
-                                                <p class="text-danger small text-left"><strong>WARNING:</strong> All associated internship records will also be removed.</p>
-                                            </div>
-                                            <div class="modal-footer bg-light">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                                <form action="{{ route('coordinator.intern.destroy', $intern->id) }}" method="POST">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger fw-medium">Unregister</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">No intern data found.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>     
-                </table>
-            </div>
+        <div class="card-body table-responsive py-0 px-3">
+          <!-- Loading Overlay -->
+          <div id="tableLoadingOverlay" 
+            style="position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(255,255,255,0.85); 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000;
+            gap: 1rem;">
+            <i class="ph-bold ph-arrows-clockwise fa-spin fs-3 text-primary"></i>
+            <span class="text-primary">Loading Interns . . .</span>
+          </div>
+          <table id="internsTable" class="table table-bordered mb-0">
+            <thead class="table-light">
+              <tr>
+                <th width="12%">Student ID</th>
+                <th>Name</th>
+                <th>Year Level</th>
+                <th>Section</th>
+                <th>Academic Year</th>
+                <th>Semester</th>
+                <th width="15%">Status</th>
+                <th width="3%">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($interns as $intern)
+              <tr>
+                <td>{{ $intern->student_id }}</td>
+                <td>{{ $intern->user->fname }} {{ $intern->user->lname }}</td>
+                <td class="text-center">{{ $intern->year_level }}</td>
+                <td class="text-center">{{ strtoupper($intern->section) }}</td>
+                <td class="text-center">{{ $intern->academic_year }}</td>
+                <td class="text-center">{{ $intern->semester }}</td>
+                <td class="text-center">
+                  @php
+                    $statusClass = [
+                      'pending requirements' => 'bg-warning-subtle text-warning',
+                      'ready for deployment' => 'bg-info-subtle text-info',
+                      'endorsed' => 'bg-primary-subtle text-primary',
+                      'processing' => 'bg-secondary-subtle text-secondary',
+                      'deployed' => 'bg-success-subtle text-success'
+                    ][$intern->status] ?? 'bg-light text-dark';
+                  @endphp
+                  <span class="small badge py-2 px-3 rounded-pill {{ $statusClass }}" style="font-size: 14px">
+                    {{ ucwords($intern->status) }}
+                  </span>
+                </td>
+                <td class="text-center px-2 align-middle">
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="ph-fill ph-gear custom-icons-i"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
+                      <!-- View Option -->
+                      <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.intern.show', $intern->id) }}">
+                        <i class="ph ph-eye custom-icons-i mr-2"></i>View
+                      </a>
+                      
+                      <!-- Update Option -->
+                      <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('coordinator.edit_i', $intern->id) }}">
+                        <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
+                      </a>
+                      
+                      <!-- Delete Option -->
+                      <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#deleteIntern{{ $intern->id }}">
+                        <i class="ph ph-trash custom-icons-i mr-2"></i>Delete
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <!-- Delete Confirmation Modal -->
+                  <div class="modal fade" id="deleteIntern{{ $intern->id }}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header bg-light">
+                          <h5 class="modal-title">
+                            <i class="ph-bold ph-warning details-icons-i mr-1"></i>
+                            Confirm Account Deletion
+                          </h5>                
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <p class="text-left">Are you sure you want to delete <strong>{{ $intern->user->fname }} {{ $intern->user->lname }}</strong> ({{ $intern->student_id }})? This action cannot be undone.</p>
+                          <p class="text-danger small text-left"><strong>WARNING:</strong> All associated internship records will also be deleted.</p>
+                        </div>
+                        <div class="modal-footer bg-light">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                          <form action="{{ route('coordinator.intern.destroy', $intern->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
 
           </div>
         </div>
