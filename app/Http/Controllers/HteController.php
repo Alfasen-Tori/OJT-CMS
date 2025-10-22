@@ -35,9 +35,24 @@ class HteController extends Controller
         ]);
     }
 
-    public function interns(){
-        return view('hte.interns');
-    }
+public function interns()
+{
+    // Get the authenticated HTE's ID
+    $hteId = auth()->user()->hte->id;
+    
+    // Get all deployed interns for this HTE
+    $deployedInterns = \App\Models\InternsHte::with([
+            'intern.user', 
+            'intern.department',
+            'coordinator.user'
+        ])
+        ->where('hte_id', $hteId)
+        ->where('status', 'deployed')
+        ->orderBy('deployed_at', 'desc')
+        ->get();
+
+    return view('hte.interns', compact('deployedInterns'));
+}
 
     public function showDetailsForm()
     {
