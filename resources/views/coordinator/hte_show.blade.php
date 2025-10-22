@@ -189,7 +189,7 @@
                     <div class="card-header">
                         <h3 class="card-title">All Endorsed Students</h3>
                     </div>
-                    <div class="card-body table-responsive px-3 py-0 position-relative">
+                    <div class="card-body table-responsive p-3 position-relative">
                         <!-- Loading Overlay -->
                         <div id="allStudentsLoadingOverlay" 
                             style="position: absolute; 
