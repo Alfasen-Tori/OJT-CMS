@@ -84,18 +84,18 @@
                 <td class="align-middle">{{ $intern->department->dept_name ?? 'N/A' }}</td>
                 <td class="text-center align-middle">{{ $intern->year_level }}</td>
                 <td class="text-center align-middle">{{ strtoupper($intern->section) }}</td>
-                <td class="text-center align-middle">
+                <td class="align-middle">
                   @php
                     $statusClass = [
-                      'pending requirements' => 'bg-warning-subtle text-warning',
-                      'ready for deployment' => 'bg-info-subtle text-info',
+                      'pending requirements' => 'bg-danger-subtle text-danger',
+                      'ready for deployment' => 'bg-warning-subtle text-warning',
                       'endorsed' => 'bg-primary-subtle text-primary',
-                      'processing' => 'bg-secondary-subtle text-secondary',
+                      'processing' => 'bg-info-subtle text-info',
                       'deployed' => 'bg-success-subtle text-success'
                     ][$intern->status] ?? 'bg-light text-dark';
                   @endphp
                   <span class="small badge py-2 px-3 rounded-pill {{ $statusClass }}" style="font-size: 14px">
-                    {{ ucwords($intern->status) }}
+                    {{ ucfirst($intern->status) }}
                   </span>
                 </td>
                 <td class="text-center px-2 align-middle">

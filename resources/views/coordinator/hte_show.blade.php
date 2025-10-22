@@ -183,142 +183,117 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Interns Table Section (Collapsible) -->
-                <div class="card shadow">
-                    <div class="card-header bg-white text-dark" id="internsHeading">
-                        <h3 class="card-title mb-0 d-flex align-items-center justify-content-between w-100">
-                            <div class="d-flex align-items-center">
-                                <button class="btn btn-link text-dark text-decoration-none p-0 mr-2 toggle-btn" type="button" data-toggle="collapse" data-target="#internsCollapse" aria-expanded="true" aria-controls="internsCollapse">
-                                    <i class="ph ph-plus details-icons-i collapsed-icon"></i>
-                                    <i class="ph ph-minus details-icons-i expanded-icon"></i>
-                                </button>
-                                <i class="ph-fill ph-user-list details-icons-i mr-2"></i>
-                                Interns
-                            </div>
-                            <div>
-                                @if($hasEndorsedForDeploy)
-                                    <button type="button" class="btn btn-success fw-medium" data-toggle="modal" data-target="#deployModal">
-                                        Deploy<i class="ph-fill ph-rocket-launch custom-icons-i ml-1"></i>
-                                    </button>
-                                @elseif($hasDeployed && $endorsementPath)
-                                    <a href="{{ Storage::url($endorsementPath) }}" class="btn btn-primary fw-medium" download="{{ basename($endorsementPath) }}">
-                                        <i class="ph-fill ph-download custom-icons-i mr-1"></i>Download Endorsement Letter
-                                    </a>
-                                @else
-                                    <span class="text-muted"></span>
-                                @endif
-                            </div>
-                        </h3>
+
+                <!-- All Endorsed Students Table - Grouped by Coordinator -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">All Endorsed Students</h3>
                     </div>
-                    <div id="internsCollapse" class="collapse show" aria-labelledby="internsHeading">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead class="thead-light border-light-gray">
-                                        <tr>
-                                            <th>Student ID</th>
-                                            <th>Name</th>
-                                            <th>Department</th>
-                                            <th>Year Level</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($endorsedInterns as $endorsement)
-                                            @php
-                                                $intern = $endorsement->intern;
-                                            @endphp
-                                            <tr id="row-endorsement-{{ $endorsement->id }}">
-                                                <td>{{ $intern->student_id ?? 'N/A' }}</td>
-                                                <td>{{ $intern->user->lname ?? 'N/A' }}, {{ $intern->user->fname ?? 'N/A' }}</td>
-                                                <td>{{ $intern->department->dept_name ?? 'N/A' }}</td>
-                                                <td>{{ $intern->year_level ?? 'N/A' }}</td>
-                                                <td class="align-middle text">
-                                                    @php
-                                                        $status = strtolower($intern->status ?? 'unknown');
-                                                        $badgeClass = match($status) {
-                                                            'pending requirements' => 'bg-danger-subtle text-danger',
-                                                            'ready for deployment' => 'bg-warning-subtle text-warning',
-                                                            'endorsed' => 'bg-primary-subtle text-primary',
-                                                            'processing' => 'bg-info-subtle text-info',
-                                                            'deployed' => 'bg-success-subtle text-success',
-                                                            default => 'bg-secondary'
-                                                        };
-                                                    @endphp
-                                                    <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill">{{ ucfirst($intern->status ?? 'Unknown') }}</span>
-                                                </td>
-                                                <td class="text-center px-2 align-middle">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown{{ $intern->id ?? $loop->index }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                            <i class="ph-fill ph-gear custom-icons-i"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown{{ $intern->id ?? $loop->index }}">
-                                                            <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.intern.show', $intern->id ?? '') }}">
-                                                                <i class="ph ph-eye custom-icons-i mr-2"></i>View
-                                                            </a>
-                                                            
-                                                            <!-- Conditional Remove: Only if status is 'endorsed' -->
-                                                            @if($endorsement->status === 'endorsed')
-                                                                <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#removeEndorsementModal{{ $intern->id }}">
-                                                                    <i class="ph ph-trash custom-icons-i mr-2"></i>Remove
-                                                                </a>
-                                                            @endif
-
-                                                            <!-- Conditional Officially Deploy: Only if interns_hte status is 'deployed' AND intern status is 'processing' -->
-                                                            @if($endorsement->status === 'deployed' && $intern->status === 'processing')
-                                                                <form action="{{ route('coordinator.intern.officially-deploy', $intern->id) }}" method="POST" class="m-0 p-0">
-                                                                    @csrf
-                                                                    <button class="dropdown-item btn btn-outline-light text-success type="submit">
-                                                                        <i class="ph ph-rocket-launch custom-icons-i mr-2"></i>Officially Deploy
-                                                                    </button>
-                                                                </form>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Conditional Remove Endorsement Modal: Only if status is 'endorsed' (unchanged) -->
-                                                    @if($endorsement->status === 'endorsed')
-                                                    <div class="modal fade" id="removeEndorsementModal{{ $intern->id }}" tabindex="-1" role="dialog" aria-labelledby="removeEndorsementModalLabel{{ $intern->id }}" aria-hidden="true">
-                                                        <div class="modal-dialog" role="document">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header bg-light text-dark">
-                                                                    <h5 class="modal-title" id="removeEndorsementModalLabel{{ $intern->id }}">
-                                                                        <i class="ph-bold ph-warning details-icons-i mr-1"></i>
-                                                                        Cancel Endorsement
-                                                                    </h5>
-                                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                                        <span aria-hidden="true">&times;</span>
-                                                                    </button>
-                                                                </div>
-                                                                <div class="modal-body text-left">
-                                                                    <p>Are you sure you want to remove <strong>{{ $intern->user->fname ?? '' }} {{ $intern->user->lname ?? '' }}</strong> from <strong>{{ $hte->organization_name }}</strong>?</p>
-                                                                    <p class="text-warning small"><strong>Note:</strong><em>Interns cannot be removed once deployed.</em></p>
-                                                                </div>
-                                                                <div class="modal-footer bg-light">
-                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                                                    <button type="button" class="btn btn-danger fw-medium btn-remove-endorsement" data-interns-hte-id="{{ $endorsement->id }}" data-row-id="row-endorsement-{{ $endorsement->id }}">
-                                                                        Remove Endorsement
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="6" class="text-center text-muted py-4">No endorsed interns found.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="card-body table-responsive px-3 py-0 position-relative">
+                        <!-- Loading Overlay -->
+                        <div id="allStudentsLoadingOverlay" 
+                            style="position: absolute; 
+                                    width: 100%; 
+                                    height: 100%; 
+                                    background: rgba(255,255,255,0.85); 
+                                    display: flex; 
+                                    flex-direction: column;
+                                    justify-content: center; 
+                                    align-items: center; 
+                                    z-index: 1000;
+                                    gap: 1rem;">
+                            <i class="ph-bold ph-arrows-clockwise fa-spin fs-3 text-primary"></i>
+                            <span class="text-primary">Loading students . . .</span>
                         </div>
+                        
+                        <table id="allStudentsTable" class="table table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="20%">Coordinator</th>
+                                    <th width="15%">Student ID</th>
+                                    <th width="20%">Student Name</th>
+                                    <th width="15%">Department</th>
+                                    <th width="15%">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($groupedByCoordinator as $coordinatorId => $endorsements)
+                                    @php
+                                        $firstEndorsement = $endorsements->first();
+                                        $coordinator = $firstEndorsement->coordinator;
+                                    @endphp
+                                    
+                                    @foreach($endorsements as $endorsement)
+                                        @php
+                                            $intern = $endorsement->intern;
+                                            $statusClass = $endorsement->status === 'deployed' ? 
+                                                'bg-success-subtle text-success' : 
+                                                'bg-primary-subtle text-primary';
+                                        @endphp
+                                        <tr>
+                                            <!-- Coordinator Column (only show for first row of each group) -->
+                                            @if($loop->first)
+                                                <td class="align-middle" rowspan="{{ $endorsements->count() }}">
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
+                                                            alt="Coordinator Picture" 
+                                                            class="rounded-circle me-2 table-pfp" 
+                                                            width="30" height="30">
+                                                        <div>
+                                                            <strong>{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</strong>
+                                                            <br>
+                                                            <small class="text-muted">{{ $coordinator->faculty_id }}</small>
+                                                            <br>
+                                                            <small class="text-muted">BS{{ $coordinator->department->short_name ?? 'N/A' }}</small>
+                                                            <br>
+                                                            <small class="text-info">{{ $endorsements->count() }} student(s)</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            @endif
+                                            
+                                            <!-- Student Details -->
+                                            <td class="align-middle">
+                                                <strong>{{ $intern->student_id }}</strong>
+                                            </td>
+                                            <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                                                        alt="Student Picture" 
+                                                        class="rounded-circle me-2 table-pfp" 
+                                                        width="30" height="30">
+                                                    <div>
+                                                        <strong>{{ $intern->user->lname }}, {{ $intern->user->fname }}</strong>
+                                                        <br>
+                                                        <small class="text-muted">{{ $intern->year_level }}{{ strtoupper($intern->section) }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                <span class="text-dark">BS{{ $intern->department->short_name ?? 'N/A' }}</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <span class="badge {{ $statusClass }} px-3 py-2 rounded-pill text-capitalize">
+                                                    {{ $endorsement->status }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <div class="d-flex flex-column align-items-center text-muted">
+                                                <i class="ph ph-users fs-1 mb-2"></i>
+                                                <span>No students endorsed to this HTE yet.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+                
             </div>
         </div>
     </div>
@@ -342,87 +317,7 @@
     }
 </style>
 
-    <!-- Deploy Confirmation Modal -->
-    @if($hasEndorsedForDeploy)
-    <div class="modal fade" id="deployModal" tabindex="-1" role="dialog" aria-labelledby="deployModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-light text-dark">
-                    <h5 class="modal-title" id="deployModalLabel">
-                        <i class="ph-bold ph-arrow-square-out details-icons-i mr-1"></i>
-                        Confirm Deployment
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <form action="{{ route('coordinator.deploy_htes', $hte->id) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <!-- List of Endorsed Interns -->
-                        <h5 class="mb-4"><strong>Interns Endorsed</strong></h5>
-                        <ul class="list-unstyled mb-0">
-                            @foreach($endorsedInterns->where('status', 'endorsed') as $endorsement)
-                                @php
-                                    $intern = $endorsement->intern;
-                                @endphp
-                                <li class="mb-2 p-2 border rounded bg-light">
-                                    <img src="{{ asset('storage/' . ($intern->user->pic ?? 'default-avatar.png')) }}" 
-                                        alt="Profile Picture" 
-                                        class="rounded-circle me-2 table-pfp" 
-                                        width="30" height="30">
-                                    {{ $intern->user->lname ?? 'N/A' }}, {{ $intern->user->fname ?? 'N/A' }} ({{ $intern->student_id ?? 'N/A' }})<br>
-                                    <small class="text-muted">Dept: {{ $intern->department->dept_name ?? 'N/A' }} | Year: {{ $intern->year_level }}</small>
-                                </li>
-                            @endforeach
-                        </ul>
-                        <hr>
-                        <!-- Deployment Details Inputs -->
-                        <h5 class="mb-4"><strong>Internship Duration</strong></h5>
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label for="start_date" class="form-label"><strong>Start Date</strong> <small class="text-muted">(Official internship start)</small></label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" required 
-                                    value="{{ now()->format('Y-m-d') }}" min="{{ now()->format('Y-m-d') }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="no_of_hours" class="form-label"><strong>Required Hours</strong> <small class="text-muted">(Total hours per intern)</small></label>
-                                <input type="number" class="form-control" id="no_of_hours" name="no_of_hours" required min="1" step="1"> 
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label"><strong>Estimated Weeks</strong> <small class="text-muted">(Based on 40 hours/week)</small></label>
-                                <input type="text" class="form-control bg-light" id="no_of_weeks" readonly value="">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="end_date" class="form-label"><strong>Estimated End Date</strong> <small class="text-muted">(Dynamic: Start + Weeks)</small></label>
-                                <input type="date" class="form-control bg-light" id="end_date" name="end_date" readonly>
-                            </div>
-                        </div>
-                        
-                        <!-- Confirmation Checkbox (Required) -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="confirm_deployment" name="confirm_deployment" required>
-                            <label class="form-check-label" for="confirm_deployment">
-                                I confirm the deployment of the students listed above to <strong>{{ $hte->organization_name }}</strong> and verify that all the internship details are accurate.
-                            </label>
-                        </div>
-                        
-                        <p class="text-warning small mt-3"><strong>Note:</strong> This action will mark these interns as deployed and cannot be undone. End date is estimated and may adjust due to class cancellations.</p>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success fw-medium" id="confirmDeployBtn" disabled>
-                            <i class="ph-fill ph-check custom-icons-i mr-1"></i>Confirm Deploy
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    @endif
+
 
     <!-- Unregister Modal (Unchanged) -->
     @if($canManage)
@@ -456,54 +351,4 @@
     @endif
 </div>
 @endsection
-<script>
-    
-document.addEventListener('DOMContentLoaded', function() {
-    const startDateInput = document.getElementById('start_date');
-    const hoursInput = document.getElementById('no_of_hours');
-    const weeksInput = document.getElementById('no_of_weeks');
-    const endDateInput = document.getElementById('end_date');
 
-    function calculateDeployment() {
-        const hours = parseInt(hoursInput.value) || 0;
-        const weeks = Math.ceil(hours / 40); // 40 hours/week (8/day * 5 days)
-        weeksInput.value = weeks > 0 ? weeks + ' weeks' : '';
-
-        if (startDateInput.value && weeks > 0) {
-            const startDate = new Date(startDateInput.value);
-            const endDate = new Date(startDate);
-            endDate.setDate(endDate.getDate() + (weeks * 7)); // Add weeks * 7 days
-            endDateInput.value = endDate.toISOString().split('T')[0];
-        } else {
-            endDateInput.value = '';
-        }
-    }
-
-
-
-    // Event listeners
-    hoursInput.addEventListener('input', calculateDeployment);
-    startDateInput.addEventListener('change', calculateDeployment);
-
-    // Initial calculation
-    calculateDeployment();
-
-    // Enable/Disable Confirm Deploy Button based on Checkbox
-    const checkbox = document.getElementById('confirm_deployment');
-    const submitBtn = document.getElementById('confirmDeployBtn');
-    
-    if (checkbox && submitBtn) {
-        checkbox.addEventListener('change', function() {
-            submitBtn.disabled = !this.checked;
-        });
-        
-        // Optional: If you want to re-enable/disable on modal show (in case of multiple opens)
-        const modal = document.getElementById('deployModal');
-        if (modal) {
-            modal.addEventListener('shown.bs.modal', function() { // Bootstrap 4/5 event
-                submitBtn.disabled = !checkbox.checked;
-            });
-        }
-    }   
-});
-</script>

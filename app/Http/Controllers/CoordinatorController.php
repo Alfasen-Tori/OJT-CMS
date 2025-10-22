@@ -73,6 +73,7 @@ class CoordinatorController extends Controller
             'contact' => 'required|string|max:20',
             'student_id' => 'required|string|unique:interns|regex:/^\d{4}-\d{5}$/',
             'birthdate' => 'required|date',
+            'sex' => 'required|in:male,female',
             'year_level' => 'required|integer|between:1,4',
             'section' => 'required|in:a,b,c,d,e,f',
             'academic_year' => 'required|string|regex:/^\d{4}-\d{4}$/',
@@ -90,6 +91,7 @@ class CoordinatorController extends Controller
             'fname' => $validated['first_name'],
             'lname' => $validated['last_name'],
             'contact' => $validated['contact'],
+            'sex' => $validated['sex'],
             'pic' => 'profile-pictures/profile.jpg', // Default profile picture
             'temp_password' => true,
             'username' => $validated['student_id']
@@ -190,13 +192,13 @@ class CoordinatorController extends Controller
                 'lname' => $validated['last_name'],
                 'email' => $validated['email'],
                 'contact' => $validated['contact'],
+                'sex' => $validated['sex'],
             ]);
             
             // Update intern information
             $intern->update([
                 'student_id' => $validated['student_id'],
                 'birthdate' => $validated['birthdate'],
-                'sex' => $validated['sex'],
                 'academic_year' => $validated['academic_year'],
                 'semester' => $validated['semester'],
                 'year_level' => $validated['year_level'],
@@ -358,37 +360,37 @@ class CoordinatorController extends Controller
         }
     }
 
-    public function showHTE($id)
-    {
-        $hte = Hte::with(['user', 'skills', 'skills.department'])
-            ->findOrFail($id);
+public function showHTE($id)
+{
+    $hte = Hte::with(['user', 'skills', 'skills.department'])
+        ->findOrFail($id);
 
-        // Load all interns_htes for this HTE (endorsed, deployed, etc.)
-        $endorsedInterns = \App\Models\InternsHte::with(['intern.user', 'intern.department'])
-            ->where('hte_id', $id)
-            ->get();
+    // Load all interns_htes for this HTE with coordinator information
+    $endorsedInterns = \App\Models\InternsHte::with([
+            'intern.user', 
+            'intern.department',
+            'coordinator.user' // Load coordinator details
+        ])
+        ->where('hte_id', $id)
+        ->get();
 
-        $endorsedCount = $endorsedInterns->count();
-        $availableSlots = $hte->slots - $endorsedCount;
-        $availableSlots = max(0, $availableSlots); // prevent negative
+    // Group by coordinator_id for the new table
+    $groupedByCoordinator = $endorsedInterns->groupBy('coordinator_id');
 
-        // New: Check for deploy conditions
-        $hasEndorsedForDeploy = $endorsedInterns->where('status', 'endorsed')->isNotEmpty();
-        $hasDeployed = $endorsedInterns->where('status', 'deployed')->isNotEmpty();
-        $endorsementPath = $hasDeployed ? $endorsedInterns->where('status', 'deployed')->first()->endorsement_letter_path : null;
+    $endorsedCount = $endorsedInterns->count();
+    $availableSlots = $hte->slots - $endorsedCount;
+    $availableSlots = max(0, $availableSlots);
 
-        $canManage = auth()->user()->coordinator->can_add_hte == 1;
+    $canManage = auth()->user()->coordinator->can_add_hte == 1;
 
-        return view('coordinator.hte_show', compact(
-            'hte', 
-            'canManage', 
-            'endorsedInterns', 
-            'availableSlots', 
-            'hasEndorsedForDeploy', 
-            'hasDeployed', 
-            'endorsementPath'
-        ));
-    }
+    return view('coordinator.hte_show', compact(
+        'hte', 
+        'canManage', 
+        'endorsedInterns', 
+        'availableSlots', 
+        'groupedByCoordinator' 
+    ));
+}
 
     public function toggleMoaStatus($id)
     {

@@ -81,9 +81,8 @@
                     <div class="col-md-3 mb-3">
                         <label for="sex" class="form-label">Sex*</label>
                         <select class="form-select" id="sex" name="sex" required>
-                            <option class="d-none" value="" disabled>Select Sex</option>
-                            <option value="male" {{ old('sex', $intern->sex) == 'male' ? 'selected' : '' }}>Male</option>
-                            <option value="female" {{ old('sex', $intern->sex) == 'female' ? 'selected' : '' }}>Female</option>
+                            <option value="male" {{ old('sex', $intern->user->sex) == 'male' ? 'selected' : '' }}>Male</option>
+                            <option value="female" {{ old('sex', $intern->user->sex) == 'female' ? 'selected' : '' }}>Female</option>
                         </select>
                     </div>
                 </div>
