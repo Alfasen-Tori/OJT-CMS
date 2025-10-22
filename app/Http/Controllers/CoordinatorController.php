@@ -429,7 +429,6 @@ public function showHTE($id)
             'address' => 'required|string|max:500',
             'organization_name' => 'required|string|max:255',
             'organization_type' => 'required|in:private,government,ngo,educational,other',
-            'hte_status' => 'required|in:active,new',
             'description' => 'nullable|string',
         ]);
         
@@ -449,7 +448,6 @@ public function showHTE($id)
             $hte->update([
                 'organization_name' => $validated['organization_name'],
                 'type' => $validated['organization_type'],
-                'status' => $validated['hte_status'],
                 'address' => $validated['address'],
                 'description' => $validated['description'] ?? null,
             ]);
