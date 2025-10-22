@@ -340,6 +340,43 @@
     });
     </script>
 
+    <!-- HTE Interns Table -->
+    <script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#internsTableHTE').DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "emptyTable": "No students are currently deployed to your organization.",
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search students...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ students",
+                "paginate": {
+                    "previous": "«",
+                    "next": "»"
+                }
+            },
+            "columnDefs": [
+                { "orderable": false, "targets": [5] } // Disable sorting for Actions column
+            ],
+            "initComplete": function() {
+                // Hide loading overlay when table is ready
+                $('#tableLoadingOverlay').fadeOut();
+            }
+        });
+        
+        // Remove the manual search input
+        $('.card-header input[type="search"]').parent().remove();
+    });
+    </script>
+
     <!-- Coordinator: HTE Preview -->
     <script>
     $(document).ready(function() {
@@ -986,54 +1023,55 @@
         });
     </script>
 
-<script>
-$(document).ready(function() {
-    // Wait a bit for the DOM to fully render the rowspan structure
-    setTimeout(function() {
-        try {
-            // Initialize DataTable with minimal configuration
-            $('#allStudentsTable').DataTable({
-                "paging": true,
-                "lengthChange": false,
-                "searching": false,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
-                "responsive": false, // Disable responsive for complex tables
-                "pageLength": 10,
-                "order": [], // No initial sorting to avoid conflicts
-                "language": {
-                    "emptyTable": "No students endorsed to this HTE yet.",
-                    "lengthMenu": "",
-                    "info": "Showing _START_ to _END_ of _TOTAL_ students",
-                    "infoEmpty": "Showing 0 to 0 of 0 students",
-                    "infoFiltered": "",
-                    "paginate": {
-                        "previous": "«",
-                        "next": "»"
+    <!-- Coordinator: HTE/show - All Students Table with Rowspan -->
+    <script>
+    $(document).ready(function() {
+        // Wait a bit for the DOM to fully render the rowspan structure
+        setTimeout(function() {
+            try {
+                // Initialize DataTable with minimal configuration
+                $('#allStudentsTable').DataTable({
+                    "paging": true,
+                    "lengthChange": false,
+                    "searching": false,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": false, // Disable responsive for complex tables
+                    "pageLength": 10,
+                    "order": [], // No initial sorting to avoid conflicts
+                    "language": {
+                        "emptyTable": "No students endorsed to this HTE yet.",
+                        "lengthMenu": "",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ students",
+                        "infoEmpty": "Showing 0 to 0 of 0 students",
+                        "infoFiltered": "",
+                        "paginate": {
+                            "previous": "«",
+                            "next": "»"
+                        }
+                    },
+                    "initComplete": function() {
+                        console.log('DataTable initialized successfully');
+                        $('#allStudentsLoadingOverlay').fadeOut();
+                    },
+                    "drawCallback": function() {
+                        console.log('Table redrawn');
                     }
-                },
-                "initComplete": function() {
-                    console.log('DataTable initialized successfully');
-                    $('#allStudentsLoadingOverlay').fadeOut();
-                },
-                "drawCallback": function() {
-                    console.log('Table redrawn');
-                }
-            });
-        } catch (error) {
-            console.error('DataTable initialization failed:', error);
-            // If DataTable fails, just hide the overlay and show the table as-is
+                });
+            } catch (error) {
+                console.error('DataTable initialization failed:', error);
+                // If DataTable fails, just hide the overlay and show the table as-is
+                $('#allStudentsLoadingOverlay').fadeOut();
+            }
+        }, 100); // Small delay to ensure DOM is ready
+        
+        // Fallback: Always hide overlay after 3 seconds
+        setTimeout(function() {
             $('#allStudentsLoadingOverlay').fadeOut();
-        }
-    }, 100); // Small delay to ensure DOM is ready
-    
-    // Fallback: Always hide overlay after 3 seconds
-    setTimeout(function() {
-        $('#allStudentsLoadingOverlay').fadeOut();
-    }, 3000);
-});
-</script>
+        }, 3000);
+    });
+    </script>
 
 
 
