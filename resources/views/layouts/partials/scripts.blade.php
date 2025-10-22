@@ -217,8 +217,8 @@
                         // Update UI without refresh
                         $('.card-body').html(`
                             <div class="w-100">
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle mr-2"></i>
+                                <div class="alert bg-success-subtle text-success text-center mb-4 w-100 small">
+                                    <i class="ph-fill ph-check-circle custom-icons-i  mr-2"></i>
                                     ${response.message}
                                 </div>
                                 
@@ -278,8 +278,8 @@
                         // Update UI without refresh
                         $('.card-body').html(`
                             <div class="d-flex flex-column align-items-center justify-content-center py-4">
-                                <div class="alert alert-warning text-center mb-4 w-100">
-                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                <div class="alert bg-warning-subtle text-warning small text-center mb-4 w-100">
+                                    <i class="ph-fill ph-warning-circle custom-icons-i small mr-2"></i>
                                     ${response.message}
                                 </div>
                                 
@@ -305,7 +305,7 @@
                                             Please upload a signed copy of the Memorandum of Agreement in PDF format.
                                         </small>
                                     </div>
-                                    
+                                
                                     <div class="text-center mt-4">
                                         <button type="submit" 
                                                 class="btn btn-success btn-lg"

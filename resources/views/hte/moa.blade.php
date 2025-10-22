@@ -32,9 +32,9 @@
             @if($hte->moa_path)
               <!-- MOA Preview Section -->
               <div class="w-100">
-                <div class="alert alert-success">
-                  <i class="fas fa-check-circle mr-2"></i>
-                  Your Memorandum of Agreement has been submitted.
+                <div class="alert bg-success-subtle text-success text-center mb-4 w-100 small fs-medium">
+                  <i class="ph-fill ph-check-circle custom-icons-i mr-2"></i>
+                  MOA Submitted. Please stand by for verification.
                 </div>
                 
                 <div class="embed-responsive embed-responsive-16by9 mb-3">

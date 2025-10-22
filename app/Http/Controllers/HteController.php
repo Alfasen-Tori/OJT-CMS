@@ -182,7 +182,7 @@ public function uploadMOA(Request $request)
     ]);
 
     return response()->json([
-        'message' => 'MOA uploaded successfully!',
+        'message' => 'MOA uploaded! Please stand by for verification.',
         'file_url' => Storage::url($path),
         'status' => 'success'
     ]);
@@ -203,7 +203,7 @@ public function deleteMOA()
     $hte->update(['moa_path' => null]);
 
     return response()->json([
-        'message' => 'MOA removed successfully. You can upload a new one anytime.',
+        'message' => 'MOA removed. Please upload a new one.',
         'status' => 'success'
     ]);
 }
