@@ -24,16 +24,16 @@
                     <small class="text-muted">HTE</small>
                 </div>
                 
-                <a href="{{ route('intern.profile') }}" class="dropdown-item py-2">
-                    <i class="fas fa-user-circle mr-2 text-primary"></i> My Profile
+                <a href="" class="py-2 btn btn-outline-light btn-flat border-0 w-100 text-left text-dark">
+                    <i class="ph ph-user-gear custom-icons-i mr-2 text-primary"></i>Manage Profile
                 </a>
                 
                 <div class="dropdown-divider"></div>
                 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="dropdown-item py-2 text-danger">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Sign Out
+                    <button type="submit" class="py-2 btn btn-outline-light btn-flat border-0 w-100 text-left text-danger">
+                        <i class="ph ph-sign-out custom-icons-i mr-2"></i>Sign Out
                     </button>
                 </form>
             </div>
