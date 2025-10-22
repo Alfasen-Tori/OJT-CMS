@@ -22,7 +22,7 @@
 <section class="content d-flex flex-grow-1 align-items-center justify-content-center">
   <div class="container-fluid">
     <div class="row justify-content-center align-items-center min-vh-80">
-      <div class="col-lg-10">
+      <div class="col-sm-6 col-lg-10">
         <div class="card shadow">
           <div class="card-header bg-white text-white">
             <h3 class="card-title">MOA Submission</h3>
@@ -61,9 +61,9 @@
             @else
               <!-- MOA Upload Form -->
               <div class="d-flex flex-column align-items-center justify-content-center py-4">
-                <div class="alert alert-warning text-center mb-4 w-100">
-                  <i class="fas fa-exclamation-circle mr-2"></i>
-                  Action Required: Upload a signed copy of the Memorandum of Agreement to recieve endorsements.
+                <div class="alert bg-warning-subtle text-warning text-center mb-4 w-100 small fs-medium">
+                  <i class="ph-fill ph-warning-circle custom-icons-i mr-2"></i>
+                  Download the MOA template sent at <span class="text-decoration-underline">{{ Auth::user()->email }}</span>, fill it out, and upload the signed copy below.
                 </div>
                 
                 <form id="moaUploadForm" 
