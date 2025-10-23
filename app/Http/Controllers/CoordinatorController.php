@@ -360,37 +360,37 @@ class CoordinatorController extends Controller
         }
     }
 
-public function showHTE($id)
-{
-    $hte = Hte::with(['user', 'skills', 'skills.department'])
-        ->findOrFail($id);
+    public function showHTE($id)
+    {
+        $hte = Hte::with(['user', 'skills', 'skills.department'])
+            ->findOrFail($id);
 
-    // Load all interns_htes for this HTE with coordinator information
-    $endorsedInterns = \App\Models\InternsHte::with([
-            'intern.user', 
-            'intern.department',
-            'coordinator.user' // Load coordinator details
-        ])
-        ->where('hte_id', $id)
-        ->get();
+        // Load all interns_htes for this HTE with coordinator information
+        $endorsedInterns = \App\Models\InternsHte::with([
+                'intern.user', 
+                'intern.department',
+                'coordinator.user' // Load coordinator details
+            ])
+            ->where('hte_id', $id)
+            ->get();
 
-    // Group by coordinator_id for the new table
-    $groupedByCoordinator = $endorsedInterns->groupBy('coordinator_id');
+        // Group by coordinator_id for the new table
+        $groupedByCoordinator = $endorsedInterns->groupBy('coordinator_id');
 
-    $endorsedCount = $endorsedInterns->count();
-    $availableSlots = $hte->slots - $endorsedCount;
-    $availableSlots = max(0, $availableSlots);
+        $endorsedCount = $endorsedInterns->count();
+        $availableSlots = $hte->slots - $endorsedCount;
+        $availableSlots = max(0, $availableSlots);
 
-    $canManage = auth()->user()->coordinator->can_add_hte == 1;
+        $canManage = auth()->user()->coordinator->can_add_hte == 1;
 
-    return view('coordinator.hte_show', compact(
-        'hte', 
-        'canManage', 
-        'endorsedInterns', 
-        'availableSlots', 
-        'groupedByCoordinator' 
-    ));
-}
+        return view('coordinator.hte_show', compact(
+            'hte', 
+            'canManage', 
+            'endorsedInterns', 
+            'availableSlots', 
+            'groupedByCoordinator' 
+        ));
+    }
 
     public function toggleMoaStatus($id)
     {
@@ -637,8 +637,12 @@ public function showHTE($id)
             $matchingSkills = array_intersect($internSkills, $requiredSkillIds);
             
             // Calculate match percentage
-            $matchPercentage = count($requiredSkillIds) > 0 
-                ? round((count($matchingSkills) / count($requiredSkillIds)) * 100) : 0;
+            // $matchPercentage = count($requiredSkillIds) > 0 
+            //     ? round((count($matchingSkills) / count($requiredSkillIds)) * 100) : 0;
+
+                $matchPercentage = count($internSkills) > 0 
+                ? round((count($matchingSkills) / count($internSkills)) * 100) 
+                : 0;
             
             // Get skill names for display
             $matchingSkillNames = $intern->skills
