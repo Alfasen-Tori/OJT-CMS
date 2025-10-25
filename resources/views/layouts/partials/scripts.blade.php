@@ -341,10 +341,10 @@
     </script>
 
     <!-- HTE Interns Table -->
-    <script>
+<script>
     $(document).ready(function() {
         // Initialize DataTable
-        $('#internsTableHTE').DataTable({
+        var table = $('#internsTableHTE').DataTable({
             "paging": true,
             "lengthChange": true,
             "searching": true,
@@ -364,18 +364,105 @@
                 }
             },
             "columnDefs": [
-                { "orderable": false, "targets": [5] } // Disable sorting for Actions column
+                { "orderable": false, "targets": [6] } // Disable sorting for Actions column
             ],
-            "initComplete": function() {
+            "initComplete": function(settings, json) {
                 // Hide loading overlay when table is ready
-                $('#tableLoadingOverlay').fadeOut();
+                $('#tableLoadingOverlay').fadeOut(300);
             }
         });
         
-        // Remove the manual search input
+        // Remove the manual search input if it exists
         $('.card-header input[type="search"]').parent().remove();
+        
+        // Fallback: hide loading overlay after 2 seconds
+        setTimeout(function() {
+            $('#tableLoadingOverlay').fadeOut(300);
+        }, 2000);
+
+        // Evaluation form submission
+        $('.evaluate-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            const form = $(this);
+            const deploymentId = form.attr('id').replace('evaluateForm', '');
+            const submitBtn = form.find('.submit-evaluate-btn');
+            const submitText = form.find('.submit-text');
+            const spinner = form.find('.spinner-border');
+            
+            // Show loading state
+            submitBtn.prop('disabled', true);
+            submitText.addClass('d-none');
+            spinner.removeClass('d-none');
+            
+            // Clear previous errors
+            form.find('.is-invalid').removeClass('is-invalid');
+            form.find('.invalid-feedback').text('');
+            
+            $.ajax({
+                url: '{{ route("hte.interns.evaluate", "") }}/' + deploymentId,
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        // Show success toast
+                        toastr.success(response.message, 'Success');
+                        
+                        // Close modal
+                        $('#evaluateModal' + deploymentId).modal('hide');
+                        
+                        // Reload page after short delay to show updated grade
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error(response.message, 'Error');
+                        submitBtn.prop('disabled', false);
+                        submitText.removeClass('d-none');
+                        spinner.addClass('d-none');
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    
+                    if (xhr.status === 422 && response.errors) {
+                        // Show validation errors
+                        $.each(response.errors, function(field, errors) {
+                            const input = form.find('[name="' + field + '"]');
+                            const errorDiv = form.find('#' + field + 'Error' + deploymentId);
+                            
+                            input.addClass('is-invalid');
+                            errorDiv.text(errors[0]);
+                        });
+                        toastr.error('Please fix the validation errors.', 'Validation Error');
+                    } else {
+                        toastr.error(response?.message || 'An error occurred while submitting evaluation.', 'Error');
+                    }
+                    
+                    submitBtn.prop('disabled', false);
+                    submitText.removeClass('d-none');
+                    spinner.addClass('d-none');
+                }
+            });
+        });
+
+        // Reset form when modal is closed
+        $('.modal').on('hidden.bs.modal', function () {
+            const form = $(this).find('form');
+            form[0].reset();
+            form.find('.is-invalid').removeClass('is-invalid');
+            form.find('.invalid-feedback').text('');
+            
+            const submitBtn = form.find('.submit-evaluate-btn');
+            const submitText = form.find('.submit-text');
+            const spinner = form.find('.spinner-border');
+            
+            submitBtn.prop('disabled', false);
+            submitText.removeClass('d-none');
+            spinner.addClass('d-none');
+        });
     });
-    </script>
+</script>
 
     <!-- Coordinator: HTE Preview -->
     <script>

@@ -53,6 +53,7 @@
               <th>Department</th>
               <th width="15%">Coordinator</th>
               <th width="10%">Status</th>
+              <th width="10%">Grade</th>
               <th width="3%">Actions</th>
             </tr>
           </thead>
@@ -62,12 +63,24 @@
                 $intern = $deployment->intern;
                 $coordinator = $deployment->coordinator;
                 
-                // Determine if intern is completed (hours requirement met)
-                $totalHours = \App\Models\Attendance::where('intern_hte_id', $deployment->id)
-                    ->sum('hours_rendered');
-                $isCompleted = $totalHours >= $deployment->no_of_hours;
-                $statusClass = $isCompleted ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary';
-                $statusText = $isCompleted ? 'Completed' : 'Deployed';
+                // Get individual intern status
+                $status = $intern->status;
+                $statusClass = [
+                  'pending requirements' => 'bg-warning-subtle text-warning',
+                  'ready for deployment' => 'bg-info-subtle text-info',
+                  'endorsed' => 'bg-primary-subtle text-primary',
+                  'processing' => 'bg-secondary-subtle text-secondary',
+                  'deployed' => 'bg-success-subtle text-success',
+                  'completed' => 'bg-success-subtle text-success'
+                ][$status] ?? 'bg-light text-dark';
+                
+                // Check if completed for evaluate action
+                $isCompleted = $status === 'completed';
+                
+                // Check if evaluated and get grade
+                $isEvaluated = $deployment->evaluation !== null;
+                $grade = $isEvaluated ? $deployment->evaluation->grade : null;
+                $gpa = $grade ? number_format((100 - $grade) / 20, 1) : null;
             @endphp
             <tr>
               <td class="align-middle">{{ $intern->student_id }}</td>
@@ -94,11 +107,18 @@
               </td>
               <td class="align-middle">
                 <span class="small badge py-2 px-3 rounded-pill {{ $statusClass }}" style="font-size: 14px">
-                  {{ $statusText }}
+                  {{ ucwords($status) }}
                 </span>
-                @if($isCompleted)
-                  <br>
-                  <small class="text-muted">{{ $totalHours }}/{{ $deployment->no_of_hours }} hrs</small>
+              </td>
+              <td class="align-middle text-center">
+                @if($isEvaluated)
+                  <span class="small badge bg-success-subtle text-success py-2 px-3 rounded-pill" style="font-size: 14px">
+                    {{ $gpa }}
+                  </span>
+                @else
+                  <span class="small badge bg-danger-subtle text-danger py-2 px-3 rounded-pill" style="font-size: 14px">
+                    No Evaluation
+                  </span>
                 @endif
               </td>
               <td class="text-center px-2 align-middle">
@@ -112,9 +132,9 @@
                       <i class="ph ph-eye custom-icons-i mr-2"></i>View
                     </a>
                     
-                    <!-- Evaluate Option - Only show if completed -->
-                    @if($isCompleted)
-                      <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="#">
+                    <!-- Evaluate Option - Only show if completed and not evaluated -->
+                    @if($isCompleted && !$isEvaluated)
+                      <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="#" data-toggle="modal" data-target="#evaluateModal{{ $deployment->id }}">
                         <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>Evaluate
                       </a>
                     @endif
@@ -122,64 +142,79 @@
                 </div>
               </td>
             </tr>
+
+            <!-- Evaluation Modal -->
+            @if($isCompleted && !$isEvaluated)
+            <div class="modal fade" id="evaluateModal{{ $deployment->id }}" tabindex="-1" role="dialog" aria-labelledby="evaluateModalLabel{{ $deployment->id }}" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="evaluateModalLabel{{ $deployment->id }}">
+                      <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>
+                      Evaluate Intern
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <form id="evaluateForm{{ $deployment->id }}" class="evaluate-form">
+                    @csrf
+                    <div class="modal-body">
+                      <div class="text-center mb-4">
+                        <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                          alt="Profile Picture" 
+                          class="rounded-circle mb-3" 
+                          width="80" height="80">
+                        <h5>{{ $intern->user->fname }} {{ $intern->user->lname }}</h5>
+                        <p class="text-muted">{{ $intern->student_id }} • {{ $intern->department->dept_name ?? 'N/A' }}</p>
+                      </div>
+                      
+                      <div class="alert bg-info-subtle text-info">
+                        <i class="ph ph-info custom-icons-i mr-2"></i>
+                        Provide a grade evaluation for this intern's performance during their internship period.
+                      </div>
+                      
+                      <!-- Evaluation Form -->
+                      <div class="form-group">
+                        <label for="grade{{ $deployment->id }}" class="form-label">Grade (0-100) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="grade{{ $deployment->id }}" name="grade" min="0" max="100" step="0.01" placeholder="Enter grade from 0 to 100" required>
+                        <small class="form-text text-muted">100 = Excellent, 0 = Poor</small>
+                        <div class="invalid-feedback" id="gradeError{{ $deployment->id }}"></div>
+                      </div>
+                      <div class="form-group">
+                        <label for="comments{{ $deployment->id }}" class="form-label">Comments (Optional)</label>
+                        <textarea class="form-control" id="comments{{ $deployment->id }}" name="comments" rows="3" placeholder="Provide feedback on the intern's performance..."></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary submit-evaluate-btn">
+                        <span class="submit-text">Submit Evaluation</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            @endif
             @endforeach
           </tbody>
         </table>
       </div>
-    @else
-        <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="height: 70vh;">
-          <i class="ph ph-users fs-1 mb-3" style="font-size: 4rem !important;"></i>
-          <h4 class="text-muted mb-2">Wow, such empty.</h4>
-          <p class="text-muted mb-0">Check back later for deployed students.</p>
-        </div>
-      @endif
     </div>
+    @else
+    <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="height: 70vh;">
+      <i class="ph ph-users fs-1 mb-3" style="font-size: 4rem !important;"></i>
+      <h4 class="text-muted mb-2">Wow, such empty.</h4>
+      <p class="text-muted mb-0">Check back later for deployed students.</p>
+    </div>
+    @endif
   </div>
 </section>
 
 @endsection
 
 @section('scripts')
-@if(count($deployedInterns) > 0)
-<script>
-    $(document).ready(function() {
-        // Initialize DataTable
-        var table = $('#internsTableHTE').DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-            "language": {
-                "emptyTable": "No students are currently deployed to your organization.",
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search students...",
-                "lengthMenu": "Show _MENU_ entries",
-                "info": "Showing _START_ to _END_ of _TOTAL_ students",
-                "paginate": {
-                    "previous": "«",
-                    "next": "»"
-                }
-            },
-            "columnDefs": [
-                { "orderable": false, "targets": [5] } // Disable sorting for Actions column
-            ],
-            "initComplete": function(settings, json) {
-                // Hide loading overlay when table is ready
-                $('#tableLoadingOverlay').fadeOut(300);
-            }
-        });
-        
-        // Remove the manual search input if it exists
-        $('.card-header input[type="search"]').parent().remove();
-        
-        // Fallback: hide loading overlay after 2 seconds
-        setTimeout(function() {
-            $('#tableLoadingOverlay').fadeOut(300);
-        }, 2000);
-    });
-</script>
-@endif
+
 @endsection

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Models\InternsHte;
 use Illuminate\Http\Request;
+use App\Models\InternEvaluation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -40,11 +42,12 @@ public function interns()
     // Get the authenticated HTE's ID
     $hteId = auth()->user()->hte->id;
     
-    // Get all deployed interns for this HTE
+    // Get all deployed interns for this HTE with evaluation relationship
     $deployedInterns = \App\Models\InternsHte::with([
             'intern.user', 
             'intern.department',
-            'coordinator.user'
+            'coordinator.user',
+            'evaluation' // Load the evaluation relationship
         ])
         ->where('hte_id', $hteId)
         ->where('status', 'deployed')
@@ -52,6 +55,68 @@ public function interns()
         ->get();
 
     return view('hte.interns', compact('deployedInterns'));
+}
+
+public function submitEvaluation(Request $request, $deploymentId)
+{
+    try {
+        $request->validate([
+            'grade' => 'required|numeric|min:0|max:100',
+            'comments' => 'nullable|string|max:1000'
+        ]);
+
+        $deployment = InternsHte::findOrFail($deploymentId);
+        
+        // Check if the deployment belongs to the authenticated HTE
+        if ($deployment->hte_id !== auth()->user()->hte->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized action.'
+            ], 403);
+        }
+
+        // Check if intern is completed
+        if ($deployment->intern->status !== 'completed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Intern must have completed status to be evaluated.'
+            ], 422);
+        }
+
+        // Check if already evaluated
+        if ($deployment->evaluation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This intern has already been evaluated.'
+            ], 422);
+        }
+
+        // Create evaluation
+        InternEvaluation::create([
+            'intern_hte_id' => $deploymentId,
+            'grade' => $request->grade,
+            'comments' => $request->comments,
+            'evaluation_date' => now()->toDateString()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Evaluation submitted successfully!',
+            'gpa' => number_format((100 - $request->grade) / 20, 1)
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation error.',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while submitting evaluation.'
+        ], 500);
+    }
 }
 
     public function showDetailsForm()
