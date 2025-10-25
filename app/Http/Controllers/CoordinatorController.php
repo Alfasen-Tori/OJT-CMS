@@ -136,13 +136,55 @@ class CoordinatorController extends Controller
             ->with('success', 'Intern registered successfully. Activation email sent.');
     }
 
-    public function showIntern($id)
-    {
-        $intern = Intern::with(['user', 'department', 'skills', 'coordinator.user'])
-            ->findOrFail($id);
+public function showIntern($id)
+{
+    $intern = Intern::with([
+            'user', 
+            'department', 
+            'skills', 
+            'coordinator.user',
+            'weeklyReports'
+        ])
+        ->findOrFail($id);
+    
+    // Get current deployment if any
+    $currentDeployment = \App\Models\InternsHte::with('evaluation')
+        ->where('intern_id', $id)
+        ->whereIn('status', ['deployed', 'completed'])
+        ->latest()
+        ->first();
+    
+    $progress = [];
+    $evaluation = null;
+    
+    if ($currentDeployment) {
+        // Calculate progress
+        $totalHours = \App\Models\Attendance::where('intern_hte_id', $currentDeployment->id)
+            ->sum('hours_rendered');
+        $requiredHours = $currentDeployment->no_of_hours;
+        $percentage = $requiredHours > 0 ? min(100, ($totalHours / $requiredHours) * 100) : 0;
         
-        return view('coordinator.intern_show', compact('intern'));
+        $progress = [
+            'total_rendered' => $totalHours,
+            'required_hours' => $requiredHours,
+            'percentage' => round($percentage, 1)
+        ];
+        
+        // Get evaluation if exists
+        $evaluation = $currentDeployment->evaluation;
     }
+    
+    // Get weekly reports
+    $weeklyReports = $intern->weeklyReports()->orderBy('week_no')->get();
+
+    return view('coordinator.intern_show', compact(
+        'intern', 
+        'currentDeployment', 
+        'progress', 
+        'evaluation',
+        'weeklyReports'
+    ));
+}
 
     public function editIntern($id)
     {
