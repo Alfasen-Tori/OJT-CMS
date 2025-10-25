@@ -483,43 +483,21 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        // Update modal button text and style
-                        if (response.new_status === 'yes') {
-                            // Update modal button
-                            button.removeClass('btn-primary').addClass('btn-warning');
-                            button.html('<i class="ph ph-x mr-1 custom-icons-i"></i> Mark as Unsigned');
-                            
-                            // Update status badge
-                            $('li:contains("Status:")').find('.badge')
-                                .removeClass('bg-warning-subtle text-warning')
-                                .addClass('bg-success-subtle text-success')
-                                .text('Signed');
-                                
-                            // Update MOA button
-                            $('li:contains("MOA:")').find('button')
-                                .removeClass('btn-outline-warning')
-                                .addClass('btn-outline-primary')
-                                .html('<i class="ph-fill ph-eye custom-icons-i mr-1"></i>View');
-                        } else {
-                            // Update modal button
-                            button.removeClass('btn-warning').addClass('btn-primary');
-                            button.html('<i class="ph ph-check mr-1 custom-icons-i"></i> Mark as Signed');
-                            
-                            // Update status badge
-                            $('li:contains("Status:")').find('.badge')
-                                .removeClass('bg-success-subtle text-success')
-                                .addClass('bg-warning-subtle text-warning')
-                                .text('Validation Required');
-                                
-                            // Update MOA button
-                            $('li:contains("MOA:")').find('button')
-                                .removeClass('btn-outline-primary')
-                                .addClass('btn-outline-warning')
-                                .html('<i class="ph ph-eye custom-icons-i mr-1"></i>Review');
-                        }
+                        // Show success toast
+                        toastr.success(response.message, 'Success');
                         
-                        // Show success message
-                        toastr.success('MOA status updated successfully');
+                        // Close modal
+                        $('#evaluateModal' + deploymentId).modal('hide');
+                        
+                        // Reload page after short delay to show updated grade
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error(response.message, 'Error');
+                        submitBtn.prop('disabled', false);
+                        submitText.removeClass('d-none');
+                        spinner.addClass('d-none');
                     }
                 },
                 error: function(xhr) {

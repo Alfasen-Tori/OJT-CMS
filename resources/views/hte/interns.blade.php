@@ -110,16 +110,31 @@
                   {{ ucwords($status) }}
                 </span>
               </td>
+              @php
+                  // Check if evaluated and get grade
+                  $isEvaluated = $deployment->evaluation !== null;
+                  $grade = $isEvaluated ? $deployment->evaluation->grade : null;
+                  $gpa = $isEvaluated ? $deployment->evaluation->calculateGPA() : null;
+                  
+                  // Get GPA color for the badge
+                  $gpaColorClass = 'bg-success-subtle text-success'; // Default green
+                  if ($gpa) {
+                      if ($gpa >= 4.00) $gpaColorClass = 'bg-danger-subtle text-danger';
+                      elseif ($gpa >= 3.00) $gpaColorClass = 'bg-warning-subtle text-warning';
+                      elseif ($gpa >= 2.00) $gpaColorClass = 'bg-info-subtle text-info';
+                  }
+              @endphp
+
               <td class="align-middle text-center">
-                @if($isEvaluated)
-                  <span class="small badge bg-success-subtle text-success py-2 px-3 rounded-pill" style="font-size: 14px">
-                    {{ $gpa }}
-                  </span>
-                @else
-                  <span class="small badge bg-danger-subtle text-danger py-2 px-3 rounded-pill" style="font-size: 14px">
-                    No Evaluation
-                  </span>
-                @endif
+                  @if($isEvaluated)
+                      <span class="small badge {{ $gpaColorClass }} py-2 px-3 rounded-pill" style="font-size: 14px">
+                          {{ number_format($gpa, 2) }}
+                      </span>
+                  @else
+                      <span class="small badge bg-danger-subtle text-danger py-2 px-3 rounded-pill" style="font-size: 14px">
+                          No Evaluation
+                      </span>
+                  @endif
               </td>
               <td class="text-center px-2 align-middle">
                 <div class="dropdown">
