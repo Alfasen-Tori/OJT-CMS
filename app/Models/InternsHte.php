@@ -81,4 +81,17 @@ class InternsHte extends Model
 
         return min(100, round(($this->total_hours_rendered / $this->no_of_hours) * 100, 2));
     }
+
+    public function evaluation()
+    {
+        return $this->hasOne(InternEvaluation::class, 'intern_hte_id');
+    }
+
+    /**
+     * Check if this deployment has been evaluated.
+     */
+    public function getIsEvaluatedAttribute()
+    {
+        return $this->evaluation()->exists();
+    }
 }

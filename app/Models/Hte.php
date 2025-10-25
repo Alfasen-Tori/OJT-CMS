@@ -77,4 +77,16 @@ class Hte extends Model
     {
         return $this->hasMany(\App\Models\InternsHte::class, 'hte_id');
     }
+
+    public function internEvaluations()
+    {
+        return $this->hasManyThrough(
+            InternEvaluation::class,
+            InternsHte::class,
+            'hte_id', // Foreign key on interns_hte table
+            'intern_hte_id', // Foreign key on intern_evaluations table
+            'id', // Local key on htes table
+            'id' // Local key on interns_hte table
+        );
+    }
 }

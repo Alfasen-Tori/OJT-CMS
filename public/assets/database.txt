@@ -114,4 +114,10 @@ report_path (VARCHAR or TEXT) — uploaded file path, nullable
 submitted_at (TIMESTAMP) nullable
 timestamps
 
-
+[INTERN_EVALUATIONS]
+id (PK, auto-increment)
+intern_hte_id (FK to interns_hte.id) - to track which deployment is being evaluated
+grade (DECIMAL(5,2) - 0-100 scale
+comments (TEXT, nullable) - optional feedback from HTE
+evaluation_date (DATE)
+timestamps (created_at, updated_at)
