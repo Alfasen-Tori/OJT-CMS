@@ -312,12 +312,13 @@ class CoordinatorController extends Controller
         $generatedDocxPath = null; // Declare outside if block to track for deletion
 
         if ($validated['hte_status'] === 'new') {
-            $templatePath = storage_path('app/public/moa-templates/moa-template.docx');
-            $generatedDocxPath = storage_path('app/public/moa-templates/generated-moa-' . $hte->id . '.docx');
+            $templatePath = public_path('templates/moa-template.docx');
+            $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
 
             // Fill DOCX template
             $templateProcessor = new TemplateProcessor($templatePath);
             $templateProcessor->setValue('organization_name', $validated['organization_name']);
+            $templateProcessor->setValue('org_name', strtoupper($validated['organization_name']));
             $templateProcessor->setValue('address', $validated['address']);
             $templateProcessor->setValue('contact_name', $contactName);
             // Add more placeholders as needed
