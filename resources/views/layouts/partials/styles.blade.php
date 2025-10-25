@@ -197,6 +197,15 @@
         padding-top: 0.5rem;
     }
 
+    #internsTableHTE_wrapper .row:first-child {
+        padding-top: 1rem;
+    }
+
+    #internsTableHTE_wrapper .row:last-child {
+        padding-bottom: 1rem;
+        padding-top: 0.5rem;
+    }
+
     #allStudentsTable_wrapper .row:first-child {
         padding-top: 1rem;
     }
@@ -205,7 +214,7 @@
         padding: 1rem;
     }
 
-    #internsTable, #htesTable, #deploymentsTable, #internAttendanceTable thead th {
+    #internsTable, #htesTable, #deploymentsTable, #internAttendanceTable, #internsTableHTE thead th {
         border-right: 1px solid #dee2e6 !important;
     }
 

@@ -22,11 +22,13 @@
 
 <section class="content">
   <div class="container-fluid">
+    @if(count($deployedInterns) > 0)
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">Deployed Students</h3>
       </div>
-      <div class="card-body table-responsive py-0 px-3">
+      
+      <div class="card-body table-responsive py-0 px-3" style="position: relative;">
         <!-- Loading Overlay -->
         <div id="tableLoadingOverlay" 
           style="position: absolute; 
@@ -55,7 +57,7 @@
             </tr>
           </thead>
           <tbody>
-            @forelse($deployedInterns as $deployment)
+            @foreach($deployedInterns as $deployment)
             @php
                 $intern = $deployment->intern;
                 $coordinator = $deployment->coordinator;
@@ -120,22 +122,64 @@
                 </div>
               </td>
             </tr>
-            @empty
-            <tr>
-              <td colspan="8" class="text-center py-4">
-                <div class="d-flex flex-column align-items-center text-muted">
-                  <i class="ph ph-users fs-1 mb-2"></i>
-                  <span>No students are currently deployed to your organization.</span>
-                  <small class="mt-1">Deployed students will appear here once coordinators assign them to your HTE.</small>
-                </div>
-              </td>
-            </tr>
-            @endforelse
+            @endforeach
           </tbody>
         </table>
       </div>
+    @else
+        <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="height: 70vh;">
+          <i class="ph ph-users fs-1 mb-3" style="font-size: 4rem !important;"></i>
+          <h4 class="text-muted mb-2">Wow, such empty.</h4>
+          <p class="text-muted mb-0">Check back later for deployed students.</p>
+        </div>
+      @endif
     </div>
   </div>
 </section>
 
+@endsection
+
+@section('scripts')
+@if(count($deployedInterns) > 0)
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        var table = $('#internsTableHTE').DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "emptyTable": "No students are currently deployed to your organization.",
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search students...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ students",
+                "paginate": {
+                    "previous": "«",
+                    "next": "»"
+                }
+            },
+            "columnDefs": [
+                { "orderable": false, "targets": [5] } // Disable sorting for Actions column
+            ],
+            "initComplete": function(settings, json) {
+                // Hide loading overlay when table is ready
+                $('#tableLoadingOverlay').fadeOut(300);
+            }
+        });
+        
+        // Remove the manual search input if it exists
+        $('.card-header input[type="search"]').parent().remove();
+        
+        // Fallback: hide loading overlay after 2 seconds
+        setTimeout(function() {
+            $('#tableLoadingOverlay').fadeOut(300);
+        }, 2000);
+    });
+</script>
+@endif
 @endsection
