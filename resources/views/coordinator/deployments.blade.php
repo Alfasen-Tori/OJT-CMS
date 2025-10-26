@@ -59,9 +59,11 @@
                 $firstEndorsement = $endorsements->first();
                 $hte = $firstEndorsement->hte;
                 $studentCount = $endorsements->count();
-                $status = $endorsements->contains('status', 'deployed') ? 'deployed' 
-                          : ($endorsements->contains('status', 'processing') ? 'processing' 
-                          : 'endorsed');
+                $status = $endorsements->contains('status', 'completed') ? 'completed'
+                    : ($endorsements->contains('status', 'deployed') ? 'deployed'
+                    : ($endorsements->contains('status', 'processing') ? 'processing'
+                    : 'endorsed'));
+
                           
                 $statusClass = match($status) {
                     'deployed' => 'bg-success-subtle text-success',
