@@ -37,7 +37,7 @@
           </li>
 
           <li class="nav-item">
-            <a href="{{route('hte.interns')}}" class="nav-link {{ Request::is('hte/interns*') ? 'current-page' : '' }}">
+            <a href="{{route('hte.interns')}}" class="nav-link {{ Request::is('hte/intern*') ? 'current-page' : '' }}">
               <i class="ph{{ Request::is('hte/interns') ? '-fill' : '' }} ph-graduation-cap nav-link-i"></i>
               <p class="me-1">Interns</p>
             </a>
