@@ -143,7 +143,7 @@
                   </button>
                   <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
                     <!-- View Option -->
-                    <a class="dropdown-item btn btn-outline-light text-dark" href="">
+                    <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('hte.intern.show', $intern->id) }}">
                       <i class="ph ph-eye custom-icons-i mr-2"></i>View
                     </a>
                     

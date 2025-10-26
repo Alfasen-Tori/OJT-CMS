@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Intern;
 use App\Models\Department;
 use App\Models\InternsHte;
 use Illuminate\Http\Request;
@@ -55,6 +56,55 @@ public function interns()
         ->get();
 
     return view('hte.interns', compact('deployedInterns'));
+}
+
+public function showIntern($id)
+{
+    // Get the authenticated HTE's ID
+    $hteId = auth()->user()->hte->id;
+    
+    $intern = Intern::with([
+            'user', 
+            'department', 
+            'skills', 
+            'coordinator.user'
+        ])
+        ->findOrFail($id);
+    
+    // Get current deployment for this HTE
+    $currentDeployment = \App\Models\InternsHte::with('evaluation')
+        ->where('intern_id', $id)
+        ->where('hte_id', $hteId)
+        ->whereIn('status', ['deployed', 'completed'])
+        ->latest()
+        ->first();
+    
+    $progress = [];
+    $evaluation = null;
+    
+    if ($currentDeployment) {
+        // Calculate progress
+        $totalHours = \App\Models\Attendance::where('intern_hte_id', $currentDeployment->id)
+            ->sum('hours_rendered');
+        $requiredHours = $currentDeployment->no_of_hours;
+        $percentage = $requiredHours > 0 ? min(100, ($totalHours / $requiredHours) * 100) : 0;
+        
+        $progress = [
+            'total_rendered' => $totalHours,
+            'required_hours' => $requiredHours,
+            'percentage' => round($percentage, 1)
+        ];
+        
+        // Get evaluation if exists
+        $evaluation = $currentDeployment->evaluation;
+    }
+
+    return view('hte.intern_show', compact(
+        'intern', 
+        'currentDeployment', 
+        'progress', 
+        'evaluation'
+    ));
 }
 
 public function submitEvaluation(Request $request, $deploymentId)

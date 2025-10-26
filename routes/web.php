@@ -140,6 +140,7 @@ Route::middleware(['auth:web', 'hte'])->prefix('hte')->group(function() {
 
     Route::get('/interns', [HteController::class, 'interns'])->name('hte.interns');
     Route::post('/interns/evaluate/{deployment}', [HteController::class, 'submitEvaluation'])->name('hte.interns.evaluate');
+    Route::get('/intern/{id}', [HteController::class, 'showIntern'])->name('hte.intern.show');
 
     Route::get('/moa', [HteController::class, 'moa'])->name('hte.moa');
     Route::post('/moa/upload', [HteController::class, 'uploadMOA'])->name('hte.moa.upload');

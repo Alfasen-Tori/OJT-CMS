@@ -274,7 +274,7 @@
                                             </td>
                                             <td class="align-middle">
                                                 <span class="badge {{ $statusClass }} px-3 py-2 rounded-pill text-capitalize">
-                                                    {{ $endorsement->status }}
+                                                    {{ $endorsement->intern->status }}
                                                 </span>
                                             </td>
                                         </tr>
