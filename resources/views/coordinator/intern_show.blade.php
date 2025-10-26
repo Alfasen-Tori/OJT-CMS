@@ -145,7 +145,7 @@
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
                         <i class="ph-fill ph-chart-donut custom-icons-i me-1 text-primary"></i>
-                        Internship Progress
+                        Progress
                     </h5>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-center">
@@ -202,13 +202,13 @@
                 </div>
                 <div class="card-body p-0 d-flex flex-column">
                     @if(isset($weeklyReports) && $weeklyReports->count() > 0)
-                        <div class="list-group list-group-flush flex-grow-1" style="max-height: 300px; overflow-y: auto;">
+                        <div class="list-group list-group-flush flex-grow-1" style="max-height: 500px; overflow-y: auto;">
                             @foreach($weeklyReports as $report)
                             <div class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
                                 <div>
                                     <h6 class="mb-1">Week {{ $report->week_no }}</h6>
                                     <small class="text-muted">
-                                        Submitted: {{ $report->submitted_at ? \Carbon\Carbon::parse($report->submitted_at)->format('M j, Y') : 'Not submitted' }}
+                                        Submitted: {{ $report->submitted_at ? \Carbon\Carbon::parse($report->submitted_at)->format('M j, Y') : 'N/A' }}
                                     </small>
                                 </div>
                                 <div>
@@ -237,10 +237,9 @@
             </div>
         </div>
 
-        <!-- 3. Evaluation Section -->
-        @if($evaluation)
+        <!-- 3. Evaluation Section - ALWAYS SHOW -->
         <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100 d-flex flex-column">
+            <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
                         <i class="ph-fill ph-clipboard-text custom-icons-i me-1 text-success"></i>
@@ -248,50 +247,67 @@
                     </h5>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-center">
-                    <div class="text-center mb-4">
-                        @php
-                            $gpa = $evaluation->calculateGPA();
-                            $gpaColor = $evaluation->getGPAColor();
-                            $gpaDescription = $evaluation->getGPADescription();
-                        @endphp
-                        <div class="d-flex justify-content-center align-items-center mb-3">
-                            <div style="width: 100px; height: 100px; background: {{ $gpaColor }}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <h3 class="text-white mb-0 fw-bold">{{ number_format($gpa, 2) }}</h3>
+                    @if($evaluation)
+                        <!-- Show evaluation when it exists -->
+                        <div class="text-center mb-4">
+                            @php
+                                $gpa = $evaluation->calculateGPA();
+                                $gpaColor = $evaluation->getGPAColor();
+                                $gpaDescription = $evaluation->getGPADescription();
+                            @endphp
+                            <div class="d-flex justify-content-center align-items-center mb-3">
+                                <div style="width: 100px; height: 100px; background: {{ $gpaColor }}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <h3 class="text-white mb-0 fw-bold">{{ number_format($gpa, 2) }}</h3>
+                                </div>
                             </div>
-                        </div>
-                        <h4 class="fw-bold mb-1" style="color: {{ $gpaColor }}">GPA: {{ number_format($gpa, 2) }}</h4>
-                        <p class="text-muted mb-0">{{ $gpaDescription }}</p>
-                    </div>
-                    
-                    <div class="border-top pt-3 mt-auto">
-                        <div class="row text-center mb-3">
-                            <div class="col-6">
-                                <h5 class="fw-bold text-primary mb-1">{{ $evaluation->grade }}/100</h5>
-                                <small class="text-muted">Score</small>
-                            </div>
-                            <div class="col-6">
-                                <h5 class="fw-bold mb-1" style="color: {{ $gpaColor }}">{{ $evaluation->grade_with_letter }}</h5>
-                                <small class="text-muted">Letter Grade</small>
-                            </div>
+                            <h4 class="fw-bold mb-1" style="color: {{ $gpaColor }}">GPA: {{ number_format($gpa, 2) }}</h4>
+                            <p class="text-muted mb-0">{{ $gpaDescription }}</p>
                         </div>
                         
-                        @if($evaluation->comments)
-                        <div class="mt-3">
-                            <h6 class="text-muted mb-2">Comments:</h6>
-                            <div class="border rounded p-3 bg-light">
-                                <p class="mb-0 small">{{ $evaluation->comments }}</p>
+                        <div class="border-top pt-3 mt-auto">
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <h5 class="fw-bold text-primary mb-1">{{ $evaluation->grade }}/100</h5>
+                                    <small class="text-muted">Rating</small>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="fw-bold mb-1" style="color: {{ $gpaColor }}">{{ $evaluation->grade_with_letter }}</h5>
+                                    <small class="text-muted">Letter Grade</small>
+                                </div>
+                            </div>
+                            
+                            @if($evaluation->comments)
+                            <div class="mt-3">
+                                <h6 class="text-muted mb-2">Comments:</h6>
+                                <div class="border rounded p-3 bg-light">
+                                    <p class="mb-0 small">{{ $evaluation->comments }}</p>
+                                </div>
+                            </div>
+                            @endif
+                            
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">Evaluated on: {{ \Carbon\Carbon::parse($evaluation->evaluation_date)->format('F j, Y') }}</small>
                             </div>
                         </div>
-                        @endif
-                        
-                        <div class="mt-3 text-center">
-                            <small class="text-muted">Evaluated on: {{ \Carbon\Carbon::parse($evaluation->evaluation_date)->format('F j, Y') }}</small>
+                    @else
+                        <!-- Show "No Evaluation" state -->
+                        <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                            <div>
+                                <i class="ph ph-clock fs-1 mb-2"></i>
+                                <h5 class="text-muted mb-2">Evaluation Pending</h5>
+                                <p class="mb-0 small">
+                                    @if($intern->status === 'deployed')
+                                        Evaluation will be available after the intern completes their internship.
+                                    @else
+                                        No evaluation has been submitted by the HTE yet.
+                                    @endif
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
-        @endif
     </div>
     @endif
 </div>
