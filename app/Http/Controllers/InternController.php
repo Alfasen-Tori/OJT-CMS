@@ -90,7 +90,7 @@ class InternController extends Controller
 
         $requiredHours = $internship->no_of_hours;
         
-        if ($totalHoursRendered >= $requiredHours && $internship->status === 'deployed') {
+        if ($totalHoursRendered >= $requiredHours) {
             $internship->update([
                 'status' => 'completed',
                 'completed_at' => now()
@@ -197,18 +197,45 @@ class InternController extends Controller
             return response()->json(['error' => 'You already punched out today.'], 400);
         }
 
-        $attendance->time_out = Carbon::now();  // UTC/app timezone
+        $attendance->time_out = Carbon::now();
         $attendance->hours_rendered = round($attendance->time_out->floatDiffInHours($attendance->time_in), 2);
         $attendance->save();
 
+        // ✅ Check if internship should be marked as completed
+        $totalHoursRendered = Attendance::where('intern_hte_id', $internHte->id)
+            ->sum('hours_rendered');
+        
+        $statusChanged = false;
+        if ($totalHoursRendered >= $internHte->no_of_hours && $internHte->status === 'deployed') {
+            $internHte->update([
+                'status' => 'completed',
+                'completed_at' => now()
+            ]);
+            $statusChanged = true;
+            
+            // Also update the intern's main status if needed
+            $intern->update(['status' => 'completed']);
+        }
+
+        // Get updated progress data for the response
+        $progressData = [
+            'total_rendered' => $totalHoursRendered,
+            'required_hours' => $internHte->no_of_hours,
+            'percentage' => min(100, round(($totalHoursRendered / $internHte->no_of_hours) * 100, 2))
+        ];
+
         return response()->json([
             'success' => true,
-            'message' => 'Punch out recorded successfully!',
+            'message' => $statusChanged 
+                ? 'Punch out recorded successfully! 🎉 Congratulations, you have completed your internship hours!' 
+                : 'Punch out recorded successfully!',
             'time_in' => $attendance->time_in->format('h:i A'),
             'time_out' => $attendance->time_out->format('h:i A'),
             'hours' => $attendance->hours_rendered,
-            'time_in_raw' => $attendance->time_in->toDateTimeString(),  // UTC for JS
-            'time_out_raw' => $attendance->time_out->toDateTimeString(),  // UTC for JS
+            'time_in_raw' => $attendance->time_in->toDateTimeString(),
+            'time_out_raw' => $attendance->time_out->toDateTimeString(),
+            'progress_data' => $progressData,
+            'status_changed' => $statusChanged
         ]);
     }
 
@@ -476,7 +503,7 @@ public function reports()
 
     // Get current internship
     $internship = InternsHte::where('intern_id', $intern->id)
-        ->where('status', 'deployed')
+        ->whereIn('status', ['deployed', 'completed'])
         ->first();
 
     if (!$internship) {
@@ -743,7 +770,7 @@ public function attendances()
 
     // Get current internship
     $internship = InternsHte::where('intern_id', $intern->id)
-        ->where('status', 'deployed')
+        ->whereIn('status', ['deployed', 'completed'])
         ->first();
 
     if (!$internship) {
