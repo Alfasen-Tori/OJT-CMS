@@ -216,10 +216,10 @@
                                     <a href="{{ asset('storage/' . $report->report_path) }}" 
                                        target="_blank" 
                                        class="btn btn-sm btn-outline-primary">
-                                        <i class="ph ph-eye mr-1"></i>View
+                                        <i class="ph ph-arrow-circle-up-right custom-icons-i mr-1"></i>Open
                                     </a>
                                     @else
-                                    <span class="badge bg-warning-subtle text-warning">No file</span>
+                                    <span class="badge bg-danger-subtle text-danger">Missing</span>
                                     @endif
                                 </div>
                             </div>
@@ -294,7 +294,7 @@
                         <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
                             <div>
                                 <i class="ph ph-clock fs-1 mb-2"></i>
-                                <h5 class="text-muted mb-2">Evaluation Pending</h5>
+                                <h5 class="text-muted mb-2">Pending</h5>
                                 <p class="mb-0 small">
                                     @if($intern->status === 'deployed')
                                         Evaluation will be available after the intern completes their internship.
