@@ -1,4 +1,4 @@
-@extends('layouts.coordinator')
+@extends('layouts.hte')
 
 @section('title', 'Intern Details')
 
@@ -9,15 +9,9 @@
         <div class="col-md-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-white text-dark">
-                    <h3 class="card-title mb-0 d-flex justify-content-between align-items-center w-100">
-                        <div>
-                            <i class="ph ph-graduation-cap details-icons-i mr-2"></i>
-                            Intern Details
-                        </div>
-                        <div class="title-right">
-                            <a href="{{ route('coordinator.edit_i', $intern->id) }}" class="btn btn-outline-light border-0 rounded-4 text-muted"><i class="ph ph-wrench details-icons-i p-0"></i></a>
-                            <a class="btn btn-outline-light border-0 rounded-4 text-muted" data-toggle="modal" data-target="#removeModal"><i class="ph ph-trash details-icons-i p-0"></i></a>
-                        </div>
+                    <h3 class="card-title mb-0">
+                        <i class="ph ph-graduation-cap details-icons-i mr-2"></i>
+                        Intern Details
                     </h3>
                 </div>
                 
@@ -135,12 +129,12 @@
         </div>
     </div>
 
-    <!-- Internship Progress, Reports & Evaluation Cards -->
+    <!-- Internship Progress & Evaluation Cards -->
     @if($intern->status === 'deployed' || $intern->status === 'completed')
     <div class="row">
         <!-- 1. Internship Progress -->
         @if($currentDeployment)
-        <div class="col-lg-4 col-md-6 mb-4">
+        <div class="col-lg-6 col-md-6 mb-4">
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
@@ -191,59 +185,13 @@
         </div>
         @endif
 
-        <!-- 2. Weekly Reports Section -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow-sm h-100 d-flex flex-column">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-file-text custom-icons-i me-1 text-info"></i>
-                        Weekly Reports
-                    </h5>
-                </div>
-                <div class="card-body p-0 d-flex flex-column">
-                    @if(isset($weeklyReports) && $weeklyReports->count() > 0)
-                        <div class="list-group list-group-flush flex-grow-1" style="max-height: 500px; overflow-y: auto;">
-                            @foreach($weeklyReports as $report)
-                            <div class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
-                                <div>
-                                    <h6 class="mb-1">Week {{ $report->week_no }}</h6>
-                                    <small class="text-muted">
-                                        Submitted: {{ $report->submitted_at ? \Carbon\Carbon::parse($report->submitted_at)->format('M j, Y') : 'N/A' }}
-                                    </small>
-                                </div>
-                                <div>
-                                    @if($report->report_path)
-                                    <a href="{{ asset('storage/' . $report->report_path) }}" 
-                                       target="_blank" 
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="ph ph-arrow-circle-up-right custom-icons-i mr-1"></i>Open
-                                    </a>
-                                    @else
-                                    <span class="badge bg-danger-subtle text-danger">Missing</span>
-                                    @endif
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
-                            <div>
-                                <i class="ph ph-file-text fs-1 mb-2"></i>
-                                <p class="mb-0">No weekly reports submitted yet.</p>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Evaluation Section - ALWAYS SHOW -->
-        <div class="col-lg-4 col-md-6 mb-4">
+        <!-- 2. Evaluation Section -->
+        <div class="col-lg-6 col-md-6 mb-4">
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
                         <i class="ph-fill ph-clipboard-text custom-icons-i me-1 text-success"></i>
-                        HTE Evaluation
+                        Evaluation
                     </h5>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-center">
@@ -290,20 +238,32 @@
                             </div>
                         </div>
                     @else
-                        <!-- Show "No Evaluation" state -->
-                        <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
-                            <div>
-                                <i class="ph ph-clock fs-1 mb-2"></i>
-                                <h5 class="text-muted mb-2">Pending</h5>
-                                <p class="mb-0 small">
-                                    @if($intern->status === 'deployed')
-                                        Evaluation will be available after the intern completes their internship.
-                                    @else
-                                        No evaluation has been submitted by the HTE yet.
-                                    @endif
-                                </p>
+                        <!-- Show evaluation button or pending message -->
+                        @if($intern->status === 'completed' && !$evaluation)
+                            <!-- Show Evaluate Button for completed interns without evaluation -->
+                            <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                                <div>
+                                    <i class="ph ph-clipboard-text fs-1 mb-3 text-success"></i>
+                                    <h5 class="text-muted mb-3">Ready for Evaluation</h5>
+                                    <p class="mb-3 small">This intern has completed their internship and is ready for evaluation.</p>
+                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#evaluateModal{{ $currentDeployment->id }}">
+                                        <i class="ph ph-clipboard-text mr-2"></i>
+                                        Evaluate Intern
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        @else
+                            <!-- Show pending message for deployed interns -->
+                            <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                                <div>
+                                    <i class="ph ph-clock fs-1 mb-2"></i>
+                                    <h5 class="text-muted mb-2">Evaluation Pending</h5>
+                                    <p class="mb-0 small">
+                                        Evaluation will be available after the intern completes their internship.
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -312,34 +272,61 @@
     @endif
 </div>
 
-<!-- Remove Modal -->
-<div class="modal fade" id="removeModal" tabindex="-1" role="dialog">
+<!-- Evaluation Modal -->
+@if($intern->status === 'completed' && !$evaluation && $currentDeployment)
+<div class="modal fade" id="evaluateModal{{ $currentDeployment->id }}" tabindex="-1" role="dialog" aria-labelledby="evaluateModalLabel{{ $currentDeployment->id }}" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-light text-white">
-                <h5 class="modal-title">
-                    <i class="ph-bold ph-warning details-icons-i mr-1"></i>
-                    Confirm Account Deletion
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="evaluateModalLabel{{ $currentDeployment->id }}">
+                    <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>
+                    Evaluate Intern
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <p>Are you sure you want to unregister <strong>{{ $intern->user->fname }} {{ $intern->user->lname }}</strong>? This action cannot be undone.</p>
-                <p class="text-danger small"><strong>WARNING:</strong> All associated internship records will also be removed.</p>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <form action="{{ route('coordinator.intern.destroy', $intern->id) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger fw-medium">Unregister</button>
-                </form>
-            </div>
+            <form id="evaluateForm{{ $currentDeployment->id }}" class="evaluate-form">
+                @csrf
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                            alt="Profile Picture" 
+                            class="rounded-circle mb-3" 
+                            width="80" height="80">
+                        <h5>{{ $intern->user->fname }} {{ $intern->user->lname }}</h5>
+                        <p class="text-muted">{{ $intern->student_id }} • {{ $intern->department->dept_name ?? 'N/A' }}</p>
+                    </div>
+                    
+                    <div class="alert bg-info-subtle text-info">
+                        <i class="ph ph-info custom-icons-i mr-2"></i>
+                        Provide a grade evaluation for this intern's performance during their internship period.
+                    </div>
+                    
+                    <!-- Evaluation Form -->
+                    <div class="form-group">
+                        <label for="grade{{ $currentDeployment->id }}" class="form-label">Grade (0-100) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="grade{{ $currentDeployment->id }}" name="grade" min="0" max="100" step="0.01" placeholder="Enter grade from 0 to 100" required>
+                        <small class="form-text text-muted">100 = Excellent, 0 = Poor</small>
+                        <div class="invalid-feedback" id="gradeError{{ $currentDeployment->id }}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="comments{{ $currentDeployment->id }}" class="form-label">Comments (Optional)</label>
+                        <textarea class="form-control" id="comments{{ $currentDeployment->id }}" name="comments" rows="3" placeholder="Provide feedback on the intern's performance..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary submit-evaluate-btn">
+                        <span class="submit-text">Submit Evaluation</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+@endif
 
 <style>
 .knob-container {
@@ -376,24 +363,99 @@
     justify-content: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-
-/* Custom scrollbar for weekly reports */
-.list-group-flush::-webkit-scrollbar {
-    width: 6px;
-}
-
-.list-group-flush::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.list-group-flush::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.list-group-flush::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
 </style>
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // Evaluation form submission for all evaluate forms
+        $('.evaluate-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            const form = $(this);
+            const formId = form.attr('id');
+            const deploymentId = formId.replace('evaluateForm', '');
+            const submitBtn = form.find('.submit-evaluate-btn');
+            const submitText = form.find('.submit-text');
+            const spinner = form.find('.spinner-border');
+            
+            // Show loading state
+            submitBtn.prop('disabled', true);
+            submitText.addClass('d-none');
+            spinner.removeClass('d-none');
+            
+            // Clear previous errors
+            form.find('.is-invalid').removeClass('is-invalid');
+            form.find('.invalid-feedback').text('');
+            
+            $.ajax({
+                url: '{{ route("hte.interns.evaluate", "") }}/' + deploymentId,
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        // Show success toast
+                        toastr.success(response.message, 'Success');
+                        
+                        // Close modal
+                        $('#evaluateModal' + deploymentId).modal('hide');
+                        
+                        // Reload page after short delay to show updated evaluation
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error(response.message, 'Error');
+                        submitBtn.prop('disabled', false);
+                        submitText.removeClass('d-none');
+                        spinner.addClass('d-none');
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    
+                    if (xhr.status === 422 && response.errors) {
+                        // Show validation errors
+                        $.each(response.errors, function(field, errors) {
+                            const input = form.find('[name="' + field + '"]');
+                            const errorDiv = form.find('#' + field + 'Error' + deploymentId);
+                            
+                            input.addClass('is-invalid');
+                            if (errorDiv.length) {
+                                errorDiv.text(errors[0]);
+                            }
+                        });
+                        toastr.error('Please fix the validation errors.', 'Validation Error');
+                    } else {
+                        toastr.error(response?.message || 'An error occurred while submitting evaluation.', 'Error');
+                    }
+                    
+                    submitBtn.prop('disabled', false);
+                    submitText.removeClass('d-none');
+                    spinner.addClass('d-none');
+                }
+            });
+        });
+
+        // Reset form when any evaluate modal is closed
+        $('[id^="evaluateModal"]').on('hidden.bs.modal', function () {
+            const modalId = $(this).attr('id');
+            const deploymentId = modalId.replace('evaluateModal', '');
+            const form = $(this).find('form');
+            
+            form[0].reset();
+            form.find('.is-invalid').removeClass('is-invalid');
+            form.find('.invalid-feedback').text('');
+            
+            const submitBtn = form.find('.submit-evaluate-btn');
+            const submitText = form.find('.submit-text');
+            const spinner = form.find('.spinner-border');
+            
+            submitBtn.prop('disabled', false);
+            submitText.removeClass('d-none');
+            spinner.addClass('d-none');
+        });
+    });
+</script>
+@endsection
 @endsection

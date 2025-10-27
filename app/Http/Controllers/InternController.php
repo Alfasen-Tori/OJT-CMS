@@ -39,11 +39,13 @@ class InternController extends Controller
                 ->first();
         }
 
-        // Calculate progress if deployed
+        // Calculate progress if deployed AND check for completion
         $progress = null;
+        $completionMessage = null;
+        
         if ($intern->status === 'deployed' && $internHte) {
             $totalRendered = Attendance::where('intern_hte_id', $internHte->id)
-                ->sum('hours_rendered');  // Total hours from all attendances
+                ->sum('hours_rendered');
 
             $requiredHours = $internHte->no_of_hours ?? 0;
             $percentage = $requiredHours > 0 ? min(100, round(($totalRendered / $requiredHours) * 100)) : 0;
@@ -53,9 +55,16 @@ class InternController extends Controller
                 'required_hours' => $requiredHours,
                 'percentage' => $percentage
             ];
+
+            // ✅ Check and update internship completion
+            if ($this->checkInternshipCompletion($internHte, $totalRendered)) {
+                $completionMessage = 'Congratulations! You have completed your internship hours!';
+                // Refresh the internship data since status changed
+                $internHte->refresh();
+            }
         }
 
-        return view('student.dashboard', [  // Adjust view name if needed (e.g., 'intern.dashboard')
+        return view('student.dashboard', [
             'status' => $intern->status,
             'semester' => $intern->semester,
             'academic_year' => $intern->academic_year,
@@ -63,8 +72,39 @@ class InternController extends Controller
             'hteDetails' => $hteDetails,
             'internHte' => $internHte,
             'attendance' => $attendance,
-            'progress' => $progress  // New: Pass initial progress data
+            'progress' => $progress,
+            'completionMessage' => $completionMessage
         ]);
+    }
+
+    /**
+     * Check if internship hours are completed and update status
+     */
+    private function checkInternshipCompletion($internship, $totalHoursRendered = null)
+    {
+        // If total hours not provided, calculate them
+        if ($totalHoursRendered === null) {
+            $totalHoursRendered = Attendance::where('intern_hte_id', $internship->id)
+                ->sum('hours_rendered');
+        }
+
+        $requiredHours = $internship->no_of_hours;
+        
+        if ($totalHoursRendered >= $requiredHours) {
+            $internship->update([
+                'status' => 'completed',
+                'completed_at' => now()
+            ]);
+            
+            // Also update the intern's main status if needed
+            $internship->intern->update([
+                'status' => 'completed'
+            ]);
+            
+            return true;
+        }
+        
+        return false;
     }
 
     public function getProgress()
@@ -157,18 +197,45 @@ class InternController extends Controller
             return response()->json(['error' => 'You already punched out today.'], 400);
         }
 
-        $attendance->time_out = Carbon::now();  // UTC/app timezone
+        $attendance->time_out = Carbon::now();
         $attendance->hours_rendered = round($attendance->time_out->floatDiffInHours($attendance->time_in), 2);
         $attendance->save();
 
+        // ✅ Check if internship should be marked as completed
+        $totalHoursRendered = Attendance::where('intern_hte_id', $internHte->id)
+            ->sum('hours_rendered');
+        
+        $statusChanged = false;
+        if ($totalHoursRendered >= $internHte->no_of_hours && $internHte->status === 'deployed') {
+            $internHte->update([
+                'status' => 'completed',
+                'completed_at' => now()
+            ]);
+            $statusChanged = true;
+            
+            // Also update the intern's main status if needed
+            $intern->update(['status' => 'completed']);
+        }
+
+        // Get updated progress data for the response
+        $progressData = [
+            'total_rendered' => $totalHoursRendered,
+            'required_hours' => $internHte->no_of_hours,
+            'percentage' => min(100, round(($totalHoursRendered / $internHte->no_of_hours) * 100, 2))
+        ];
+
         return response()->json([
             'success' => true,
-            'message' => 'Punch out recorded successfully!',
+            'message' => $statusChanged 
+                ? 'Punch out recorded successfully! 🎉 Congratulations, you have completed your internship hours!' 
+                : 'Punch out recorded successfully!',
             'time_in' => $attendance->time_in->format('h:i A'),
             'time_out' => $attendance->time_out->format('h:i A'),
             'hours' => $attendance->hours_rendered,
-            'time_in_raw' => $attendance->time_in->toDateTimeString(),  // UTC for JS
-            'time_out_raw' => $attendance->time_out->toDateTimeString(),  // UTC for JS
+            'time_in_raw' => $attendance->time_in->toDateTimeString(),
+            'time_out_raw' => $attendance->time_out->toDateTimeString(),
+            'progress_data' => $progressData,
+            'status_changed' => $statusChanged
         ]);
     }
 
@@ -436,7 +503,7 @@ public function reports()
 
     // Get current internship
     $internship = InternsHte::where('intern_id', $intern->id)
-        ->where('status', 'deployed')
+        ->whereIn('status', ['deployed', 'completed'])
         ->first();
 
     if (!$internship) {
@@ -458,33 +525,32 @@ public function reports()
     // Calculate week information
     $weekInfo = $this->calculateWeekInformation($internship, $weeklyReports);
 
-    return view('student.reports', compact('weeklyReports', 'weekInfo', 'internship'));
+    return view('student.reports', compact('weeklyReports', 'weekInfo', 'internship', 'totalHoursRendered'));
 }
 
 private function generateWeeklyReports($internId, $internship, $totalHoursRendered)
 {
-    $startDate = Carbon::parse($internship->start_date);
-    $currentDate = Carbon::now();
-    $endDate = Carbon::parse($internship->end_date);
-    
     // Stop generating if internship is completed (hours requirement met)
     if ($totalHoursRendered >= $internship->no_of_hours) {
         return;
     }
     
+    $startDate = Carbon::parse($internship->start_date);
+    $currentDate = Carbon::now();
+    $endDate = Carbon::parse($internship->end_date);
+    
     // Find the Monday of the start date week
     $firstMonday = $startDate->copy()->startOfWeek(Carbon::MONDAY);
     
-    // Determine which week number to start from
-    $startWeekNumber = 1;
+    // Calculate current week number (0-based)
+    $currentWeekNumber = $firstMonday->diffInWeeks($currentDate);
     
-    // Calculate how many weeks to generate
-    if ($currentDate->lt($startDate)) {
-        // Start date is in the future - only generate the start week
-        $weeksToGenerate = 1;
+    // Determine how many weeks to generate
+    if ($currentDate->isSunday()) {
+        // It's Sunday - generate current week + 1 upcoming week
+        $weeksToGenerate = $currentWeekNumber + 2;
     } else {
-        // Start date has passed - generate current week + 1 upcoming week
-        $currentWeekNumber = $firstMonday->diffInWeeks($currentDate) + 1;
+        // Not Sunday - only generate up to current week
         $weeksToGenerate = $currentWeekNumber + 1;
     }
     
@@ -495,7 +561,7 @@ private function generateWeeklyReports($internId, $internship, $totalHoursRender
     // Limit to maximum 52 weeks (1 year) as safety
     $weeksToGenerate = min($weeksToGenerate, 52);
     
-    for ($weekNo = $startWeekNumber; $weekNo <= $weeksToGenerate; $weekNo++) {
+    for ($weekNo = 1; $weekNo <= $weeksToGenerate; $weekNo++) {
         // Calculate week start (Monday) and end (Friday)
         $weekStart = $firstMonday->copy()->addWeeks($weekNo - 1);
         $weekEnd = $weekStart->copy()->addDays(4); // Friday
@@ -542,26 +608,20 @@ private function calculateWeekInformation($internship, $weeklyReports)
         // Calculate week start (Monday) and end (Friday)
         $weekStart = $firstMonday->copy()->addWeeks($report->week_no - 1);
         $weekEnd = $weekStart->copy()->addDays(4); // Friday
-        
-        // Skip weeks that end before internship start
-        if ($weekEnd->lt($startDate)) {
-            continue;
-        }
+        $submissionOpens = $weekEnd->copy()->addDay(); // Saturday
         
         // Determine status based on your business rules
-        $isCurrentWeek = $currentDate->between($weekStart, $weekEnd);
-        $weekPassed = $currentDate->gt($weekEnd);
-        $isFutureWeek = $currentDate->lt($weekStart);
+        $isUpcoming = $currentDate->lt($weekStart); // Before Monday
+        $isOngoing = $currentDate->between($weekStart, $weekEnd); // Monday-Friday
+        $canSubmit = $currentDate->gte($submissionOpens); // Saturday or later
+        $isFutureWeek = $currentDate->lt($weekStart); // Week hasn't started yet
         
         $status = 'upcoming';
-        if ($isCurrentWeek) {
-            $status = 'current';
-        } elseif ($weekPassed) {
+        if ($isOngoing) {
+            $status = 'ongoing';
+        } elseif ($canSubmit) {
             $status = $report->report_path ? 'submitted' : 'pending';
         }
-        
-        // Can submit only if week has passed AND report hasn't been submitted
-        $canSubmit = $weekPassed && is_null($report->report_path);
         
         $weekInfo[$report->week_no] = [
             'start_date' => $weekStart->format('M d'),
@@ -570,9 +630,10 @@ private function calculateWeekInformation($internship, $weeklyReports)
             'full_end_date' => $weekEnd->format('Y-m-d'),
             'status' => $status,
             'is_submitted' => !is_null($report->report_path),
-            'can_submit' => $canSubmit,
-            'week_passed' => $weekPassed,
-            'is_future' => $isFutureWeek
+            'can_submit' => $canSubmit && is_null($report->report_path),
+            'week_passed' => $canSubmit, // Week has passed if we can submit
+            'is_future' => $isFutureWeek,
+            'submission_opens' => $submissionOpens->format('Y-m-d')
         ];
     }
     
@@ -704,16 +765,16 @@ public function attendances()
     $intern = Intern::where('user_id', Auth::id())->first();
     
     if (!$intern) {
-        return view('intern.attendances')->with('error', 'Intern profile not found.');
+        return view('student.attendances')->with('error', 'Intern profile not found.');
     }
 
     // Get current internship
     $internship = InternsHte::where('intern_id', $intern->id)
-        ->where('status', 'deployed')
+        ->whereIn('status', ['deployed', 'completed'])
         ->first();
 
     if (!$internship) {
-        return view('intern.attendances')->with('error', 'No active internship found.');
+        return view('student.attendances')->with('error', 'No active internship found.');
     }
 
     // Get attendances for this internship

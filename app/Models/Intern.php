@@ -63,5 +63,10 @@ class Intern extends Model
     {
         return $this->documents()->where('type', $type)->first()?->file_path;
     }
+
+    public function weeklyReports()
+    { 
+        return $this->hasMany(WeeklyReport::class, 'intern_id');
+    }
 }
 

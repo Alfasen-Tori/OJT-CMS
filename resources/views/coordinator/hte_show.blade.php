@@ -212,7 +212,7 @@
                                     <th width="20%">Coordinator</th>
                                     <th width="15%">Student ID</th>
                                     <th width="20%">Student Name</th>
-                                    <th width="15%">Department</th>
+                                    <th width="15%">Program</th>
                                     <th width="15%">Status</th>
                                 </tr>
                             </thead>
@@ -234,17 +234,17 @@
                                             <!-- Coordinator Column (only show for first row of each group) -->
                                             @if($loop->first)
                                                 <td class="align-middle" rowspan="{{ $endorsements->count() }}">
-                                                    <div class="d-flex align-items-center">
+                                                    <div class="d-flex align-items-center flex-column">
                                                         <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
                                                             alt="Coordinator Picture" 
                                                             class="rounded-circle me-2 table-pfp" 
-                                                            width="30" height="30">
-                                                        <div>
+                                                            width="50" height="50">
+                                                        <div class="text-center">
                                                             <strong>{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</strong>
                                                             <br>
                                                             <small class="text-muted">{{ $coordinator->faculty_id }}</small>
                                                             <br>
-                                                            <small class="text-muted">BS{{ $coordinator->department->short_name ?? 'N/A' }}</small>
+                                                            <small class="text-muted">{{ $coordinator->department->dept_name ?? 'N/A' }} Department</small>
                                                             <br>
                                                             <small class="text-info">{{ $endorsements->count() }} student(s)</small>
                                                         </div>
@@ -274,7 +274,7 @@
                                             </td>
                                             <td class="align-middle">
                                                 <span class="badge {{ $statusClass }} px-3 py-2 rounded-pill text-capitalize">
-                                                    {{ $endorsement->status }}
+                                                    {{ $endorsement->intern->status }}
                                                 </span>
                                             </td>
                                         </tr>

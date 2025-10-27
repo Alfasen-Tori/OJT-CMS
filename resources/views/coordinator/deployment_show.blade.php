@@ -26,18 +26,88 @@
     $currentCoordinatorId = auth()->user()->coordinator->id;
     $myDeployments = $endorsedInterns->where('status', 'deployed');
     $myProcessing = $endorsedInterns->where('status', 'processing');
+    $myCompleted = $endorsedInterns->where('status', 'completed');
     $hasDeploymentDetails = $myDeployments->isNotEmpty();
     $hasProcessingDetails = $myProcessing->isNotEmpty();
+    $hasCompletedDetails = $myCompleted->isNotEmpty();
+    
+    // ✅ Check if ALL interns are completed
+    $allInternsCompleted = $endorsedInterns->isNotEmpty() && 
+                          $endorsedInterns->where('status', 'completed')->count() === $endorsedInterns->count();
     
     $deploymentDetails = $hasDeploymentDetails ? $myDeployments->first() : null;
     $processingDetails = $hasProcessingDetails ? $myProcessing->first() : null;
+    $completedDetails = $hasCompletedDetails ? $myCompleted->first() : null;
     $totalMyStudents = $endorsedInterns->count();
     $deployedCount = $myDeployments->count();
     $processingCount = $myProcessing->count();
+    $completedCount = $myCompleted->count();
     $endorsedCount = $endorsedInterns->where('status', 'endorsed')->count();
 @endphp
 
-@if($hasDeploymentDetails)
+@if($allInternsCompleted)
+<!-- ✅ COMPLETED STATE - All interns completed -->
+<div class="row mb-2">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success-subtle rounded d-flex justify-content-center align-items-center me-2" style="width: 50px; height: 50px;">
+                        <i class="fas fa-graduation-cap text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Program Completed</h5>
+                        <p class="text-muted mb-0">All interns have successfully completed their internship</p>
+                    </div>
+                </div>
+
+                
+                <div class="row g-4">
+                    <div class="col-sm-2 col-6">
+                        <div class="border-start border-3 border-success ps-3">
+                            <small class="text-muted fw-medium">START DATE</small>
+                            <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($completedDetails->start_date)->format('M j, Y') }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-2 col-6">
+                        <div class="border-start border-3 border-warning ps-3">
+                            <small class="text-muted fw-medium">END DATE</small>
+                            <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($completedDetails->end_date)->format('M j, Y') }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-2 col-6">
+                        <div class="border-start border-3 border-info ps-3">
+                            <small class="text-muted fw-medium">HOURS</small>
+                            <div class="fw-bold text-dark fs-6">{{ $completedDetails->no_of_hours }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-2 col-6">
+                        <div class="border-start border-3 border-primary ps-3">
+                            <small class="text-muted fw-medium">STUDENTS</small>
+                            <div class="fw-bold text-dark fs-6">{{ $completedCount }}/{{ $totalMyStudents }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 col-12">
+                        <div class="bg-success-subtle rounded-pill px-3 py-2 text-center">
+                            <span class="fw-bold text-success">COMPLETED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                @if($hte->address)
+                <div class="mt-3 pt-3 border-top">
+                    <div class="d-flex align-items-center">
+                        <i class="ph ph-map-pin text-muted me-2"></i>
+                        <span class="text-dark">{{ $hte->address }}</span>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+@elseif($hasDeploymentDetails)
 <!-- Deployed State -->
 <div class="row mb-2">
     <div class="col-md-12">
@@ -247,7 +317,7 @@
                         <i class="ph ph-minus details-icons-i expanded-icon"></i>
                     </button>
                     <i class="ph-fill ph-user-list details-icons-i mr-2"></i>
-                    My Interns
+                    Interns
                 </div>
                 <div>
                     @if($hasEndorsedForDeploy)
@@ -295,17 +365,16 @@
                                     <td>{{ $intern->year_level ?? 'N/A' }}</td>
                                     <td class="align-middle text">
                                         @php
-                                            $status = strtolower($intern->status ?? 'unknown');
+                                            $status = strtolower($endorsement->status ?? 'unknown');
                                             $badgeClass = match($status) {
-                                                'pending requirements' => 'bg-danger-subtle text-danger',
-                                                'ready for deployment' => 'bg-warning-subtle text-warning',
                                                 'endorsed' => 'bg-primary-subtle text-primary',
                                                 'processing' => 'bg-info-subtle text-info',
                                                 'deployed' => 'bg-success-subtle text-success',
+                                                'completed' => 'bg-secondary-subtle text-secondary',
                                                 default => 'bg-secondary'
                                             };
                                         @endphp
-                                        <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill">{{ ucfirst($intern->status ?? 'Unknown') }}</span>
+                                        <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill">{{ ucfirst($endorsement->status ?? 'Unknown') }}</span>
                                     </td>
                                     <td class="text-center px-2 align-middle">
                                         <div class="dropdown">
@@ -466,16 +535,19 @@
                     <p>Are you sure you want to cancel the endorsement to <strong>{{ $hte->organization_name }}</strong>? This action will:</p>
                     <ul>
                         <li>Remove all student endorsements to this HTE</li>
-                        <li>Revert student status back to "Ready for Deployment"</li>
+                        <li>Revert <strong>{{ $endorsedInterns->where('status', 'endorsed')->count() }}</strong> student(s) status back to "Ready for Deployment"</li>
                     </ul>
                     <p class="text-danger"><strong>This action cannot be undone.</strong></p>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <form action="{{ route('coordinator.deployment.cancel-endorsement', $endorsement->id) }}" method="POST" class="d-inline">
+                    <!-- Use HTE ID instead of endorsement ID -->
+                    <form action="{{ route('coordinator.deployment.cancel-endorsement', $hte->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Cancel Endorsement</button>
+                        <button type="submit" class="btn btn-danger">
+                            Cancel All Endorsements ({{ $endorsedInterns->where('status', 'endorsed')->count() }} students)
+                        </button>
                     </form>
                 </div>
             </div>
@@ -483,7 +555,7 @@
     </div>
     @endif
 
-    <!-- Cancel Endorsement Modal -->
+    <!-- Officially Deploy Modal -->
     <div class="modal fade" id="officiallyDeployModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -590,4 +662,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-

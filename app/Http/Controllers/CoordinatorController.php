@@ -136,13 +136,55 @@ class CoordinatorController extends Controller
             ->with('success', 'Intern registered successfully. Activation email sent.');
     }
 
-    public function showIntern($id)
-    {
-        $intern = Intern::with(['user', 'department', 'skills', 'coordinator.user'])
-            ->findOrFail($id);
+public function showIntern($id)
+{
+    $intern = Intern::with([
+            'user', 
+            'department', 
+            'skills', 
+            'coordinator.user',
+            'weeklyReports'
+        ])
+        ->findOrFail($id);
+    
+    // Get current deployment if any
+    $currentDeployment = \App\Models\InternsHte::with('evaluation')
+        ->where('intern_id', $id)
+        ->whereIn('status', ['deployed', 'completed'])
+        ->latest()
+        ->first();
+    
+    $progress = [];
+    $evaluation = null;
+    
+    if ($currentDeployment) {
+        // Calculate progress
+        $totalHours = \App\Models\Attendance::where('intern_hte_id', $currentDeployment->id)
+            ->sum('hours_rendered');
+        $requiredHours = $currentDeployment->no_of_hours;
+        $percentage = $requiredHours > 0 ? min(100, ($totalHours / $requiredHours) * 100) : 0;
         
-        return view('coordinator.intern_show', compact('intern'));
+        $progress = [
+            'total_rendered' => $totalHours,
+            'required_hours' => $requiredHours,
+            'percentage' => round($percentage, 1)
+        ];
+        
+        // Get evaluation if exists
+        $evaluation = $currentDeployment->evaluation;
     }
+    
+    // Get weekly reports
+    $weeklyReports = $intern->weeklyReports()->orderBy('week_no')->get();
+
+    return view('coordinator.intern_show', compact(
+        'intern', 
+        'currentDeployment', 
+        'progress', 
+        'evaluation',
+        'weeklyReports'
+    ));
+}
 
     public function editIntern($id)
     {
@@ -312,12 +354,13 @@ class CoordinatorController extends Controller
         $generatedDocxPath = null; // Declare outside if block to track for deletion
 
         if ($validated['hte_status'] === 'new') {
-            $templatePath = storage_path('app/public/moa-templates/moa-template.docx');
-            $generatedDocxPath = storage_path('app/public/moa-templates/generated-moa-' . $hte->id . '.docx');
+            $templatePath = public_path('templates/moa-template.docx');
+            $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
 
             // Fill DOCX template
             $templateProcessor = new TemplateProcessor($templatePath);
             $templateProcessor->setValue('organization_name', $validated['organization_name']);
+            $templateProcessor->setValue('org_name', strtoupper($validated['organization_name']));
             $templateProcessor->setValue('address', $validated['address']);
             $templateProcessor->setValue('contact_name', $contactName);
             // Add more placeholders as needed
@@ -536,31 +579,33 @@ class CoordinatorController extends Controller
         }
     }
 
-    public function cancelEndorsement($internHteId)
-    {
-        try {
-            // Find the intern_hte record
-            $internHte = InternsHte::findOrFail($internHteId);
-            
-            // Get the intern ID before deletion
-            $internId = $internHte->intern_id;
-            
-            // Delete the intern_hte record
-            $internHte->delete();
-            
-            // Update the intern status back to "ready for deployment"
-            Intern::where('id', $internId)->update([
-                'status' => 'ready for deployment'
-            ]);
-            
-            return redirect()->back()->with('success', 'Endorsement cancelled successfully. Intern status has been reverted to "Ready for Deployment".');
-            
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'Endorsement record not found.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
+public function cancelEndorsement($hteId)
+{
+    try {
+        // Find all intern_hte records for this HTE
+        $internHtes = InternsHte::where('hte_id', $hteId)->get();
+        
+        if ($internHtes->isEmpty()) {
+            return redirect()->back()->with('error', 'No endorsement records found for this HTE.');
         }
+        
+        // Get all intern IDs before deletion
+        $internIds = $internHtes->pluck('intern_id')->toArray();
+        
+        // Delete all intern_hte records for this HTE
+        InternsHte::where('hte_id', $hteId)->delete();
+        
+        // Update all interns status back to "ready for deployment"
+        Intern::whereIn('id', $internIds)->update([
+            'status' => 'ready for deployment'
+        ]);
+        
+        return redirect()->route('coordinator.deployments')->with('success', 'Endorsement cancelled successfully. All interns status have been reverted to "Ready for Deployment".');
+        
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
     }
+}
 
     public function showImportForm()
     {
@@ -600,20 +645,28 @@ class CoordinatorController extends Controller
         }
     }
 
-    public function endorse() {
-        $coordinatorId = auth()->user()->coordinator->id;
-        
-        $htes = \App\Models\HTE::with('skills')
-            ->where('moa_is_signed', 'yes')
-            ->withCount('internsHte')
-            ->havingRaw('slots > interns_hte_count')
-            ->whereDoesntHave('internsHte', function($query) use ($coordinatorId) {
-                $query->where('coordinator_id', $coordinatorId);
+public function endorse() {
+    $coordinatorId = auth()->user()->coordinator->id;
+    
+    $htes = \App\Models\HTE::with('skills')
+        ->where('moa_is_signed', 'yes')
+        ->withCount('internsHte')
+        ->where(function($query) use ($coordinatorId) {
+            // Include HTEs that have NO endorsements from this coordinator
+            $query->whereDoesntHave('internsHte', function($q) use ($coordinatorId) {
+                $q->where('coordinator_id', $coordinatorId);
             })
-            ->get();
+            // OR include HTEs that have endorsements with status 'endorsed' from this coordinator
+            ->orWhereHas('internsHte', function($q) use ($coordinatorId) {
+                $q->where('coordinator_id', $coordinatorId)
+                  ->where('status', 'endorsed');
+            });
+        })
+        ->havingRaw('slots > interns_hte_count')
+        ->get();
 
-        return view('coordinator.endorse', compact('htes'));
-    }
+    return view('coordinator.endorse', compact('htes'));
+}
 
     public function getRecommendedInterns(Request $request) {
         $hteId = $request->input('hte_id');
