@@ -22,6 +22,7 @@
 <section class="content">
     <div class="container-fluid px-0 px-sm-2">
         <div class="card shadow-sm ">
+            <div class="card-header"><span class="fw-medium text-primary"><i class="ph ph-graduation-cap custom-icons-i me-2"></i>Personal Information</span></div>
             <div class="card-body">
                 <!-- Profile Picture Upload -->
                 <div class="text-center mb-5">
@@ -125,7 +126,7 @@
                     <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">My Skills</h5>
-                            <button type="button" class="btn btn-sm btn-outline-primary ml-auto" data-toggle="modal" data-target="#skillsModal">
+                            <button type="button" class="btn btn-sm btn-outline-light text-muted border-0 ml-auto" data-toggle="modal" data-target="#skillsModal">
                                 <i class="ph-fill ph-gear-six custom-icons-i mr-1"></i>Manage Skills
                             </button>
                         </div>
@@ -192,7 +193,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-
-@endpush
