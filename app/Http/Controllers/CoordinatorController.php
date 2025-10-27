@@ -645,20 +645,28 @@ public function cancelEndorsement($hteId)
         }
     }
 
-    public function endorse() {
-        $coordinatorId = auth()->user()->coordinator->id;
-        
-        $htes = \App\Models\HTE::with('skills')
-            ->where('moa_is_signed', 'yes')
-            ->withCount('internsHte')
-            ->havingRaw('slots > interns_hte_count')
-            ->whereDoesntHave('internsHte', function($query) use ($coordinatorId) {
-                $query->where('coordinator_id', $coordinatorId);
+public function endorse() {
+    $coordinatorId = auth()->user()->coordinator->id;
+    
+    $htes = \App\Models\HTE::with('skills')
+        ->where('moa_is_signed', 'yes')
+        ->withCount('internsHte')
+        ->where(function($query) use ($coordinatorId) {
+            // Include HTEs that have NO endorsements from this coordinator
+            $query->whereDoesntHave('internsHte', function($q) use ($coordinatorId) {
+                $q->where('coordinator_id', $coordinatorId);
             })
-            ->get();
+            // OR include HTEs that have endorsements with status 'endorsed' from this coordinator
+            ->orWhereHas('internsHte', function($q) use ($coordinatorId) {
+                $q->where('coordinator_id', $coordinatorId)
+                  ->where('status', 'endorsed');
+            });
+        })
+        ->havingRaw('slots > interns_hte_count')
+        ->get();
 
-        return view('coordinator.endorse', compact('htes'));
-    }
+    return view('coordinator.endorse', compact('htes'));
+}
 
     public function getRecommendedInterns(Request $request) {
         $hteId = $request->input('hte_id');
