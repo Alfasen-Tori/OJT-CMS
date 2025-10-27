@@ -86,7 +86,7 @@
                 </td>
                 <td class="text-center px-2 align-middle">
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-dark rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="ph-fill ph-gear custom-icons-i"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
