@@ -72,6 +72,10 @@ Route::middleware(['auth:web', 'admin'])->prefix('admin')->group(function() {
 // Protected coordinator routes
 Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(function() {
     Route::get('/dashboard', [CoordinatorController::class, 'dashboard'])->name('coordinator.dashboard');
+
+    Route::get('/profile', [CoordinatorController::class, 'profile'])->name('coordinator.profile');
+    Route::put('/profile/update', [CoordinatorController::class, 'updateProfile'])->name('coordinator.profile.update');
+    Route::post('/profile/picture', [CoordinatorController::class, 'updateProfilePicture'])->name('coordinator.profile.picture');
     
     Route::get('/interns', [CoordinatorController::class, 'showInterns'])->name('coordinator.interns');
     Route::get('/interns/create', [CoordinatorController::class, 'newIntern'])->name('coordinator.new_i');

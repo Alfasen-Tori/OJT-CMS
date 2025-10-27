@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\InternSetupMail;
 use App\Imports\InternsImport;
-
+use Illuminate\Support\Facades\Storage;
 
 use Illuminate\Support\Facades\DB;
 use App\Mail\StudentDeploymentMail;
@@ -43,6 +43,90 @@ class CoordinatorController extends Controller
             'myStudentsCount' => $myStudentsCount,
             'totalHtesCount' => $totalHtesCount
         ]);
+    }
+
+    public function profile()
+    {
+        $coordinator = auth()->user()->coordinator;
+        return view('coordinator.profile', compact('coordinator'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
+            'contact' => 'required|string|max:20',
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        try {
+            $user = User::findOrFail(auth()->id());
+            
+            $user->fname = $request->fname;
+            $user->lname = $request->lname;
+            $user->contact = $request->contact;
+            
+            if ($request->password) {
+                $user->password = Hash::make($request->password);
+            }
+            
+            if (!$user->save()) {
+                throw new \Exception('Failed to save user');
+            }
+
+            return back()->with('success', 'Profile updated successfully');
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error updating profile: ' . $e->getMessage());
+        }
+    }
+
+    public function updateProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_pic' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        try {
+            $userId = auth()->id();
+            $user = DB::table('users')->where('id', $userId)->first();
+            
+            if (!$user) {
+                throw new \Exception('User not found');
+            }
+
+            if ($request->hasFile('profile_pic')) {
+                // Delete old picture if exists
+                if ($user->pic) {
+                    Storage::delete($user->pic);
+                }
+
+                // Store new picture
+                $path = $request->file('profile_pic')->store('profile-pictures', 'public');
+                
+                // Update database directly
+                $updated = DB::table('users')
+                            ->where('id', $userId)
+                            ->update(['pic' => $path]);
+                
+                if (!$updated) {
+                    throw new \Exception('Failed to update profile picture in database');
+                }
+
+                return response()->json([
+                    'url' => asset('storage/'.$path),
+                    'message' => 'Profile picture updated successfully'
+                ]);
+            }
+
+            throw new \Exception('No file uploaded');
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 
     // Intern Methods
