@@ -117,6 +117,7 @@
 @php
     $firstEndorsement = $endorsements->first();
     $hte = $firstEndorsement->hte;
+    $studentCount = $endorsements->count();
 @endphp
 <div class="modal fade" id="cancelEndorsementModal{{ $hteId }}" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
@@ -134,19 +135,20 @@
                 <p>Are you sure you want to cancel the endorsement to <strong>{{ $hte->organization_name }}</strong>? This action will:</p>
                 <ul>
                     <li>Remove all student endorsements to this HTE</li>
-                    <li>Revert student status back to "Ready for Deployment"</li>
+                    <li>Revert <strong>{{ $studentCount }}</strong> student(s) status back to "Ready for Deployment"</li>
                 </ul>
                 <p class="text-danger"><strong>This action cannot be undone.</strong></p>
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                @foreach($endorsements as $endorsement)
-                <form action="{{ route('coordinator.deployment.cancel-endorsement', $endorsement->id) }}" method="POST" class="d-inline">
+                <!-- Single form that cancels ALL endorsements for this HTE -->
+                <form action="{{ route('coordinator.deployment.cancel-endorsement', $hteId) }}" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Cancel Endorsement</button>
+                    <button type="submit" class="btn btn-danger">
+                        Cancel All Endorsements ({{ $studentCount }} students)
+                    </button>
                 </form>
-                @endforeach
             </div>
         </div>
     </div>

@@ -579,31 +579,33 @@ public function showHTE($id)
         }
     }
 
-    public function cancelEndorsement($internHteId)
-    {
-        try {
-            // Find the intern_hte record
-            $internHte = InternsHte::findOrFail($internHteId);
-            
-            // Get the intern ID before deletion
-            $internId = $internHte->intern_id;
-            
-            // Delete the intern_hte record
-            $internHte->delete();
-            
-            // Update the intern status back to "ready for deployment"
-            Intern::where('id', $internId)->update([
-                'status' => 'ready for deployment'
-            ]);
-            
-            return redirect()->back()->with('success', 'Endorsement cancelled successfully. Intern status has been reverted to "Ready for Deployment".');
-            
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'Endorsement record not found.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
+public function cancelEndorsement($hteId)
+{
+    try {
+        // Find all intern_hte records for this HTE
+        $internHtes = InternsHte::where('hte_id', $hteId)->get();
+        
+        if ($internHtes->isEmpty()) {
+            return redirect()->back()->with('error', 'No endorsement records found for this HTE.');
         }
+        
+        // Get all intern IDs before deletion
+        $internIds = $internHtes->pluck('intern_id')->toArray();
+        
+        // Delete all intern_hte records for this HTE
+        InternsHte::where('hte_id', $hteId)->delete();
+        
+        // Update all interns status back to "ready for deployment"
+        Intern::whereIn('id', $internIds)->update([
+            'status' => 'ready for deployment'
+        ]);
+        
+        return redirect()->route('coordinator.deployments')->with('success', 'Endorsement cancelled successfully. All interns status have been reverted to "Ready for Deployment".');
+        
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
     }
+}
 
     public function showImportForm()
     {

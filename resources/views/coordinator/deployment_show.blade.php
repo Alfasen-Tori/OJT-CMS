@@ -535,16 +535,19 @@
                     <p>Are you sure you want to cancel the endorsement to <strong>{{ $hte->organization_name }}</strong>? This action will:</p>
                     <ul>
                         <li>Remove all student endorsements to this HTE</li>
-                        <li>Revert student status back to "Ready for Deployment"</li>
+                        <li>Revert <strong>{{ $endorsedInterns->where('status', 'endorsed')->count() }}</strong> student(s) status back to "Ready for Deployment"</li>
                     </ul>
                     <p class="text-danger"><strong>This action cannot be undone.</strong></p>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <form action="{{ route('coordinator.deployment.cancel-endorsement', $endorsement->id) }}" method="POST" class="d-inline">
+                    <!-- Use HTE ID instead of endorsement ID -->
+                    <form action="{{ route('coordinator.deployment.cancel-endorsement', $hte->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Cancel Endorsement</button>
+                        <button type="submit" class="btn btn-danger">
+                            Cancel All Endorsements ({{ $endorsedInterns->where('status', 'endorsed')->count() }} students)
+                        </button>
                     </form>
                 </div>
             </div>
@@ -552,7 +555,7 @@
     </div>
     @endif
 
-    <!-- Cancel Endorsement Modal -->
+    <!-- Officially Deploy Modal -->
     <div class="modal fade" id="officiallyDeployModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">

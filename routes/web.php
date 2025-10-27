@@ -100,7 +100,7 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
 
     Route::get('/deployments', [CoordinatorController::class, 'deployments'])->name('coordinator.deployments');
     Route::get('/deployment/{id}', [CoordinatorController::class, 'showDeployment'])->name('coordinator.deployment.show'); 
-    Route::delete('/deployment/cancel-endorsement/{internHte}', [CoordinatorController::class, 'cancelEndorsement'])->name('coordinator.deployment.cancel-endorsement');
+    Route::delete('/deployment/cancel-endorsement/{hte}', [CoordinatorController::class, 'cancelEndorsement'])->name('coordinator.deployment.cancel-endorsement');
     Route::put('/deployment/officially-deploy/{internHte}', [CoordinatorController::class, 'officiallyDeploy'])->name('coordinator.deployment.officially-deploy');
 });
 
