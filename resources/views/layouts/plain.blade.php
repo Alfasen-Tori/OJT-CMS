@@ -12,31 +12,9 @@
 </head>
 <body class="hold-transition layout-top-nav">
     <div class="wrapper">
-        <!-- Navbar -->
-        <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
-            <div class="container">
-                <a href="#" class="navbar-brand">
-                    <img src="{{ asset('assets/images/EVSU_Official_Logo.png') }}" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-                    <span class="brand-text" style="position: relative; top: -2px">{{ config('app.name') }}</span>
-                </a>
-                
-                <!-- Right navbar links -->
-                <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
-                    <li class="nav-item">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                <i class="fas fa-sign-out-alt mr-1"></i> Logout
-                            </button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <!-- /.navbar -->
 
         <!-- Content Wrapper -->
-        <div class="content-wrapper">
+        <div class="content-wrapper pt-4">
             <!-- Main content -->
             <div class="content">
                 <div class="container">
