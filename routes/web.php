@@ -106,6 +106,10 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
     Route::get('/deployment/{id}', [CoordinatorController::class, 'showDeployment'])->name('coordinator.deployment.show'); 
     Route::delete('/deployment/cancel-endorsement/{hte}', [CoordinatorController::class, 'cancelEndorsement'])->name('coordinator.deployment.cancel-endorsement');
     Route::put('/deployment/officially-deploy/{internHte}', [CoordinatorController::class, 'officiallyDeploy'])->name('coordinator.deployment.officially-deploy');
+
+    Route::get('/honorarium', [CoordinatorController::class, 'documents'])->name('coordinator.documents');
+    Route::post('/honorarium/upload', [CoordinatorController::class, 'uploadDocument'])->name('coordinator.documents.upload');
+    Route::delete('/honorarium/{id}', [CoordinatorController::class, 'deleteDocument'])->name('coordinator.documents.delete');
 });
 
 // Protected intern routes

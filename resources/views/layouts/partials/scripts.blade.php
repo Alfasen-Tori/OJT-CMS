@@ -1272,6 +1272,360 @@
     });
     </script>
 
+    <!-- Coordinator: Documents Management -->
+    <script>
+    $(document).ready(function() {
+        // Upload document modal
+        $('.upload-document').click(function() {
+            const type = $(this).data('type');
+            const label = $(this).closest('tr').find('td:first').text() || 
+                        $(this).closest('.card').find('.card-title').text();
+            
+            $('#documentType').val(type);
+            $('#uploadModal .modal-title').text('Upload ' + label);
+            $('#uploadModal').modal('show');
+        });
+
+        // View document
+        $('.view-document').click(function() {
+            const url = $(this).data('url');
+            const label = $(this).closest('tr').find('td:first').text() || 
+                        $(this).closest('.card-body').find('.card-title').text();
+            
+            $('#documentTitle').text(label);
+            $('#documentFrame').attr('src', url);
+            $('#downloadLink').attr('href', url);
+            $('#documentModal').modal('show');
+        });
+
+        // Remove document
+        $('.remove-document').click(function() {
+            const documentId = $(this).data('id');
+            const row = $(this).closest('tr');
+            const card = $(this).closest('.col-12');
+            const documentType = row.data('document-type') || card.data('document-type');
+            
+            if (confirm('Are you sure you want to delete this document?')) {
+                $.ajax({
+                    url: '{{ route("coordinator.documents.delete", "") }}/' + documentId,
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Document deleted successfully!', 'Success', {
+                                timeOut: 3000,
+                                progressBar: true
+                            });
+                            
+                            // Update UI without page reload
+                            updateUIAfterDelete(response, documentType);
+                        }
+                    },
+                    error: function(xhr) {
+                        toastr.error('Error deleting document. Please try again.', 'Error', {
+                            timeOut: 5000,
+                            progressBar: true
+                        });
+                    }
+                });
+            }
+        });
+
+        // Upload form submission
+        $('#uploadForm').submit(function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            const documentType = $('#documentType').val();
+            
+            submitBtn.prop('disabled', true).html('<i class="ph ph-circle-notch ph-spin custom-icons-i mr-1"></i>Uploading...');
+            
+            $.ajax({
+                url: '{{ route("coordinator.documents.upload") }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $('#uploadModal').modal('hide');
+                    toastr.success('Document uploaded successfully!', 'Success', {
+                        timeOut: 3000,
+                        progressBar: true
+                    });
+                    
+                    // Update UI without page reload
+                    updateUIAfterUpload(response, documentType);
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error uploading document. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    toastr.error(errorMessage, 'Error', {
+                        timeOut: 5000,
+                        progressBar: true
+                    });
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+
+        // Function to update UI after successful upload
+        function updateUIAfterUpload(response, documentType) {
+            updateStatusUI(response);
+            
+            // Update the specific row/card that was uploaded
+            const row = $(`[data-document-type="${documentType}"]`);
+            
+            if (row.length) {
+                // Desktop table view
+                if (row.is('tr')) {
+                    // Clear existing status content and replace
+                    const statusTd = row.find('td').eq(2);
+                    statusTd.html(`
+                        <span class="badge bg-success-subtle text-success py-2 px-3 rounded-4 w-100 status-badge">Submitted</span><br>
+                        <small>${new Date().toISOString().split('T')[0]}</small>
+                    `);
+                    
+                    // Replace upload button with dropdown
+                    const actionHtml = `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="ph-fill ph-gear custom-icons-i"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right py-0 overflow-hidden" aria-labelledby="actionDropdown">
+                                <button class="dropdown-item btn btn-outline-light view-document w-100 fw-medium border-bottom border-lightgray btn-flat text-dark py-2" 
+                                        data-url="${response.document.file_path}">
+                                    <i class="ph ph-eye custom-icons-i"></i>
+                                    <span>View</span>
+                                </button>
+                                <button class="dropdown-item btn btn-outline-light remove-document w-100 fw-medium btn-flat text-danger py-2" 
+                                        data-id="${response.document.id}">
+                                    <i class="ph ph-trash custom-icons-i"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    row.find('td:last').html(actionHtml);
+                } 
+                // Mobile card view
+                else {
+                    const statusDiv = row.find('.text-end');
+                    statusDiv.html(`
+                        <span class="badge bg-success-subtle text-success py-1 px-2 rounded-4">Submitted</span>
+                        <small class="d-block text-muted">${new Date().toISOString().split('T')[0]}</small>
+                    `);
+                    
+                    const actionHtml = `
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-outline-primary view-document flex-fill" 
+                                    data-url="${response.document.file_path}">
+                                <i class="ph ph-eye custom-icons-i me-1"></i>
+                                View
+                            </button>
+                            <button class="btn btn-outline-danger remove-document flex-fill" 
+                                    data-id="${response.document.id}">
+                                <i class="ph ph-trash custom-icons-i me-1"></i>
+                                Delete
+                            </button>
+                        </div>
+                    `;
+                    row.find('.d-grid').html(actionHtml);
+                }
+                
+                // Re-bind event listeners to the new buttons
+                bindEventListeners();
+            }
+        }
+
+        // Function to update UI after successful delete
+        function updateUIAfterDelete(response, documentType) {
+            updateStatusUI(response);
+            
+            // Update the specific row/card that was deleted
+            const row = $(`[data-document-type="${documentType}"]`);
+            
+            if (row.length) {
+                // Desktop table view
+                if (row.is('tr')) {
+                    // Clear existing status content and replace
+                    const statusTd = row.find('td').eq(2);
+                    statusTd.html(`
+                        <span class="badge bg-danger-subtle text-danger py-2 px-3 rounded-pill w-100 status-badge">Missing</span>
+                    `);
+                    
+                    // Replace dropdown with upload button
+                    const actionHtml = `
+                        <button class="btn btn-sm btn-outline-success upload-document fw-medium" 
+                                data-type="${documentType}">
+                            <i class="ph-fill ph-upload custom-icons-i"></i>
+                            <span>Upload</span>
+                        </button>
+                    `;
+                    row.find('td:last').html(actionHtml);
+                } 
+                // Mobile card view
+                else {
+                    const statusDiv = row.find('.text-end');
+                    statusDiv.html(`
+                        <span class="badge bg-danger-subtle text-danger py-1 px-2 rounded-pill">Missing</span>
+                    `);
+                    
+                    const actionHtml = `
+                        <button class="btn btn-success upload-document w-100" 
+                                data-type="${documentType}">
+                            <i class="ph-fill ph-upload custom-icons-i me-1"></i>
+                            Upload Document
+                        </button>
+                    `;
+                    row.find('.d-grid').html(actionHtml);
+                }
+                
+                // Re-bind event listeners to the new buttons
+                bindEventListeners();
+            }
+        }
+
+        // Function to update status UI (counter, badge, etc.)
+        function updateStatusUI(response) {
+            // Update document counter
+            $('#documentCounter').text(response.document_count);
+            
+            // Format status text for display (capitalize first letter of each word)
+            const formatStatusText = (status) => {
+                return status.split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+            };
+            
+            const displayStatus = formatStatusText(response.status);
+            $('#statusText').text(displayStatus);
+            
+            // Update badge appearance based on new status
+            const statusBadge = $('#statusBadge');
+            statusBadge.removeClass('bg-success-subtle bg-info-subtle bg-warning-subtle text-success text-info text-warning');
+            
+            switch(response.status) {
+                case 'eligible for claim':
+                case 'claimed':
+                    statusBadge.addClass('bg-success-subtle text-success');
+                    break;
+                case 'for validation':
+                    statusBadge.addClass('bg-info-subtle text-info');
+                    break;
+                default:
+                    statusBadge.addClass('bg-warning-subtle text-warning');
+            }
+            
+            // Update status icon
+            const statusIcon = statusBadge.find('i');
+            statusIcon.removeClass('ph-seal-check ph-seal-warning ph-seal-question');
+            
+            switch(response.status) {
+                case 'eligible for claim':
+                case 'claimed':
+                    statusIcon.addClass('ph-seal-check');
+                    break;
+                case 'for validation':
+                    statusIcon.addClass('ph-seal-warning');
+                    break;
+                default:
+                    statusIcon.addClass('ph-seal-question');
+            }
+        }
+
+        // Function to bind event listeners to dynamically created elements
+        function bindEventListeners() {
+            // Re-bind upload document buttons
+            $('.upload-document').off('click').on('click', function() {
+                const type = $(this).data('type');
+                const label = $(this).closest('tr').find('td:first').text() || 
+                            $(this).closest('.card').find('.card-title').text();
+                
+                $('#documentType').val(type);
+                $('#uploadModal .modal-title').text('Upload ' + label);
+                $('#uploadModal').modal('show');
+            });
+
+            // Re-bind view document buttons
+            $('.view-document').off('click').on('click', function() {
+                const url = $(this).data('url');
+                const label = $(this).closest('tr').find('td:first').text() || 
+                            $(this).closest('.card-body').find('.card-title').text();
+                
+                $('#documentTitle').text(label);
+                $('#documentFrame').attr('src', url);
+                $('#downloadLink').attr('href', url);
+                $('#documentModal').modal('show');
+            });
+
+            // Re-bind remove document buttons
+            $('.remove-document').off('click').on('click', function() {
+                const documentId = $(this).data('id');
+                const row = $(this).closest('tr');
+                const card = $(this).closest('.col-12');
+                const documentType = row.data('document-type') || card.data('document-type');
+                
+                if (confirm('Are you sure you want to delete this document?')) {
+                    $.ajax({
+                        url: '{{ route("coordinator.documents.delete", "") }}/' + documentId,
+                        type: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                toastr.success('Document deleted successfully!', 'Success', {
+                                    timeOut: 3000,
+                                    progressBar: true
+                                });
+                                
+                                updateUIAfterDelete(response, documentType);
+                            }
+                        },
+                        error: function(xhr) {
+                            toastr.error('Error deleting document. Please try again.', 'Error', {
+                                timeOut: 5000,
+                                progressBar: true
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Reset form when modal is closed
+        $('#uploadModal').on('hidden.bs.modal', function() {
+            $('#uploadForm')[0].reset();
+            $('#uploadForm button[type="submit"]').prop('disabled', false).html('<i class="ph-fill ph-upload custom-icons-i mr-1"></i>Upload');
+        });
+
+        // Handle modal iframes - clean up when modal is closed
+        $('#documentModal').on('hidden.bs.modal', function() {
+            $('#documentFrame').attr('src', '');
+        });
+
+        // Define document type labels for JavaScript use
+        const CoordinatorDocument = {
+            typeLabels: {
+                'consolidated_moas': 'Consolidated Notarized MOAs',
+                'consolidated_sics': 'Consolidated Notarized SICs',
+                'annex_cmo104': 'ANEX CMO104 Series of 2017',
+                'honorarium_request': 'Honorarium Request',
+                'special_order': 'Special Order',
+                'board_resolution': 'Board Resolution'
+            }
+        };
+    });
+    </script>
+
+
+
 
 
 

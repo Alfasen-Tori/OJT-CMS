@@ -52,7 +52,14 @@
           <li class="nav-item">
             <a href="{{route('coordinator.deployments')}}" class="nav-link {{ Request::is('coordinator/deployment*') ? 'current-page' : '' }}">
               <i class="ph{{ Request::is('coordinator/deployment*') ? '-fill' : '' }} ph-briefcase nav-link-i"></i>
-              <p> Deployments</p>
+              <p>Deployments</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{{route('coordinator.documents')}}" class="nav-link {{ Request::is('coordinator/honorarium*') ? 'current-page' : '' }}">
+              <i class="ph{{ Request::is('coordinator/honorarium*') ? '-fill' : '' }} ph-wallet nav-link-i"></i>
+              <p>Honorarium</p>
             </a>
           </li>
 

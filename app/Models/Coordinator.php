@@ -18,7 +18,8 @@ class Coordinator extends Model
         'faculty_id',
         'user_id',
         'dept_id',
-        'can_add_hte'
+        'can_add_hte',
+        'status',
     ];
 
     /**
@@ -97,5 +98,22 @@ class Coordinator extends Model
     public function scopeCannotAddHte($query)
     {
         return $query->where('can_add_hte', false);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(CoordinatorDocument::class);
+    }
+
+    public function updateStatus()
+    {
+        $documentCount = $this->documents()->count();
+        $requiredCount = 6; // Total required documents
+        
+        if ($documentCount >= $requiredCount && $this->status === 'pending documents') {
+            $this->update(['status' => 'for validation']);
+        } elseif ($documentCount < $requiredCount && $this->status === 'for validation') {
+            $this->update(['status' => 'pending documents']);
+        }
     }
 }

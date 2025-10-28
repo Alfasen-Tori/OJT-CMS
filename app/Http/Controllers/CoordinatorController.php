@@ -12,10 +12,10 @@ use App\Models\Intern;
 use App\Mail\HteSetupMail;
 use App\Models\InternsHte;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
+
 use App\Mail\InternSetupMail;
 use App\Imports\InternsImport;
-use Illuminate\Support\Facades\Storage;
+
 
 use Illuminate\Support\Facades\DB;
 use App\Mail\StudentDeploymentMail;
@@ -23,6 +23,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+
+use App\Models\Coordinator;
+use App\Models\CoordinatorDocument;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpWord\TemplateProcessor;
@@ -1241,5 +1247,76 @@ public function endorse() {
             'isProcessing',
             'endorsementPath'
         ));
+    }
+
+    public function documents()
+    {
+        // Get the coordinator with their documents
+        $coordinator = Coordinator::with('documents')
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+        
+        $documents = $coordinator->documents;
+        
+        return view('coordinator.documents', compact('coordinator', 'documents'));
+    }
+
+    public function uploadDocument(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:' . implode(',', array_keys(CoordinatorDocument::typeLabels())),
+            'document' => 'required|file|mimes:pdf|max:5120' // 5MB max
+        ]);
+
+        $coordinator = Coordinator::where('user_id', Auth::id())->firstOrFail();
+        
+        // Check if document type already exists
+        $existingDocument = $coordinator->documents()->where('type', $request->type)->first();
+        if ($existingDocument) {
+            return response()->json(['error' => 'Document type already exists'], 422);
+        }
+
+        // Store file
+        $filePath = $request->file('document')->store('coordinator_documents', 'public');
+
+        // Create document record
+        $document = $coordinator->documents()->create([
+            'type' => $request->type,
+            'file_path' => $filePath
+        ]);
+
+        // Update coordinator status
+        $coordinator->updateStatus();
+
+        return response()->json([
+            'success' => true,
+            'document' => [
+                'id' => $document->id,
+                'file_path' => Storage::url($document->file_path)
+            ],
+            'status' => $coordinator->fresh()->status,
+            'document_count' => $coordinator->documents()->count()
+        ]);
+    }
+
+    public function deleteDocument($id)
+    {
+        $coordinator = Coordinator::where('user_id', Auth::id())->firstOrFail();
+        $document = $coordinator->documents()->findOrFail($id);
+
+        // Delete file from storage
+        Storage::disk('public')->delete($document->file_path);
+
+        // Delete document record
+        $document->delete();
+
+        // Update coordinator status
+        $coordinator->updateStatus();
+
+        return response()->json([
+            'success' => true,
+            'status' => $coordinator->fresh()->status,
+            'document_count' => $coordinator->documents()->count()
+        ]);
     }
 }
