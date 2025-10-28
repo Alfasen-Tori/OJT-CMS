@@ -14,7 +14,7 @@
           <img src="{{ asset('storage/' . auth()->user()->pic) }}" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="" class="d-block">{{ Auth::user()->fname }} {{ Auth::user()->lname }}</a>
+          <a href="{{ route('hte.profile') }}" class="d-block">{{ Auth::user()->fname }} {{ Auth::user()->lname }}</a>
         </div>
       </div>
 

@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Intern;
 use App\Models\Department;
+use App\Models\HTE;
+use App\Models\Skill;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use App\Models\InternsHte;
 use Illuminate\Http\Request;
 use App\Models\InternEvaluation;
@@ -36,6 +40,134 @@ class HteController extends Controller
         return view('hte.dashboard', [
             'moaStatus' => $moaStatus
         ]);
+    }
+
+    public function profile()
+    {
+        $hte = auth()->user()->hte;
+        $skills = Skill::all(); // Get all skills for HTE to choose from
+        $selectedSkills = $hte->skills->pluck('skill_id')->toArray();
+
+        return view('hte.profile', compact('hte', 'skills', 'selectedSkills'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
+            'contact' => 'required|string|max:20',
+            'organization_name' => 'required|string|max:255',
+            'address' => 'required|string|max:500',
+            'description' => 'nullable|string',
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        try {
+            $user = User::findOrFail(auth()->id());
+            $hte = HTE::where('user_id', auth()->id())->firstOrFail();
+            
+            // Update user info
+            $user->fname = $request->fname;
+            $user->lname = $request->lname;
+            $user->contact = $request->contact;
+            
+            if ($request->password) {
+                $user->password = Hash::make($request->password);
+            }
+            
+            if (!$user->save()) {
+                throw new \Exception('Failed to save user');
+            }
+
+            // Update HTE info
+            $hte->organization_name = $request->organization_name;
+            $hte->address = $request->address;
+            $hte->description = $request->description;
+            
+            if (!$hte->save()) {
+                throw new \Exception('Failed to save HTE information');
+            }
+
+            return back()->with('success', 'Profile updated successfully');
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error updating profile: ' . $e->getMessage());
+        }
+    }
+
+    public function updateProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_pic' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        try {
+            $userId = auth()->id();
+            $user = DB::table('users')->where('id', $userId)->first();
+            
+            if (!$user) {
+                throw new \Exception('User not found');
+            }
+
+            if ($request->hasFile('profile_pic')) {
+                // Delete old picture if exists
+                if ($user->pic) {
+                    Storage::delete($user->pic);
+                }
+
+                // Store new picture
+                $path = $request->file('profile_pic')->store('profile-pictures', 'public');
+                
+                // Update database directly
+                $updated = DB::table('users')
+                            ->where('id', $userId)
+                            ->update(['pic' => $path]);
+                
+                if (!$updated) {
+                    throw new \Exception('Failed to update profile picture in database');
+                }
+
+                return response()->json([
+                    'url' => asset('storage/'.$path),
+                    'message' => 'Profile picture updated successfully'
+                ]);
+            }
+
+            throw new \Exception('No file uploaded');
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function updateSkills(Request $request)
+    {
+        $request->validate([
+            'skills' => 'required|array|min:5',
+            'skills.*' => 'exists:skills,skill_id',
+        ]);
+
+        try {
+            $hte = HTE::where('user_id', auth()->id())->firstOrFail();
+            
+            // Sync skills
+            $hte->skills()->sync($request->skills);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Skills updated successfully',
+                'skills' => $hte->skills->pluck('name')
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating skills: ' . $e->getMessage()
+            ], 400);
+        }
     }
 
 public function interns()

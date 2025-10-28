@@ -142,6 +142,11 @@ Route::middleware(['auth:web', 'intern'])->prefix('intern')->group(function() {
 Route::middleware(['auth:web', 'hte'])->prefix('hte')->group(function() {
     Route::get('/dashboard', [HteController::class, 'dashboard'])->name('hte.dashboard');
 
+    Route::get('/profile', [HteController::class, 'profile'])->name('hte.profile');
+    Route::put('/profile/update', [HteController::class, 'updateProfile'])->name('hte.profile.update');
+    Route::post('/profile/picture', [HteController::class, 'updateProfilePicture'])->name('hte.profile.picture');
+    Route::put('/skills/update', [HteController::class, 'updateSkills'])->name('hte.skills.update');
+
     Route::get('/interns', [HteController::class, 'interns'])->name('hte.interns');
     Route::post('/interns/evaluate/{deployment}', [HteController::class, 'submitEvaluation'])->name('hte.interns.evaluate');
     Route::get('/intern/{id}', [HteController::class, 'showIntern'])->name('hte.intern.show');

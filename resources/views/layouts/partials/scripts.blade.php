@@ -341,128 +341,227 @@
     </script>
 
     <!-- HTE Interns Table -->
-<script>
-    $(document).ready(function() {
-        // Initialize DataTable
-        var table = $('#internsTableHTE').DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-            "language": {
-                "emptyTable": "No students are currently deployed to your organization.",
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search students...",
-                "lengthMenu": "Show _MENU_ entries",
-                "info": "Showing _START_ to _END_ of _TOTAL_ students",
-                "paginate": {
-                    "previous": "«",
-                    "next": "»"
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#internsTableHTE').DataTable({
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No students are currently deployed to your organization.",
+                    "search": "_INPUT_",
+                    "searchPlaceholder": "Search students...",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ students",
+                    "paginate": {
+                        "previous": "«",
+                        "next": "»"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": [6] } // Disable sorting for Actions column
+                ],
+                "initComplete": function(settings, json) {
+                    // Hide loading overlay when table is ready
+                    $('#tableLoadingOverlay').fadeOut(300);
                 }
-            },
-            "columnDefs": [
-                { "orderable": false, "targets": [6] } // Disable sorting for Actions column
-            ],
-            "initComplete": function(settings, json) {
-                // Hide loading overlay when table is ready
+            });
+            
+            // Remove the manual search input if it exists
+            $('.card-header input[type="search"]').parent().remove();
+            
+            // Fallback: hide loading overlay after 2 seconds
+            setTimeout(function() {
                 $('#tableLoadingOverlay').fadeOut(300);
-            }
-        });
-        
-        // Remove the manual search input if it exists
-        $('.card-header input[type="search"]').parent().remove();
-        
-        // Fallback: hide loading overlay after 2 seconds
-        setTimeout(function() {
-            $('#tableLoadingOverlay').fadeOut(300);
-        }, 2000);
+            }, 2000);
 
-        // Evaluation form submission
-        $('.evaluate-form').on('submit', function(e) {
-            e.preventDefault();
-            
-            const form = $(this);
-            const deploymentId = form.attr('id').replace('evaluateForm', '');
-            const submitBtn = form.find('.submit-evaluate-btn');
-            const submitText = form.find('.submit-text');
-            const spinner = form.find('.spinner-border');
-            
-            // Show loading state
-            submitBtn.prop('disabled', true);
-            submitText.addClass('d-none');
-            spinner.removeClass('d-none');
-            
-            // Clear previous errors
-            form.find('.is-invalid').removeClass('is-invalid');
-            form.find('.invalid-feedback').text('');
-            
-            $.ajax({
-                url: '{{ route("hte.interns.evaluate", "") }}/' + deploymentId,
-                type: 'POST',
-                data: form.serialize(),
-                success: function(response) {
-                    if (response.success) {
-                        // Show success toast
-                        toastr.success(response.message, 'Success');
+            // Evaluation form submission
+            $('.evaluate-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                const form = $(this);
+                const deploymentId = form.attr('id').replace('evaluateForm', '');
+                const submitBtn = form.find('.submit-evaluate-btn');
+                const submitText = form.find('.submit-text');
+                const spinner = form.find('.spinner-border');
+                
+                // Show loading state
+                submitBtn.prop('disabled', true);
+                submitText.addClass('d-none');
+                spinner.removeClass('d-none');
+                
+                // Clear previous errors
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').text('');
+                
+                $.ajax({
+                    url: '{{ route("hte.interns.evaluate", "") }}/' + deploymentId,
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success toast
+                            toastr.success(response.message, 'Success');
+                            
+                            // Close modal
+                            $('#evaluateModal' + deploymentId).modal('hide');
+                            
+                            // Reload page after short delay to show updated grade
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            toastr.error(response.message, 'Error');
+                            submitBtn.prop('disabled', false);
+                            submitText.removeClass('d-none');
+                            spinner.addClass('d-none');
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
                         
-                        // Close modal
-                        $('#evaluateModal' + deploymentId).modal('hide');
+                        if (xhr.status === 422 && response.errors) {
+                            // Show validation errors
+                            $.each(response.errors, function(field, errors) {
+                                const input = form.find('[name="' + field + '"]');
+                                const errorDiv = form.find('#' + field + 'Error' + deploymentId);
+                                
+                                input.addClass('is-invalid');
+                                errorDiv.text(errors[0]);
+                            });
+                            toastr.error('Please fix the validation errors.', 'Validation Error');
+                        } else {
+                            toastr.error(response?.message || 'An error occurred while submitting evaluation.', 'Error');
+                        }
                         
-                        // Reload page after short delay to show updated grade
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        toastr.error(response.message, 'Error');
                         submitBtn.prop('disabled', false);
                         submitText.removeClass('d-none');
                         spinner.addClass('d-none');
                     }
-                },
-                error: function(xhr) {
-                    const response = xhr.responseJSON;
-                    
-                    if (xhr.status === 422 && response.errors) {
-                        // Show validation errors
-                        $.each(response.errors, function(field, errors) {
-                            const input = form.find('[name="' + field + '"]');
-                            const errorDiv = form.find('#' + field + 'Error' + deploymentId);
-                            
-                            input.addClass('is-invalid');
-                            errorDiv.text(errors[0]);
-                        });
-                        toastr.error('Please fix the validation errors.', 'Validation Error');
-                    } else {
-                        toastr.error(response?.message || 'An error occurred while submitting evaluation.', 'Error');
-                    }
-                    
-                    submitBtn.prop('disabled', false);
-                    submitText.removeClass('d-none');
-                    spinner.addClass('d-none');
-                }
+                });
+            });
+
+            // Reset form when modal is closed
+            $('.modal').on('hidden.bs.modal', function () {
+                const form = $(this).find('form');
+                form[0].reset();
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').text('');
+                
+                const submitBtn = form.find('.submit-evaluate-btn');
+                const submitText = form.find('.submit-text');
+                const spinner = form.find('.spinner-border');
+                
+                submitBtn.prop('disabled', false);
+                submitText.removeClass('d-none');
+                spinner.addClass('d-none');
             });
         });
+    </script>
 
-        // Reset form when modal is closed
-        $('.modal').on('hidden.bs.modal', function () {
-            const form = $(this).find('form');
-            form[0].reset();
-            form.find('.is-invalid').removeClass('is-invalid');
-            form.find('.invalid-feedback').text('');
-            
-            const submitBtn = form.find('.submit-evaluate-btn');
-            const submitText = form.find('.submit-text');
-            const spinner = form.find('.spinner-border');
-            
-            submitBtn.prop('disabled', false);
-            submitText.removeClass('d-none');
-            spinner.addClass('d-none');
+    <!-- HTE Profile Management --> -->
+     <script>
+        $(document).ready(function() {
+            // Profile Picture Upload
+            $('#profileUpload').change(function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size must be less than 2MB');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('profile_pic', file);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                $.ajax({
+                    url: '{{ route("hte.profile.picture") }}',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#profileImage').attr('src', response.url);
+                        toastr.success('Profile picture updated successfully');
+                    },
+                    error: function(xhr) {
+                        toastr.error(xhr.responseJSON.message || 'Error uploading picture');
+                    }
+                });
+            });
+
+            // Skills Modal Functionality
+            function updateSelectionCount() {
+                const selected = $('.skill-checkbox:checked').length;
+                $('#selectedCount').text(selected);
+                
+                // Enable/disable submit button
+                const submitBtn = $('#submitSkillsBtn');
+                submitBtn.prop('disabled', selected < 5);
+                
+                // Update button text
+                if (submitBtn.prop('disabled')) {
+                    const remaining = 5 - selected;
+                    submitBtn.html(`<i class="ph-fill ph-floppy-disk-back custom-icons-i mr-1"></i> Select ${remaining} more`);
+                } else {
+                    submitBtn.html(`<i class="ph-fill ph-floppy-disk-back custom-icons-i mr-1"></i> Save Skills (${selected})`);
+                }
+            }
+
+            // Initialize selection count
+            updateSelectionCount();
+
+            // Update count on checkbox change
+            $('.skill-checkbox').change(updateSelectionCount);
+
+            // Make skill items clickable
+            $('.skill-modal-item').click(function(e) {
+                if (e.target.type !== 'checkbox') {
+                    const checkbox = $(this).find('.skill-checkbox');
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                    checkbox.trigger('change');
+                }
+            });
+
+            // Skills form submission
+            $('#skillsForm').submit(function(e) {
+                e.preventDefault();
+                const form = $(this);
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    method: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            // Update the skills display
+                            const skillsHtml = response.skills.map(skill => 
+                                `<span class="badge bg-secondary-subtle text-secondary py-2 px-3 rounded-pill">
+                                    <i class="fas fa-check-circle mr-1"></i> ${skill}
+                                </span>`
+                            ).join('');
+                            
+                            $('.card-body .d-flex.flex-wrap').html(skillsHtml);
+                            $('#skillsModal').modal('hide');
+                            toastr.success(response.message);
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        toastr.error(xhr.responseJSON?.message || 'Error updating skills');
+                    }
+                });
+            });
         });
-    });
-</script>
+    </script>
 
 <!-- COORDINATOR PROFILE MANAGEMENT -->
 <script>
