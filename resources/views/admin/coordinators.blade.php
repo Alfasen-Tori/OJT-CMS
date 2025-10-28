@@ -1,11 +1,12 @@
-{{-- resources/views/dashboard.blade.php --}}
+{{-- resources/views/admin/coordinators/index.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Manage Coordinators')
 
 @section('content')
+
 <section class="content-header">
-  <div class="container-fluid">
+  <div class="container-fluid px-3">
     <div class="row mb-2">
       <div class="col-sm-6">
         <h1 class="page-header">MANAGE COORDINATORS</h1>
@@ -21,98 +22,179 @@
 </section>
 
 <section class="content">
-<div class="container-fluid">
+  <div class="container-fluid">
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div class="flex-grow-1" style="max-width: 220px;">
-                <input type="search" class="form-control form-control-sm" placeholder="Search..." id="coordinatorSearch">
-            </div>
-            <div class="d-flex flex-grow-1 justify-content-end p-0">
-                <button class="btn btn-outline-success btn-sm d-flex mr-2">
-                    <span class="d-none d-sm-inline mr-1">Import</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="table-cta-icon" viewBox="0 0 256 256"><path d="M200,24H72A16,16,0,0,0,56,40V64H40A16,16,0,0,0,24,80v96a16,16,0,0,0,16,16H56v24a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24ZM72,160a8,8,0,0,1-6.15-13.12L81.59,128,65.85,109.12a8,8,0,0,1,12.3-10.24L92,115.5l13.85-16.62a8,8,0,1,1,12.3,10.24L102.41,128l15.74,18.88a8,8,0,0,1-12.3,10.24L92,140.5,78.15,157.12A8,8,0,0,1,72,160Zm56,56H72V192h56Zm0-152H72V40h56Zm72,152H144V192a16,16,0,0,0,16-16v-8h40Zm0-64H160V104h40Zm0-64H160V80a16,16,0,0,0-16-16V40h56Z"></path></svg>                
-                </button>
-                <a href="{{ route('admin.new_c') }}" class="btn btn-primary btn-sm d-flex">
-                    <span>Register</span>
-                </a>
-            </div>
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 px-2">
+        <div class="d-flex flex-grow-1 justify-content-end p-0">
+          <a href="{{ route('admin.new_c') }}" class="btn btn-primary d-flex">
+            <span class="fw-medium">Register new</span>
+          </a>
         </div>
+      </div>
 
-        <div class="card-body table-responsive p-0">
-            <table class="table table-bordered text-nowrap mb-0" id="coordinatorsTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Faculty ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Contact</th>
-                        <th>Department</th>
-                        <th>HTE Privilege</th>
-                        <th style="white-space: nowrap; width: 12%">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($coordinators as $coordinator)
-                    <tr>
-                        <td>{{ $coordinator->faculty_id }}</td>
-                        <td>{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</td>
-                        <td>{{ $coordinator->user->email }}</td>
-                        <td>{{ $coordinator->user->contact }}</td>
-                        <td>{{ $coordinator->department->short_name ?? 'N/A' }}</td>
-                        <td>
-                            <span class="badge {{ $coordinator->can_add_hte ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} px-3 py-2 rounded-pill">
-                                {{ $coordinator->can_add_hte ? 'Allowed' : 'Not Allowed' }}
-                            </span>
-                        </td>
-                        <td class="text-center px-2" style="white-space: nowrap;">
-                            <a href="{{ route('coordinators.edit', $coordinator->id) }}" class="btn btn-primary btn-sm">
-                                <span class="d-none d-sm-inline">Edit</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="table-action-icon" viewBox="0 0 256 256"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.32,64l24-24L216,84.68Z"></path></svg>
-                            </a>
-                            <form action="{{ route('coordinators.destroy', $coordinator->id) }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
-                                    <span class="d-none d-sm-inline">Remove</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="table-action-icon" viewBox="0 0 256 256"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path></svg>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">No coordinators found</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+      <div class="card-body table-responsive py-0 px-3">
+        <!-- Loading Overlay -->
+        <div id="tableLoadingOverlay" 
+          style="position: absolute; 
+          width: 100%; 
+          height: 100%; 
+          background: rgba(255,255,255,0.85); 
+          display: flex; 
+          flex-direction: column;
+          justify-content: center; 
+          align-items: center; 
+          z-index: 1000;
+          gap: 1rem;">
+          <i class="ph-bold ph-arrows-clockwise fa-spin fs-3 text-primary"></i>
+          <span class="text-primary">Loading Coordinators . . .</span>
         </div>
-
-        <div class="card-footer clearfix">
-            <ul class="pagination pagination-sm m-0 float-end">
-                <li class="page-item"><a class="page-link" href="#">«</a></li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#">»</a></li>
-            </ul>
-        </div>
-    </div>
-</div>
-
-@section('scripts')
-<script>
-    // Simple search functionality
-    document.getElementById('coordinatorSearch').addEventListener('input', function() {
-        const searchValue = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#coordinatorsTable tbody tr');
         
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchValue) ? '' : 'none';
+        <table id="coordinatorsTable" class="table table-bordered mb-0">
+          <thead class="table-light">
+            <tr>
+              <th width="12%">Faculty ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Contact</th>
+              <th>Department</th>
+              <th width="15%">Status</th>
+              <th width="15%">HTE Privilege</th>
+              <th width="3%">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($coordinators as $coordinator)
+            <tr>
+              <td class="align-middle">{{ $coordinator->faculty_id }}</td>
+              <td class="align-middle">
+                <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
+                  alt="Profile Picture" 
+                  class="rounded-circle me-2 table-pfp" 
+                  width="30" height="30">
+                {{ $coordinator->user->lname }}, {{ $coordinator->user->fname }}
+              </td>
+              <td class="align-middle">{{ $coordinator->user->email }}</td>
+              <td class="align-middle">{{ $coordinator->user->contact }}</td>
+              <td class="align-middle">{{ $coordinator->department->short_name ?? 'N/A' }}</td>
+              <td class="align-middle">
+                @php
+                  $statusClass = [
+                    'pending documents' => 'bg-warning-subtle text-warning',
+                    'for validation' => 'bg-info-subtle text-info',
+                    'eligible for claim' => 'bg-success-subtle text-success',
+                    'claimed' => 'bg-secondary-subtle text-secondary'
+                  ][$coordinator->status] ?? 'bg-light text-dark';
+                @endphp
+                <span class="small badge py-2 px-3 rounded-pill {{ $statusClass }}" style="font-size: 14px">
+                  {{ ucfirst($coordinator->status) }}
+                </span>
+              </td>
+              <td class="align-middle">
+                <span class="badge {{ $coordinator->can_add_hte ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} px-3 py-2 rounded-pill">
+                  {{ $coordinator->can_add_hte ? 'Allowed' : 'Not Allowed' }}
+                </span>
+              </td>
+              <td class="text-center px-2 align-middle">
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-dark px-2 rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="ph-fill ph-gear custom-icons-i"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
+                    <!-- View Option -->
+                    <a class="dropdown-item btn btn-outline-light text-dark" href="">
+                      <i class="ph ph-eye custom-icons-i mr-2"></i>View
+                    </a>
+                    
+                    <!-- Update Option -->
+                    <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="">
+                      <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
+                    </a>
+                    
+                    <!-- Documents Option -->
+                    <a class="dropdown-item border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('admin.coordinators.documents', $coordinator->id) }}">
+                      <i class="ph ph-file-text custom-icons-i mr-2"></i>Documents
+                    </a>
+                    
+                    <!-- Delete Option -->
+                    <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#deleteCoordinator{{ $coordinator->id }}">
+                      <i class="ph ph-trash custom-icons-i mr-2"></i>Delete
+                    </a>
+                  </div>
+                </div>
+                
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteCoordinator{{ $coordinator->id }}" tabindex="-1" role="dialog">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header bg-light">
+                        <h5 class="modal-title">
+                          <i class="ph-bold ph-warning details-icons-i mr-1"></i>
+                          Confirm Account Deletion
+                        </h5>                
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <p class="text-left">Are you sure you want to delete <strong>{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</strong> ({{ $coordinator->faculty_id }})? This action cannot be undone.</p>
+                        <p class="text-danger small text-left"><strong>WARNING:</strong> All associated data will also be deleted.</p>
+                      </div>
+                      <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <form action="{{ route('coordinators.destroy', $coordinator->id) }}" method="POST">
+                          @csrf
+                          @method('DELETE')
+                          <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+@include('layouts.partials.scripts-main')
+
+    <!-- Admin: Coordinators Management Table -->
+    <script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#coordinatorsTable').DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "emptyTable": "No coordinator data found.",
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ coordinators",
+                "paginate": {
+                    "previous": "«",
+                    "next": "»"
+                }
+            },
+            "columnDefs": [
+                { "orderable": false, "targets": [7] } // Disable sorting for Actions column
+            ],
+            "initComplete": function() {
+                // Hide loading overlay when table is ready
+                $('#tableLoadingOverlay').fadeOut();
+            }
         });
     });
-</script>
+    </script>
 @endsection
-</section>
-@endsection
+

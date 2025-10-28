@@ -222,5 +222,14 @@
         border: 1px solid #dee2e6 !important;
     }
 
+    #coordinatorsTable_wrapper .row:first-child {
+        padding-top: 1rem;
+    }
+
+    #coordinatorsTable_wrapper .row:last-child {
+        padding-bottom: 1rem;
+        padding-top: 0.5rem;
+    }
+
 
 </style>

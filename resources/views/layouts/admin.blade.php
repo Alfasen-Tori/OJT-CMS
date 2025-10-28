@@ -19,7 +19,5 @@
   </div>
 
 </div>
-
-@include('layouts.partials.scripts') {{-- Extract scripts to a separate file --}}
 </body>
 </html>

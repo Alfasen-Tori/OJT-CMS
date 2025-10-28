@@ -164,5 +164,46 @@ public function deleteSkill($id)
     return redirect()->route('admin.skills')->with('success', 'Skill deleted successfully');
 }
 
+    public function coordinatorDocuments($id)
+    {
+        $coordinator = Coordinator::with(['user', 'department', 'documents'])->findOrFail($id);
+        $documents = $coordinator->documents;
+        
+        return view('admin.documents', compact('coordinator', 'documents'));
+    }
+
+    public function updateCoordinatorStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:eligible for claim,claimed'
+        ]);
+
+        $coordinator = Coordinator::findOrFail($id);
+        
+        // Validate status transitions
+        if ($request->status === 'eligible for claim' && $coordinator->status !== 'for validation') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid status transition. Coordinator must be in "for validation" status.'
+            ], 422);
+        }
+
+        if ($request->status === 'claimed' && $coordinator->status !== 'eligible for claim') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid status transition. Coordinator must be in "eligible for claim" status.'
+            ], 422);
+        }
+
+        $coordinator->update(['status' => $request->status]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated successfully',
+            'new_status' => $coordinator->status,
+            'display_status' => ucfirst($coordinator->status)
+        ]);
+    }
+
     
 }
