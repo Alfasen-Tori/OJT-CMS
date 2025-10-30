@@ -136,9 +136,9 @@
     </div>
   </div>
 </section>
-@endsection
 
-@section('scripts')
+@include('layouts.partials.scripts-main')
+
 <script>
 // Optional: Add real-time validation and formatting for Faculty ID
 document.getElementById('faculty_id').addEventListener('input', function(e) {

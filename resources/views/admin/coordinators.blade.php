@@ -52,13 +52,13 @@
         <table id="coordinatorsTable" class="table table-bordered mb-0">
           <thead class="table-light">
             <tr>
-              <th width="12%">Faculty ID</th>
+              <th>Faculty ID</th>
               <th>Name</th>
               <th>Email</th>
               <th>Contact</th>
               <th>Department</th>
-              <th width="15%">Status</th>
-              <th width="15%">HTE Privilege</th>
+              <th width="12%">Status</th>
+              <th width="12%">HTE Privilege</th>
               <th width="3%">Actions</th>
             </tr>
           </thead>
@@ -75,7 +75,7 @@
               </td>
               <td class="align-middle">{{ $coordinator->user->email }}</td>
               <td class="align-middle">{{ $coordinator->user->contact }}</td>
-              <td class="align-middle">{{ $coordinator->department->short_name ?? 'N/A' }}</td>
+              <td class="align-middle small">{{ $coordinator->department->dept_name ?? 'N/A' }}</td>
               <td class="align-middle">
                 @php
                   $statusClass = [

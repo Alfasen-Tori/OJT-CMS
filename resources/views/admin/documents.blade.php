@@ -25,7 +25,7 @@
 <section class="content">
   <div class="container-fluid">
     <div class="row" style="min-height: 600px;">
-      <div class="col-md-4 d-flex flex-column">
+      <div class="col-md-4 d-flex flex-column justify-content-between">
         <!-- Coordinator Info Card -->
         <div class="card">
           <div class="card-header bg-light">
@@ -63,7 +63,7 @@
         </div>
 
         <!-- Status Card - Takes remaining space -->
-        <div class="card mt-3 flex-grow-1">
+        <div class="card mt-1 flex-grow-1 mb-0">
           <div class="card-header bg-light">
             <h5 class="card-title mb-0">Honorarium Status</h5>
           </div>
@@ -321,6 +321,5 @@
         });
     });
     </script>
-
 
 @endsection
