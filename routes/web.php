@@ -50,6 +50,10 @@ Route::prefix('hte')->group(function() {
 // Protected admin routes
 Route::middleware(['auth:web', 'admin'])->prefix('admin')->group(function() {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    Route::get('/profile', [AdminController::class, 'profile'])->name('admin.profile');
+    Route::put('/profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
+    Route::post('/profile/upload-picture', [AdminController::class, 'uploadProfilePicture'])->name('admin.profile.upload-picture');
     
     Route::get('/coordinators', [AdminController::class, 'showCoordinators'])->name('admin.coordinators');
 

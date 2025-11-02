@@ -8,12 +8,14 @@ use App\Models\Department;
 use App\Models\Coordinator;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+
+
 use Illuminate\Support\Facades\Mail; // For sending emails
 use Illuminate\Support\Str;       // For generating tokens
-
-
 use App\Mail\CoordinatorSetupMail; // Your custom mail class
 use Illuminate\Support\Facades\DB; // For database operations
 
@@ -21,6 +23,92 @@ class AdminController extends Controller
 {
     public function dashboard() {
         return view('admin.dashboard');
+    }
+
+    public function profile()
+    {
+        $admin = auth()->user()->admin;
+        return view('admin.profile', compact('admin'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
+            'contact' => 'required|string|max:20',
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        try {
+            $user = User::findOrFail(auth()->id());
+            
+            $user->fname = $request->fname;
+            $user->lname = $request->lname;
+            $user->contact = $request->contact;
+            
+            if ($request->password) {
+                $user->password = Hash::make($request->password);
+            }
+            
+            if (!$user->save()) {
+                throw new \Exception('Failed to save user');
+            }
+
+            return back()->with('success', 'Profile updated successfully');
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error updating profile: ' . $e->getMessage());
+        }
+    }
+
+    public function uploadProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        try {
+            $userId = auth()->id();
+            $user = DB::table('users')->where('id', $userId)->first();
+            
+            if (!$user) {
+                throw new \Exception('User not found');
+            }
+
+            if ($request->hasFile('profile_picture')) {
+                // Delete old picture if exists and is not default
+                if ($user->pic && $user->pic !== 'profile_pics/profile.jpg') {
+                    Storage::disk('public')->delete($user->pic);
+                }
+
+                // Store new picture
+                $path = $request->file('profile_picture')->store('profile_pics', 'public');
+                
+                // Update database directly
+                $updated = DB::table('users')
+                            ->where('id', $userId)
+                            ->update(['pic' => $path]);
+                
+                if (!$updated) {
+                    throw new \Exception('Failed to update profile picture in database');
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile picture updated successfully',
+                    'image_url' => asset('storage/'.$path)
+                ]);
+            }
+
+            throw new \Exception('No file uploaded');
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 
     public function showCoordinators()
