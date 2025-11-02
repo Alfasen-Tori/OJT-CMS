@@ -5,6 +5,7 @@ password
 fname
 lname
 contact
+pic
 timestamps
 
 
@@ -20,6 +21,7 @@ faculty_id (VARCHAR, e.g. "2013-07896")
 user_id (FK to users.id)
 dept_id (FK to departments.dept_id)
 can_add_hte (Enum:0 = true, 1 = false)
+status (enum: pending documents, for validation, eligible for claim, claimed) - default: pending documents
 timestamps
 
 [INTERNS]
@@ -33,7 +35,7 @@ section (ENUM: 'a', 'b', 'c', 'd', 'e', 'f')
 year_level (TINYINT, 1–4)
 academic_year (e.g. "2025–2026")
 semester (ENUM: "1st", "2nd", "Midyear")
-status (ENUM: "pending requirements", "ready for deployment", "endorsed", "processing", "deployed") default is pending requirements for newly added interns
+status (ENUM: "pending requirements", "ready for deployment", "endorsed", "processing", "deployed", "completed") default is pending requirements for newly added interns
 first_login (tiny int) default = 1
 timestamps
 
@@ -121,3 +123,16 @@ grade (DECIMAL(5,2) - 0-100 scale
 comments (TEXT, nullable) - optional feedback from HTE
 evaluation_date (DATE)
 timestamps (created_at, updated_at)
+
+[COORDINATOR_DOCUMENTS]
+coordinator_id (FK)
+type enum('consolidated_moas', 'consolidated _sics', 'annex_cmo104', 'honorarium_request', 'special_order', 'board_resolution')
+file_path
+timestamps
+
+[INTERN_DOCUMENTS]
+intern_id (FK)
+type ('requirememts_checklist', 'certificate_of_registration', 'report_of_grades', 'application_resume', 'medical_certificate', 'parent_consent', 'insurance_certificate', 'pre_deployment_certification', 'ojt_fee_reciept')
+file_path
+original_name
+timestamps
