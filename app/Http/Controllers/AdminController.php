@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Coordinator;
-use App\Models\Department;
 use App\Models\User;
 use App\Models\Skill;
-
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail; // For sending emails
-use Illuminate\Support\Str;       // For generating tokens
-use App\Mail\CoordinatorSetupMail; // Your custom mail class
-use Illuminate\Support\Facades\DB; // For database operations
+use App\Models\Department;
+use App\Models\Coordinator;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Mail; // For sending emails
+use Illuminate\Support\Str;       // For generating tokens
+
+
+use App\Mail\CoordinatorSetupMail; // Your custom mail class
+use Illuminate\Support\Facades\DB; // For database operations
 
 class AdminController extends Controller
 {
@@ -90,6 +92,86 @@ class AdminController extends Controller
         return redirect()->route('admin.coordinators')
             ->with('success', 'Coordinator added successfully. Activation email sent.');
     }
+
+    public function editCoordinator($id)
+    {
+        $coordinator = Coordinator::with(['user', 'department'])->findOrFail($id);
+        $departments = Department::all();
+        
+        return view('admin.edit-coordinator', compact('coordinator', 'departments'));
+    }
+
+    public function updateCoordinator(Request $request, $id)
+    {
+        $coordinator = Coordinator::with('user')->findOrFail($id);
+
+        $request->validate([
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($coordinator->user_id)
+            ],
+            'contact' => 'required|string|max:20',
+            'faculty_id' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('coordinators')->ignore($coordinator->id)
+            ],
+            'dept_id' => 'required|exists:departments,dept_id',
+            'can_add_hte' => 'required|boolean'
+        ]);
+
+        try {
+            // Update user data
+            $coordinator->user->update([
+                'fname' => $request->fname,
+                'lname' => $request->lname,
+                'email' => $request->email,
+                'contact' => $request->contact
+            ]);
+
+            // Update coordinator data
+            $coordinator->update([
+                'faculty_id' => $request->faculty_id,
+                'dept_id' => $request->dept_id,
+                'can_add_hte' => $request->can_add_hte
+            ]);
+
+            return redirect()->route('admin.coordinators')
+                ->with('success', 'Coordinator updated successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error updating coordinator: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    public function destroyCoordinator($id)
+    {
+        try {
+            $coordinator = Coordinator::with('user')->findOrFail($id);
+            
+            // Delete coordinator (this should cascade to coordinator_documents if set up properly)
+            $coordinator->delete();
+            
+            // Also delete the associated user
+            $coordinator->user->delete();
+            
+            return redirect()->route('admin.coordinators')
+                ->with('success', 'Coordinator deleted successfully!');
+                
+        } catch (\Exception $e) {
+            return redirect()->route('admin.coordinators')
+                ->with('error', 'Error deleting coordinator: ' . $e->getMessage());
+        }
+    }
+
+
 
     /* DEPARTMENTS */
     public function departments()

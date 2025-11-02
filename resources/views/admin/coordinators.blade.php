@@ -57,7 +57,7 @@
               <th>Email</th>
               <th>Contact</th>
               <th>Department</th>
-              <th width="12%">Status</th>
+              <th width="12%">Claim Status</th>
               <th width="12%">HTE Privilege</th>
               <th width="3%">Actions</th>
             </tr>
@@ -101,18 +101,13 @@
                   </button>
                   <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
                     <!-- View Option -->
-                    <a class="dropdown-item btn btn-outline-light text-dark" href="">
+                    <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('admin.coordinators.documents', $coordinator->id) }}">
                       <i class="ph ph-eye custom-icons-i mr-2"></i>View
                     </a>
                     
                     <!-- Update Option -->
-                    <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="">
+                    <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('admin.coordinators.edit', $coordinator->id) }}">
                       <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
-                    </a>
-                    
-                    <!-- Documents Option -->
-                    <a class="dropdown-item border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('admin.coordinators.documents', $coordinator->id) }}">
-                      <i class="ph ph-file-text custom-icons-i mr-2"></i>Documents
                     </a>
                     
                     <!-- Delete Option -->

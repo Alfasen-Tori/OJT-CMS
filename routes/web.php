@@ -58,8 +58,11 @@ Route::middleware(['auth:web', 'admin'])->prefix('admin')->group(function() {
 
     Route::get('/coordinators/{coordinator}/edit', [AdminController::class, 'editCoordinator'])->name('coordinators.edit');
     Route::delete('/coordinators/{coordinator}', [AdminController::class, 'destroyCoordinator'])->name('coordinators.destroy');
-        Route::get('/coordinators/{id}/documents', [AdminController::class, 'coordinatorDocuments'])->name('admin.coordinators.documents');
+    Route::get('/coordinators/{id}', [AdminController::class, 'coordinatorDocuments'])->name('admin.coordinators.documents');
     Route::post('/coordinators/{id}/update-status', [AdminController::class, 'updateCoordinatorStatus'])->name('admin.coordinators.update-status');
+    Route::get('/coordinators/{id}/edit', [AdminController::class, 'editCoordinator'])->name('admin.coordinators.edit');
+    Route::put('/coordinators/{id}', [AdminController::class, 'updateCoordinator'])->name('admin.coordinators.update');
+
 
     Route::get('/departments', [AdminController::class, 'departments'])->name('admin.departments');
     Route::post('/departments', [AdminController::class, 'storeDepartment'])->name('admin.new_d');

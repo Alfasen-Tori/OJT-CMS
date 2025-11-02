@@ -5,7 +5,7 @@
 @section('title', 'Coordinator Documents')
 
 @section('content')
-<section class="content-header">
+<!-- <section class="content-header">
   <div class="container-fluid px-3">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -20,7 +20,7 @@
       </div>
     </div>
   </div>
-</section>
+</section> -->
 
 <section class="content">
   <div class="container-fluid">
@@ -28,7 +28,7 @@
       <div class="col-md-4 d-flex flex-column justify-content-between">
         <!-- Coordinator Info Card -->
         <div class="card">
-          <div class="card-header bg-light">
+          <div class="card-header bg-white">
             <h5 class="card-title mb-0">Coordinator Information</h5>
           </div>
           <div class="card-body">
@@ -40,7 +40,7 @@
                    style="object-fit: cover;">
               <h5 class="mb-1">{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</h5>
               <p class="text-muted mb-1">{{ $coordinator->faculty_id }}</p>
-              <p class="text-muted mb-2">{{ $coordinator->department->short_name ?? 'N/A' }}</p>
+              <p class="text-muted mb-2">{{ $coordinator->department->dept_name ?? 'N/A' }}</p>
             </div>
             
             <div class="border-top pt-3">
@@ -64,7 +64,7 @@
 
         <!-- Status Card - Takes remaining space -->
         <div class="card mt-1 flex-grow-1 mb-0">
-          <div class="card-header bg-light">
+          <div class="card-header bg-white">
             <h5 class="card-title mb-0">Honorarium Status</h5>
           </div>
           <div class="card-body d-flex flex-column">
@@ -114,9 +114,9 @@
       <div class="col-md-8">
         <!-- Documents Card - Full height -->
         <div class="card h-100">
-          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">Required Documents</h5>
-            <span class="badge {{ $documents->count() >= 6 ? 'bg-success' : 'bg-warning' }}">
+            <span class="badge ml-auto {{ $documents->count() >= 6 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-danger' }}">
               {{ $documents->count() }}/6 Submitted
             </span>
           </div>
