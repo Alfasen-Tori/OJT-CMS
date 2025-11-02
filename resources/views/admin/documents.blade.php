@@ -70,9 +70,9 @@
           <div class="card-body d-flex flex-column">
             @php
               $statusClass = [
-                'pending documents' => 'bg-warning',
-                'for validation' => 'bg-info',
-                'eligible for claim' => 'bg-success',
+                'pending documents' => 'bg-warning-subtle text-warning',
+                'for validation' => 'bg-info-subtle text-info',
+                'eligible for claim' => 'bg-success-subtle text-success',
                 'claimed' => 'bg-secondary'
               ][$coordinator->status] ?? 'bg-light text-dark';
             @endphp
@@ -88,23 +88,22 @@
               
               <!-- Action Buttons -->
               @if($coordinator->status === 'for validation')
-                <button id="approveBtn" class="btn btn-success w-100 mb-2">
-                  <i class="ph ph-check-circle mr-2"></i>Approve Documents
+                <button id="approveBtn" class="btn btn-primary w-100 mb-2">
+                  <i class="ph-fill ph-check-circle custom-icons-i mr-2"></i>Approve Documents
                 </button>
                 <small class="text-muted">Approve all documents and mark as eligible for claim</small>
               @elseif($coordinator->status === 'eligible for claim')
-                <button id="markClaimedBtn" class="btn btn-primary w-100 mb-2">
-                  <i class="ph ph-currency-circle-dollar mr-2"></i>Mark as Claimed
-                </button>
-                <small class="text-muted">Mark honorarium as claimed by coordinator</small>
+                <button class="btn btn-block bg-success mb-0" disabled>
+                  <i class="ph-fill ph-seal-check custom-icons-i mr-2"></i>Documents approved
+              </button>
               @elseif($coordinator->status === 'claimed')
                 <div class="alert alert-secondary mb-0">
-                  <i class="ph ph-seal-check mr-2"></i>Honorarium has been claimed
+                  <i class="ph ph-currency-circle-dollar mr-2"></i>Honorarium has been claimed
                 </div>
               @else
-                <div class="alert alert-warning mb-0">
+                <button class="btn btn-block bg-secondary mb-0 border-0" disabled>
                   <i class="ph ph-clock mr-2"></i>Waiting for all documents to be submitted
-                </div>
+              </button>
               @endif
             </div>
           </div>
@@ -266,13 +265,6 @@
             }
         });
 
-        // Mark as claimed
-        $('#markClaimedBtn').click(function() {
-            if (confirm('Are you sure you want to mark this honorarium as claimed?')) {
-                updateStatus('claimed');
-            }
-        });
-
         function updateStatus(newStatus) {
             const button = $(event.target);
             const originalText = button.html();
@@ -293,8 +285,7 @@
                         // Update UI
                         $('.badge.bg-warning, .badge.bg-info, .badge.bg-success, .badge.bg-secondary')
                             .removeClass('bg-warning bg-info bg-success bg-secondary')
-                            .addClass(response.new_status === 'eligible for claim' ? 'bg-success' : 
-                                    response.new_status === 'claimed' ? 'bg-secondary' : 'bg-info')
+                            .addClass(response.new_status === 'eligible for claim' ? 'bg-success' : 'bg-info')
                             .text(response.display_status);
                         
                         // Reload page to show updated buttons
