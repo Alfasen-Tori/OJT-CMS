@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Hte;
 use App\Models\User;
 use App\Models\Skill;
-use App\Models\Department;
-use App\Models\Coordinator;
+use App\Models\Intern;
 
+use App\Models\Department;
+use App\Models\InternsHte;
+use App\Models\Coordinator;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-
-
 use Illuminate\Support\Facades\Mail; // For sending emails
 use Illuminate\Support\Str;       // For generating tokens
 use App\Mail\CoordinatorSetupMail; // Your custom mail class
@@ -21,8 +24,18 @@ use Illuminate\Support\Facades\DB; // For database operations
 
 class AdminController extends Controller
 {
-    public function dashboard() {
-        return view('admin.dashboard');
+    public function dashboard()
+    {
+        $counts = [
+            'internsCount' => Intern::count(),
+            'coordinatorsCount' => Coordinator::count(),
+            'htesCount' => Hte::count(),
+            'departmentsCount' => Department::count(),
+            'skillsCount' => Skill::count(),
+            'activeDeploymentsCount' => InternsHte::where('status', 'deployed')->count(),
+        ];
+
+        return view('admin.dashboard', $counts);
     }
 
     public function profile()

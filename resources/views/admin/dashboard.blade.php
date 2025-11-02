@@ -1,4 +1,4 @@
-{{-- resources/views/dashboard.blade.php --}}
+{{-- resources/views/admin/dashboard.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Admin Panel')
@@ -23,54 +23,219 @@
 <section class="content">
   <div class="container-fluid">
     <div class="row">
-      {{-- Status Card --}}
-      <div class="col-lg-4 col-md-6 col-12">
-        <div class="small-box bg-danger">
-          <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-            <h2 class="fw-medium">1</h2>
-            <p>Coordinators</p>
+      <!-- Interns Card -->
+      <div class="col-lg-4 col-md-6 col-12 mb-4">
+        <div class="custom-card bg-gradient-primary">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $internsCount }}</h3>
+              <p class="label">Total Interns</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-student"></i>
+            </div>
           </div>
-          <div class="infobox-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" viewBox="0 0 256 256"><path d="M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z"></path></svg>          </div>
-          <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+          <div class="card-footer">
+            <span>All registered student interns</span>
+          </div>
         </div>
       </div>
 
-      <!-- Docs -->
-      <div class="col-lg-4 col-md-6 col-12">
-          <!-- small card -->
-          <div class="small-box bg-info"> 
-              <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-                  <h2 class="fw-medium">3</h2>
-                  <p>Departments</p>
-              </div>
-              <div class="infobox-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" viewBox="0 0 256 256"><path d="M144,96V80H128a8,8,0,0,0-8,8v80a8,8,0,0,0,8,8h16V160a16,16,0,0,1,16-16h48a16,16,0,0,1,16,16v48a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V192H128a24,24,0,0,1-24-24V136H72v8a16,16,0,0,1-16,16H24A16,16,0,0,1,8,144V112A16,16,0,0,1,24,96H56a16,16,0,0,1,16,16v8h32V88a24,24,0,0,1,24-24h16V48a16,16,0,0,1,16-16h48a16,16,0,0,1,16,16V96a16,16,0,0,1-16,16H160A16,16,0,0,1,144,96Z"></path></svg>              </div>
-              <a href="#" class="small-box-footer">
-                  More info <i class="fas fa-arrow-circle-right"></i>
-              </a>
+      <!-- Coordinators Card -->
+      <div class="col-lg-4 col-md-6 col-12 mb-4">
+        <div class="custom-card bg-gradient-info">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $coordinatorsCount }}</h3>
+              <p class="label">Coordinators</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-chalkboard-teacher"></i>
+            </div>
           </div>
+          <div class="card-footer">
+            <span>Department coordinators</span>
+          </div>
+        </div>
       </div>
 
-      <!-- My Internship -->
-      <div class="col-lg-4 col-md-6 col-12">
-          <div class="small-box bg-success"> 
-              <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-                  <h2 class="fw-medium">45</h2>
-                  <p>Skills</p>
-              </div>
-              <div class="infobox-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" viewBox="0 0 256 256"><path d="M232,86.53V56a16,16,0,0,0-16-16H40A16,16,0,0,0,24,56V184a16,16,0,0,0,16,16H160v24A8,8,0,0,0,172,231l24-13.74L220,231A8,8,0,0,0,232,224V161.47a51.88,51.88,0,0,0,0-74.94ZM128,144H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm0-32H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm88,98.21-16-9.16a8,8,0,0,0-7.94,0l-16,9.16V172a51.88,51.88,0,0,0,40,0ZM196,160a36,36,0,1,1,36-36A36,36,0,0,1,196,160Z"></path></svg>              </div>
-              <a href="#" class="small-box-footer">
-                  More info <i class="fas fa-arrow-circle-right"></i>
-              </a>
+      <!-- HTEs Card -->
+      <div class="col-lg-4 col-md-6 col-12 mb-4">
+        <div class="custom-card bg-gradient-success">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $htesCount }}</h3>
+              <p class="label">HTE Partners</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-buildings"></i>
+            </div>
           </div>
+          <div class="card-footer">
+            <span>Industry partners</span>
+          </div>
+        </div>
       </div>
 
+    </div>
 
+    <!-- Additional Stats Row -->
+    <div class="row">
+      <!-- Departments Card -->
+      <div class="col-lg-4 col-md-6 col-12 mb-4">
+        <div class="custom-card bg-gradient-warning">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $departmentsCount }}</h3>
+              <p class="label">Departments</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-department"></i>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>Academic departments</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills Card -->
+      <div class="col-lg-4 col-md-6 col-12 mb-4">
+        <div class="custom-card bg-gradient-danger">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $skillsCount }}</h3>
+              <p class="label">Skills</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-gear"></i>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>Available skills</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Deployments Card -->
+      <div class="col-lg-4 col-md-6 col-12 mb-4">
+        <div class="custom-card bg-gradient-secondary">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $activeDeploymentsCount }}</h3>
+              <p class="label">Active Deployments</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-rocket-launch"></i>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>Currently deployed interns</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-    @include('layouts.partials.scripts-main')
+<style>
+.custom-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 140px;
+}
+
+.custom-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15);
+}
+
+.card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  height: 100px;
+}
+
+.card-text .count {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+  color: white;
+}
+
+.card-text .label {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-icon {
+  font-size: 3rem;
+  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.card-footer {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-footer span {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+/* Gradient Backgrounds */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.bg-gradient-danger {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa8a8 100%);
+}
+
+.bg-gradient-secondary {
+  background: linear-gradient(135deg, #a8caba 0%, #5d4157 100%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-content {
+    padding: 1rem;
+  }
+  
+  .card-text .count {
+    font-size: 2rem;
+  }
+  
+  .card-icon {
+    font-size: 2.5rem;
+  }
+}
+</style>
+
+@include('layouts.partials.scripts-main')
 @endsection
