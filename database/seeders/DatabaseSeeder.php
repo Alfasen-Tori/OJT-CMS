@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             'fname' => 'Jessie',
             'lname' => 'Paragas',
             'contact' => '09507395757',
-            'pic' => 'profile_pictures/profile.jpg',
+            'pic' => null,
         ]);
 
         // Create the admin record linked to the user

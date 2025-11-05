@@ -102,7 +102,7 @@
                         <label for="faculty_id">Faculty ID <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="faculty_id" name="faculty_id" 
                             value="{{ old('faculty_id', $coordinator->faculty_id) }}"
-                            placeholder="Enter Employee ID" required readonly
+                            placeholder="Enter Employee ID" required
                             pattern="[A-Za-z]\d{2}\d{2}\d{2}[A-Za-z][A-Za-z]"
                             maxlength="9">
                     </div>
