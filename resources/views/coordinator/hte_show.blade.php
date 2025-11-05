@@ -213,7 +213,6 @@
                                     <th width="15%">Student ID</th>
                                     <th width="20%">Student Name</th>
                                     <th width="15%">Program</th>
-                                    <th width="15%">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -270,12 +269,7 @@
                                                 </div>
                                             </td>
                                             <td class="align-middle">
-                                                <span class="text-dark">BS{{ $intern->department->short_name ?? 'N/A' }}</span>
-                                            </td>
-                                            <td class="align-middle">
-                                                <span class="badge {{ $statusClass }} px-3 py-2 rounded-pill text-capitalize">
-                                                    {{ $endorsement->intern->status }}
-                                                </span>
+                                                <span class="text-dark">{{ $intern->department->short_name ?? 'N/A' }}</span>
                                             </td>
                                         </tr>
                                     @endforeach
