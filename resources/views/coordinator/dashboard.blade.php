@@ -33,7 +33,7 @@
               <p class="label">Student Interns</p>
             </div>
             <div class="card-icon">
-              <i class="ph ph-student"></i>
+              <i class="ph-fill ph-graduation-cap"></i>
             </div>
           </div>
           <div class="card-footer">
@@ -53,7 +53,7 @@
               <p class="label">Host Training Establishments</p>
             </div>
             <div class="card-icon">
-              <i class="ph ph-buildings"></i>
+              <i class="ph-fill ph-building-apartment"></i>
             </div>
           </div>
           <div class="card-footer">
@@ -70,10 +70,10 @@
           <div class="card-content">
             <div class="card-text">
               <h3 class="count">{{ $activeDeploymentsCount }}</h3>
-              <p class="label">Active Deployments</p>
+              <p class="label">Deployments</p>
             </div>
             <div class="card-icon">
-              <i class="ph ph-rocket-launch"></i>
+              <i class="ph-fill ph-rocket-launch"></i>
             </div>
           </div>
           <div class="card-footer">
@@ -142,7 +142,7 @@
               <div class="col-md-4 mb-3">
                 <div class="status-card status-endorsed h-100">
                   <div class="status-header">
-                    <i class="ph ph-clipboard-text status-icon"></i>
+                    <i class="ph ph-paper-plane-tilt status-icon"></i>
                     <div class="status-info">
                       <div class="status-count">{{ $endorsedInternsCount }}</div>
                       <div class="status-label">Endorsed</div>
@@ -263,21 +263,25 @@
               <a href="{{ route('coordinator.new_i') }}" class="quick-btn bg-secondary-subtle">
                 <i class="ph ph-user-plus"></i>
                 <span>Register New Intern</span>
+                <i class="ph ph-arrow-circle-up-right fs-1"></i>
               </a>
 
               <a href="{{ route('coordinator.endorse') }}" class="quick-btn bg-secondary-subtle">
-                <i class="ph ph-clipboard-text"></i>
+                <i class="ph ph-paper-plane-tilt"></i>
                 <span>Endorse Interns</span>
+                <i class="ph ph-arrow-circle-up-right fs-1"></i>
               </a>
 
               <a href="{{ route('coordinator.new_h') }}" class="quick-btn bg-secondary-subtle">
                 <i class="ph ph-building"></i>
                 <span>Add HTE Partner</span>
+                <i class="ph ph-arrow-circle-up-right fs-1"></i>
               </a>
 
               <a href="{{ route('coordinator.documents') }}" class="quick-btn bg-secondary-subtle">
                 <i class="ph ph-files"></i>
                 <span>Honorarium Docs</span>
+                <i class="ph ph-arrow-circle-up-right fs-1"></i>
               </a>
 
             </div>
