@@ -33,14 +33,38 @@
           </div>
           <div class="card-body">
             <div class="text-center mb-3">
-              <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
-                   alt="Profile Picture" 
-                   class="rounded-circle mb-2" 
-                   width="80" height="80"
-                   style="object-fit: cover;">
-              <h5 class="mb-1">{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</h5>
-              <p class="text-muted mb-1">{{ $coordinator->faculty_id }}</p>
-              <p class="text-muted mb-2">{{ $coordinator->department->dept_name ?? 'N/A' }}</p>
+                @if($coordinator->user->pic)
+                    <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
+                        alt="Profile Picture" 
+                        class="rounded-circle mb-2" 
+                        width="80" height="80"
+                        style="object-fit: cover;">
+                @else
+                    @php
+                        // Generate a consistent random color based on user's name
+                        $name = $coordinator->user->fname . $coordinator->user->lname;
+                        $colors = [
+                            'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                            'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                            'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                            'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                            'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                            'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                        ];
+                        
+                        // Generate a consistent index based on the user's name
+                        $colorIndex = crc32($name) % count($colors);
+                        $randomGradient = $colors[$colorIndex];
+                    @endphp
+                    
+                    <div class="rounded-circle mb-2 mx-auto d-flex align-items-center justify-content-center text-white fw-bold" 
+                        style="width: 80px; height: 80px; font-size: 24px; background: {{ $randomGradient }};">
+                        {{ strtoupper(substr($coordinator->user->fname, 0, 1) . substr($coordinator->user->lname, 0, 1)) }}
+                    </div>
+                @endif
+                <h5 class="mb-1">{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</h5>
+                <p class="text-muted mb-1">{{ $coordinator->faculty_id }}</p>
+                <p class="text-muted mb-2">{{ $coordinator->department->dept_name ?? 'N/A' }}</p>
             </div>
             
             <div class="border-top pt-3">

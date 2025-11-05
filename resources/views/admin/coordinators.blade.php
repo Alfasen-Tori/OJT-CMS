@@ -67,11 +67,37 @@
             <tr>
               <td class="align-middle">{{ $coordinator->faculty_id }}</td>
               <td class="align-middle">
-                <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
-                  alt="Profile Picture" 
-                  class="rounded-circle me-2 table-pfp" 
-                  width="30" height="30">
-                {{ $coordinator->user->lname }}, {{ $coordinator->user->fname }}
+                  @if($coordinator->user->pic)
+                      <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
+                          alt="Profile Picture" 
+                          class="rounded-circle me-2 table-pfp" 
+                          width="30" height="30">
+                  @else
+                      @php
+                          // Generate a consistent random color based on user's name
+                          $name = $coordinator->user->fname . $coordinator->user->lname;
+                          $colors = [
+                              '#007bff', // Blue
+                              '#28a745', // Green
+                              '#dc3545', // Red
+                              '#6f42c1', // Purple
+                              '#fd7e14', // Orange
+                              '#20c997', // Teal
+                              '#e83e8c', // Pink
+                              '#17a2b8', // Cyan
+                          ];
+                          
+                          // Generate a consistent index based on the user's name
+                          $colorIndex = crc32($name) % count($colors);
+                          $randomColor = $colors[$colorIndex];
+                      @endphp
+                      
+                      <div class="rounded-circle me-2 d-inline-flex align-items-center justify-content-center text-white fw-bold" 
+                          style="width: 30px; height: 30px; font-size: 11px; background-color: {{ $randomColor }};">
+                          {{ strtoupper(substr($coordinator->user->fname, 0, 1) . substr($coordinator->user->lname, 0, 1)) }}
+                      </div>
+                  @endif
+                  {{ $coordinator->user->lname }}, {{ $coordinator->user->fname }}
               </td>
               <td class="align-middle">{{ $coordinator->user->email }}</td>
               <td class="align-middle">{{ $coordinator->user->contact }}</td>

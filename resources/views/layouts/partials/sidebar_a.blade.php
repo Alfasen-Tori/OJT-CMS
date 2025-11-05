@@ -14,8 +14,27 @@
             @if(Auth::user()->pic)
                 <img src="{{ asset('storage/' . Auth::user()->pic) }}" class="img-circle elevation-2" alt="User Image" style="object-fit: cover; width: 33px; height: 33px;">
             @else
-                <div class="img-circle elevation-2 d-flex align-items-center justify-content-center bg-gradient-primary text-white font-weight-bold" 
-                    style="width: 33px; height: 33px; font-size: 12px; background: linear-gradient(135deg, #007bff, #6610f2);">
+                @php
+                    // Generate a consistent random color based on user's name
+                    $name = Auth::user()->fname . Auth::user()->lname;
+                    $colors = [
+                        'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                        'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                        'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                        'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                        'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                        'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                        'linear-gradient(135deg, #20c997, #28a745)', // Teal to Green
+                        'linear-gradient(135deg, #6610f2, #007bff)', // Purple to Blue
+                    ];
+                    
+                    // Generate a consistent index based on the user's name
+                    $colorIndex = crc32($name) % count($colors);
+                    $randomGradient = $colors[$colorIndex];
+                @endphp
+                
+                <div class="img-circle elevation-2 d-flex align-items-center justify-content-center text-white font-weight-bold" 
+                    style="width: 33px; height: 33px; font-size: 12px; background: {{ $randomGradient }};">
                     {{ strtoupper(substr(Auth::user()->fname, 0, 1) . substr(Auth::user()->lname, 0, 1)) }}
                 </div>
             @endif
