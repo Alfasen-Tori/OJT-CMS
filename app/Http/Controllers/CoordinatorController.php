@@ -37,19 +37,70 @@ use Carbon\Carbon;
 
 class CoordinatorController extends Controller
 {
-    public function dashboard() {
-        // Get the currently logged-in coordinator
-        $coordinator = auth()->user()->coordinator;
-        
-        // Count students added by this coordinator
-        $myStudentsCount = Intern::where('coordinator_id', $coordinator->id)->count();
-        $totalHtesCount = Hte::count();
-        
-        return view('coordinator.dashboard', [
-            'myStudentsCount' => $myStudentsCount,
-            'totalHtesCount' => $totalHtesCount
-        ]);
-    }
+public function dashboard() {
+    // Get the currently logged-in coordinator
+    $coordinator = auth()->user()->coordinator;
+    
+    // Count students added by this coordinator
+    $myStudentsCount = Intern::where('coordinator_id', $coordinator->id)->count();
+    $totalHtesCount = Hte::count();
+    
+    // Count deployments and status breakdown
+    $activeDeploymentsCount = InternsHte::where('coordinator_id', $coordinator->id)
+        ->where('status', 'deployed')
+        ->count();
+    
+    $endorsedCount = InternsHte::where('coordinator_id', $coordinator->id)
+        ->where('status', 'endorsed')
+        ->count();
+    
+    // Count interns by all statuses
+    $pendingRequirementsCount = Intern::where('coordinator_id', $coordinator->id)
+        ->where('status', 'pending requirements')
+        ->count();
+    
+    $readyForDeploymentCount = Intern::where('coordinator_id', $coordinator->id)
+        ->where('status', 'ready for deployment')
+        ->count();
+    
+    $endorsedInternsCount = Intern::where('coordinator_id', $coordinator->id)
+        ->where('status', 'endorsed')
+        ->count();
+    
+    $processingCount = Intern::where('coordinator_id', $coordinator->id)
+        ->where('status', 'processing')
+        ->count();
+    
+    $deployedCount = Intern::where('coordinator_id', $coordinator->id)
+        ->where('status', 'deployed')
+        ->count();
+    
+    $completedCount = Intern::where('coordinator_id', $coordinator->id)
+        ->where('status', 'completed')
+        ->count();
+    
+    // Recent activity (last 5 deployments)
+    $recentDeployments = InternsHte::with(['intern.user', 'hte'])
+        ->where('coordinator_id', $coordinator->id)
+        ->latest()
+        ->take(5)
+        ->get();
+
+    return view('coordinator.dashboard', [
+        'myStudentsCount' => $myStudentsCount,
+        'totalHtesCount' => $totalHtesCount,
+        'activeDeploymentsCount' => $activeDeploymentsCount,
+        'endorsedCount' => $endorsedCount,
+        'pendingRequirementsCount' => $pendingRequirementsCount,
+        'readyForDeploymentCount' => $readyForDeploymentCount,
+        'endorsedInternsCount' => $endorsedInternsCount,
+        'processingCount' => $processingCount,
+        'deployedCount' => $deployedCount,
+        'completedCount' => $completedCount,
+        'recentDeployments' => $recentDeployments,
+        'coordinator' => $coordinator
+    ]);
+}
 
     public function profile()
     {

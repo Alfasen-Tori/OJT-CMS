@@ -1,4 +1,4 @@
-{{-- resources/views/dashboard.blade.php --}}
+{{-- resources/views/coordinator/dashboard.blade.php --}}
 @extends('layouts.coordinator')
 
 @section('title', 'Coordinator | Home')
@@ -22,54 +22,538 @@
 
 <section class="content">
   <div class="container-fluid">
+    <!-- Quick Stats Row -->
     <div class="row">
-      {{-- Interns Card --}}
-      <div class="col-lg-6 col-md-6 col-12">
-        <div class="small-box bg-danger">
-          <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-            <h2 class="fw-medium">{{ $myStudentsCount }}</h2>
-            <p>Student Interns</p>
+      <!-- Student Interns Card -->
+      <div class="col-xl-4 col-md-6 mb-4">
+        <div class="custom-card bg-primary">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $myStudentsCount }}</h3>
+              <p class="label">Student Interns</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-student"></i>
+            </div>
           </div>
-          <div class="infobox-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" viewBox="0 0 256 256"><path d="M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z"></path></svg>          </div>
-          <a href="#" class="small-box-footer">Manage Interns <i class="fas fa-arrow-circle-right"></i></a>
+          <div class="card-footer">
+            <a href="{{ route('coordinator.interns') }}" class="card-link">
+              Manage Interns <i class="ph ph-arrow-right"></i>
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- HTEs -->
-      <div class="col-lg-6 col-md-6 col-12">
-          <!-- small card -->
-          <div class="small-box bg-info"> 
-              <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-                  <h2 class="fw-medium">{{ $totalHtesCount }}</h2>
-                  <p>Host Training Establishments</p>
-              </div>
-              <div class="infobox-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" style="position: relative; right: 6px" viewBox="0 0 256 256"><path d="M240,208h-8V72a8,8,0,0,0-8-8H184V40a8,8,0,0,0-8-8H80a8,8,0,0,0-8,8V96H32a8,8,0,0,0-8,8V208H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16ZM80,176H64a8,8,0,0,1,0-16H80a8,8,0,0,1,0,16Zm0-32H64a8,8,0,0,1,0-16H80a8,8,0,0,1,0,16Zm64,64H112V168h32Zm-8-64H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm0-32H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm0-32H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm56,96H176a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm0-32H176a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm0-32H176a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Z"></path></svg>              </div>
-              <a href="#" class="small-box-footer">
-                  Manage HTEs <i class="fas fa-arrow-circle-right"></i>
-              </a>
+      <!-- HTE Partners Card -->
+      <div class="col-xl-4 col-md-6 mb-4">
+        <div class="custom-card bg-warning">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $totalHtesCount }}</h3>
+              <p class="label">Host Training Establishments</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-buildings"></i>
+            </div>
           </div>
+          <div class="card-footer">
+            <a href="{{ route('coordinator.htes') }}" class="card-link">
+              Manage HTEs <i class="ph ph-arrow-right"></i>
+            </a>
+          </div>
+        </div>
       </div>
 
-      <!-- Internships -->
-      <!-- <div class="col-lg-4 col-md-6 col-12">
-          <div class="small-box bg-success"> 
-              <div class="inner p-3 d-flex flex-column justify-content-center align-items-start">
-                  <h2 class="fw-medium">72</h2>
-                  <p>Internships</p>
-              </div>
-              <div class="infobox-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="box-icon" viewBox="0 0 256 256"><path d="M152,112a8,8,0,0,1-8,8H112a8,8,0,0,1,0-16h32A8,8,0,0,1,152,112Zm80-40V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V72A16,16,0,0,1,40,56H80V48a24,24,0,0,1,24-24h48a24,24,0,0,1,24,24v8h40A16,16,0,0,1,232,72ZM96,56h64V48a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8Zm120,57.61V72H40v41.61A184,184,0,0,0,128,136,184,184,0,0,0,216,113.61Z"></path></svg>
-              </div>
-              <a href="#" class="small-box-footer">
-                  Manage Internships <i class="fas fa-arrow-circle-right"></i>
-              </a>
+      <!-- Active Deployments Card -->
+      <div class="col-xl-4 col-md-6 mb-4">
+        <div class="custom-card bg-success">
+          <div class="card-content">
+            <div class="card-text">
+              <h3 class="count">{{ $activeDeploymentsCount }}</h3>
+              <p class="label">Active Deployments</p>
+            </div>
+            <div class="card-icon">
+              <i class="ph ph-rocket-launch"></i>
+            </div>
           </div>
-      </div> -->
-
+          <div class="card-footer">
+            <a href="{{ route('coordinator.deployments') }}" class="card-link">
+              View Deployments <i class="ph ph-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
 
     </div>
+
+    <!-- Analytics & Quick Actions Row -->
+    <div class="row">
+      <!-- Enhanced Intern Status Analytics - 3x2 Grid -->
+      <div class="col-lg-8 mb-4">
+        <div class="card analytics-card h-100">
+          <div class="card-header bg-white">
+            <h5 class="card-title mb-0">
+              <i class="ph ph-chart-pie-slice me-2"></i>Intern Status Overview
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Row 1 -->
+              <div class="col-md-4 mb-3">
+                <div class="status-card status-pending h-100">
+                  <div class="status-header">
+                    <i class="ph ph-clock status-icon"></i>
+                    <div class="status-info">
+                      <div class="status-count">{{ $pendingRequirementsCount }}</div>
+                      <div class="status-label">Pending Requirements</div>
+                    </div>
+                  </div>
+                  <div class="status-progress">
+                    <div class="progress">
+                      <div class="progress-bar bg-warning" style="width: {{ $myStudentsCount > 0 ? ($pendingRequirementsCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                    </div>
+                    <div class="status-percentage">
+                      {{ $myStudentsCount > 0 ? number_format(($pendingRequirementsCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <div class="status-card status-ready h-100">
+                  <div class="status-header">
+                    <i class="ph ph-check-circle status-icon"></i>
+                    <div class="status-info">
+                      <div class="status-count">{{ $readyForDeploymentCount }}</div>
+                      <div class="status-label">Ready for Deployment</div>
+                    </div>
+                  </div>
+                  <div class="status-progress">
+                    <div class="progress">
+                      <div class="progress-bar bg-info" style="width: {{ $myStudentsCount > 0 ? ($readyForDeploymentCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                    </div>
+                    <div class="status-percentage">
+                      {{ $myStudentsCount > 0 ? number_format(($readyForDeploymentCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <div class="status-card status-endorsed h-100">
+                  <div class="status-header">
+                    <i class="ph ph-clipboard-text status-icon"></i>
+                    <div class="status-info">
+                      <div class="status-count">{{ $endorsedInternsCount }}</div>
+                      <div class="status-label">Endorsed</div>
+                    </div>
+                  </div>
+                  <div class="status-progress">
+                    <div class="progress">
+                      <div class="progress-bar bg-primary" style="width: {{ $myStudentsCount > 0 ? ($endorsedInternsCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                    </div>
+                    <div class="status-percentage">
+                      {{ $myStudentsCount > 0 ? number_format(($endorsedInternsCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 2 -->
+              <div class="col-md-4 mb-3">
+                <div class="status-card status-processing h-100">
+                  <div class="status-header">
+                    <i class="ph ph-gear status-icon"></i>
+                    <div class="status-info">
+                      <div class="status-count">{{ $processingCount }}</div>
+                      <div class="status-label">Processing</div>
+                    </div>
+                  </div>
+                  <div class="status-progress">
+                    <div class="progress">
+                      <div class="progress-bar bg-secondary" style="width: {{ $myStudentsCount > 0 ? ($processingCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                    </div>
+                    <div class="status-percentage">
+                      {{ $myStudentsCount > 0 ? number_format(($processingCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <div class="status-card status-deployed h-100">
+                  <div class="status-header">
+                    <i class="ph ph-rocket-launch status-icon"></i>
+                    <div class="status-info">
+                      <div class="status-count">{{ $deployedCount }}</div>
+                      <div class="status-label">Deployed</div>
+                    </div>
+                  </div>
+                  <div class="status-progress">
+                    <div class="progress">
+                      <div class="progress-bar bg-success" style="width: {{ $myStudentsCount > 0 ? ($deployedCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                    </div>
+                    <div class="status-percentage">
+                      {{ $myStudentsCount > 0 ? number_format(($deployedCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <div class="status-card status-completed h-100">
+                  <div class="status-header">
+                    <i class="ph ph-seal-check status-icon"></i>
+                    <div class="status-info">
+                      <div class="status-count">{{ $completedCount }}</div>
+                      <div class="status-label">Completed</div>
+                    </div>
+                  </div>
+                  <div class="status-progress">
+                    <div class="progress">
+                      <div class="progress-bar bg-dark" style="width: {{ $myStudentsCount > 0 ? ($completedCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                    </div>
+                    <div class="status-percentage">
+                      {{ $myStudentsCount > 0 ? number_format(($completedCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Summary Stats -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <div class="summary-stats">
+                  <!-- <div class="summary-item">
+                    <div class="summary-label">Total Interns</div>
+                    <div class="summary-value">{{ $myStudentsCount }}</div>
+                  </div> -->
+                  <div class="summary-item">
+                    <div class="summary-label">Deployment Rate</div>
+                    <div class="summary-value text-success">
+                      {{ $myStudentsCount > 0 ? number_format(($deployedCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                  <div class="summary-item">
+                    <div class="summary-label">Completion Rate</div>
+                    <div class="summary-value text-dark">
+                      {{ $myStudentsCount > 0 ? number_format(($completedCount / $myStudentsCount) * 100, 1) : 0 }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="col-lg-4 mb-4">
+        <div class="card quick-actions-card h-100">
+          <div class="card-header bg-white">
+            <h5 class="card-title mb-0">
+              <i class="ph ph-lightning me-2"></i>Quick Actions
+            </h5>
+          </div>
+
+          <div class="card-body p-3 d-flex align-items-center">
+            <div class="quick-stack w-100">
+              
+              <a href="{{ route('coordinator.new_i') }}" class="quick-btn bg-secondary-subtle">
+                <i class="ph ph-user-plus"></i>
+                <span>Register New Intern</span>
+              </a>
+
+              <a href="{{ route('coordinator.endorse') }}" class="quick-btn bg-secondary-subtle">
+                <i class="ph ph-clipboard-text"></i>
+                <span>Endorse Interns</span>
+              </a>
+
+              <a href="{{ route('coordinator.new_h') }}" class="quick-btn bg-secondary-subtle">
+                <i class="ph ph-building"></i>
+                <span>Add HTE Partner</span>
+              </a>
+
+              <a href="{{ route('coordinator.documents') }}" class="quick-btn bg-secondary-subtle">
+                <i class="ph ph-files"></i>
+                <span>Honorarium Docs</span>
+              </a>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
   </div>
 </section>
+
+<style>
+/* Custom Card Styles */
+.custom-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 140px;
+}
+
+.custom-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.15);
+}
+
+.card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  height: 100px;
+}
+
+.card-text .count {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+  color: white;
+}
+
+.card-text .label {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-icon {
+  font-size: 3rem;
+  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.card-footer {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-link {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-link:hover {
+  color: white;
+}
+
+/* Enhanced Status Cards */
+.status-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.status-icon {
+  font-size: 2rem;
+  margin-right: 1rem;
+}
+
+.status-pending .status-icon { color: #ffc107; }
+.status-ready .status-icon { color: #17a2b8; }
+.status-endorsed .status-icon { color: #007bff; }
+.status-processing .status-icon { color: #6c757d; }
+.status-deployed .status-icon { color: #28a745; }
+.status-completed .status-icon { color: #343a40; }
+
+.status-info {
+  flex: 1;
+}
+
+.status-count {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #2c3e50;
+}
+
+.status-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.status-progress {
+  margin-top: auto;
+}
+
+.status-progress .progress {
+  height: 6px;
+  border-radius: 3px;
+  background-color: #e9ecef;
+}
+
+.status-percentage {
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6c757d;
+  margin-top: 0.5rem;
+}
+
+/* Summary Stats */
+.summary-stats {
+  display: flex;
+  justify-content: space-around;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+}
+
+.summary-item {
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* Quick Actions - Stacked Layout */
+.quick-actions-card, .analytics-card, .recent-activity-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.quick-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.quick-btn {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  color: currentColor;
+  text-decoration: none;
+  transition: all 0.5s ease;
+  flex: 1;
+  min-height: 70px;
+}
+
+.quick-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  color: white;
+  background: #007bff !important;
+}
+
+.quick-btn i {
+  font-size: 1.75rem;
+  margin-right: 1rem;
+  width: 40px;
+  text-align: center;
+}
+
+.quick-btn span {
+  font-size: 1rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+/* Recent Activity */
+.activity-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+}
+
+.list-group-item {
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1rem 0;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-content {
+    padding: 1rem;
+  }
+  
+  .card-text .count {
+    font-size: 2rem;
+  }
+  
+  .card-icon {
+    font-size: 2.5rem;
+  }
+  
+  .status-count {
+    font-size: 1.5rem;
+  }
+  
+  .summary-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .quick-btn {
+    padding: 1rem 1.25rem;
+    min-height: 60px;
+  }
+  
+  .quick-btn i {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+  }
+  
+  .quick-btn span {
+    font-size: 0.9rem;
+  }
+}
+</style>
 @endsection
