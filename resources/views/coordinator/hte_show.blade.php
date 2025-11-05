@@ -307,6 +307,11 @@
                                                 <strong>{{ $intern->student_id }}</strong>
                                             </td>
                                             <td class="align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                                                        alt="Student Picture" 
+                                                        class="rounded-circle me-2 table-pfp" 
+                                                        width="30" height="30">
                                                     <div>
                                                         <strong>{{ $intern->user->lname }}, {{ $intern->user->fname }}</strong>
                                                         <br>
