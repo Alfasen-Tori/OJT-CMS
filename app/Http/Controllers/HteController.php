@@ -183,7 +183,7 @@ public function interns()
             'evaluation' // Load the evaluation relationship
         ])
         ->where('hte_id', $hteId)
-        ->where('status', 'deployed')
+        ->whereIn('status', ['deployed', 'completed'])
         ->orderBy('deployed_at', 'desc')
         ->get();
 
