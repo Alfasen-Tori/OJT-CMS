@@ -74,7 +74,39 @@
               @endphp
               <tr>
                 <td class="align-middle">HTE-{{ str_pad($hteId, 3, '0', STR_PAD_LEFT) }}</td>
-                <td class="align-middle">{{ $hte->organization_name }}</td>
+                <td class="align-middle">
+                    @if($hte->logo) {{-- Assuming there's a logo field --}}
+                        <img src="{{ asset('storage/' . $hte->logo) }}" 
+                            alt="Organization Logo" 
+                            class="rounded-circle me-2" 
+                            width="30" height="30">
+                    @else
+                        @php
+                            // Generate a consistent random color based on organization name
+                            $orgName = $hte->organization_name;
+                            $colors = [
+                                'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                                'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                                'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                                'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                                'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                                'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                            ];
+                            
+                            $colorIndex = crc32($orgName) % count($colors);
+                            $randomGradient = $colors[$colorIndex];
+                            
+                            // Get organization initial
+                            $initial = strtoupper(substr($orgName, 0, 1));
+                        @endphp
+                        
+                        <div class="rounded-circle me-2 d-inline-flex align-items-center justify-content-center text-white fw-bold" 
+                            style="width: 30px; height: 30px; font-size: 11px; background: {{ $randomGradient }};">
+                            {{ $initial }}
+                        </div>
+                    @endif
+                    {{ $hte->organization_name }}
+                </td>
                 <td class="align-middle small">{{ Str::limit($hte->address, 50) }}</td>
                 <td class="align-middle">
                   <span class="badge {{ $statusClass }} px-3 py-2 rounded-pill text-capitalize">

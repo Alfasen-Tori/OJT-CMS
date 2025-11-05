@@ -26,10 +26,34 @@
                         <!-- Intern Profile Section -->
                         <div class="col-md-4 d-flex flex-column">
                             <div class="text-center mb-4">
-                                <img src="{{ asset('storage/' . $intern->user->pic) }}" 
-                                     class="img-thumbnail rounded-circle" 
-                                     style="width: 200px; height: 200px; object-fit: cover;"
-                                     alt="Intern Profile Picture">
+                                @if($intern->user->pic)
+                                    <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                                        class="img-thumbnail rounded-circle" 
+                                        style="width: 200px; height: 200px; object-fit: cover;"
+                                        alt="Intern Profile Picture">
+                                @else
+                                    @php
+                                        // Generate a consistent random color based on user's name
+                                        $name = $intern->user->fname . $intern->user->lname;
+                                        $colors = [
+                                            'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                                            'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                                            'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                                            'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                                            'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                                            'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                                        ];
+                                        
+                                        // Generate a consistent index based on the user's name
+                                        $colorIndex = crc32($name) % count($colors);
+                                        $randomGradient = $colors[$colorIndex];
+                                    @endphp
+                                    
+                                    <div class="img-thumbnail rounded-circle mx-auto d-flex align-items-center justify-content-center text-white fw-bold" 
+                                        style="width: 200px; height: 200px; font-size: 60px; background: {{ $randomGradient }};">
+                                        {{ strtoupper(substr($intern->user->fname, 0, 1) . substr($intern->user->lname, 0, 1)) }}
+                                    </div>
+                                @endif
                             </div>
                             
                             <div class="border p-3 rounded bg-light flex-grow-1 mt-0">
@@ -114,10 +138,34 @@
                                 @if($intern->coordinator)
                                     <div class="d-flex align-items-center">
                                         <div class="flex-shrink-0">
-                                            <img src="{{ asset('storage/' . $intern->coordinator->user->pic) }}" 
-                                                 class="img-thumbnail rounded-circle mr-3" 
-                                                 style="width: 50px; height: 50px; object-fit: cover;"
-                                                 alt="Coordinator Profile Picture">
+                                            @if($intern->coordinator->user->pic)
+                                                <img src="{{ asset('storage/' . $intern->coordinator->user->pic) }}" 
+                                                    class="img-thumbnail rounded-circle mr-3" 
+                                                    style="width: 50px; height: 50px; object-fit: cover;"
+                                                    alt="Coordinator Profile Picture">
+                                            @else
+                                                @php
+                                                    // Generate a consistent random color based on user's name
+                                                    $name = $intern->coordinator->user->fname . $intern->coordinator->user->lname;
+                                                    $colors = [
+                                                        'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                                                        'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                                                        'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                                                        'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                                                        'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                                                        'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                                                    ];
+                                                    
+                                                    // Generate a consistent index based on the user's name
+                                                    $colorIndex = crc32($name) % count($colors);
+                                                    $randomGradient = $colors[$colorIndex];
+                                                @endphp
+                                                
+                                                <div class="img-thumbnail rounded-circle mr-3 d-flex align-items-center justify-content-center text-white fw-bold" 
+                                                    style="width: 50px; height: 50px; font-size: 16px; background: {{ $randomGradient }};">
+                                                    {{ strtoupper(substr($intern->coordinator->user->fname, 0, 1) . substr($intern->coordinator->user->lname, 0, 1)) }}
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="flex-grow-1 gap-1">
                                             <h6 class="mb-0">{{ $intern->coordinator->user->fname }} {{ $intern->coordinator->user->lname }}</h6>

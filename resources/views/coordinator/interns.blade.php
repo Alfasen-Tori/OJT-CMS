@@ -75,13 +75,37 @@
               <tr>
                 <td class="align-middle">{{ $intern->student_id }}</td>
                 <td class="align-middle">
-                    <img src="{{ asset('storage/' . $intern->user->pic) }}" 
-                    alt="Profile Picture" 
-                    class="rounded-circle me-2 table-pfp" 
-                    width="30" height="30">
+                    @if($intern->user->pic)
+                        <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                            alt="Profile Picture" 
+                            class="rounded-circle me-2 table-pfp" 
+                            width="30" height="30">
+                    @else
+                        @php
+                            // Generate a consistent random color based on user's name
+                            $name = $intern->user->fname . $intern->user->lname;
+                            $colors = [
+                                'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                                'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                                'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                                'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                                'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                                'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                            ];
+                            
+                            // Generate a consistent index based on the user's name
+                            $colorIndex = crc32($name) % count($colors);
+                            $randomGradient = $colors[$colorIndex];
+                        @endphp
+                        
+                        <div class="rounded-circle me-2 d-inline-flex align-items-center justify-content-center text-white fw-bold" 
+                            style="width: 30px; height: 30px; font-size: 11px; background: {{ $randomGradient }};">
+                            {{ strtoupper(substr($intern->user->fname, 0, 1) . substr($intern->user->lname, 0, 1)) }}
+                        </div>
+                    @endif
                     {{ $intern->user->lname }}, {{ $intern->user->fname }} 
-                    </td>         
-                <td class="align-middle">{{ $intern->department->dept_name ?? 'N/A' }}</td>
+                </td>       
+                <td class="align-middle small">{{ $intern->department->dept_name ?? 'N/A' }}</td>
                 <td class="text-center align-middle">{{ $intern->year_level }}</td>
                 <td class="text-center align-middle">{{ strtoupper($intern->section) }}</td>
                 <td class="align-middle">
