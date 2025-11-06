@@ -79,6 +79,9 @@ Route::middleware(['auth:web', 'admin'])->prefix('admin')->group(function() {
 
     Route::get('/audit-trail/sessions', [AdminController::class, 'sessionAuditTrail'])->name('admin.audit-trail.sessions');
     Route::get('/audit-trail/sessions/data', [AdminController::class, 'getSessionAuditData'])->name('admin.audit-trail.sessions.data');
+
+    Route::get('/audit-trail/users', [AdminController::class, 'userAuditTrail'])->name('admin.audit-trail.users');
+    Route::get('/audit-trail/users/data', [AdminController::class, 'getUserAuditData'])->name('admin.audit-trail.users.data');
 });
 
 // Protected coordinator routes

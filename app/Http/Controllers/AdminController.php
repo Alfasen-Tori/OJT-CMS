@@ -17,6 +17,7 @@ use Illuminate\Validation\Rule;
 use App\Services\AuditTrailService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Services\UserAuditTrailService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail; // For sending emails
 use Illuminate\Support\Str;       // For generating tokens
@@ -137,141 +138,230 @@ class AdminController extends Controller
         return view('admin.new-coordinator', compact('departments'));
     }
 
-    public function registerCoordinator(Request $request)
-    {
-        $validated = $request->validate([
-            'email' => 'required|email|unique:users',
-            'fname' => 'required|string|max:255',
-            'lname' => 'required|string|max:255',
-            'contact' => 'required|string|max:20',
-            'faculty_id' => 'required|string|unique:coordinators|regex:/^[A-Za-z]\d{2}\d{2}\d{2}[A-Za-z]{2}$/',            'dept_id' => 'required|exists:departments,dept_id',
-            'can_add_hte' => 'required|boolean',
-        ]);
+public function registerCoordinator(Request $request)
+{
+    $validated = $request->validate([
+        'email' => 'required|email|unique:users',
+        'fname' => 'required|string|max:255',
+        'lname' => 'required|string|max:255',
+        'contact' => 'required|string|max:20',
+        'faculty_id' => 'required|string|unique:coordinators|regex:/^[A-Za-z]\d{2}\d{2}\d{2}[A-Za-z]{2}$/',
+        'dept_id' => 'required|exists:departments,dept_id',
+        'can_add_hte' => 'required|boolean',
+    ]);
 
-        // Generate a strong temporary password
-        $tempPassword = Str::random(16);
+    // Generate a strong temporary password
+    $tempPassword = Str::random(16);
 
-        // Create user with temporary password
-        $user = User::create([
-            'email' => $validated['email'],
-            'password' => Hash::make($tempPassword),
+    // Create user with temporary password
+    $user = User::create([
+        'email' => $validated['email'],
+        'password' => Hash::make($tempPassword),
+        'fname' => $validated['fname'],
+        'lname' => $validated['lname'],
+        'contact' => $validated['contact'],
+        'pic' => null,
+        'temp_password' => true
+    ]);
+
+    // Create coordinator record
+    $coordinator = Coordinator::create([
+        'faculty_id' => $validated['faculty_id'],
+        'user_id' => $user->id,
+        'dept_id' => $validated['dept_id'],
+        'can_add_hte' => $validated['can_add_hte']
+    ]);
+
+    // AUDIT TRAIL: Log coordinator creation
+    UserAuditTrailService::logUserCreation(
+        $user->id,
+        [
             'fname' => $validated['fname'],
             'lname' => $validated['lname'],
+            'email' => $validated['email'],
             'contact' => $validated['contact'],
-            'pic' => 'profile-pictures/profile.jpg',
-            'temp_password' => true
+            'faculty_id' => $validated['faculty_id']
+        ],
+        'coordinator',
+        $request
+    );
+
+    // Generate password setup token (expires in 24 hours)
+    $token = Str::random(60);
+    DB::table('password_setup_tokens')->insert([
+        'email' => $user->email,
+        'token' => $token,
+        'created_at' => now()
+    ]);
+
+    // Send email with setup link
+    $setupLink = route('password.setup', [
+        'token' => $token,
+        'role' => 'coordinator'
+    ]);
+    $coordinatorName = $validated['fname'] . ' ' . $validated['lname'];
+    
+    Mail::to($user->email)->send(new CoordinatorSetupMail(
+        $setupLink, 
+        $coordinatorName,
+        $tempPassword
+    ));
+    
+    return redirect()->route('admin.coordinators')
+        ->with('success', 'Coordinator added successfully. Activation email sent.');
+}
+
+public function editCoordinator($id)
+{
+    $coordinator = Coordinator::with(['user', 'department'])->findOrFail($id);
+    $departments = Department::all();
+    
+    return view('admin.edit-coordinator', compact('coordinator', 'departments'));
+}
+
+public function updateCoordinator(Request $request, $id)
+{
+    $coordinator = Coordinator::with('user')->findOrFail($id);
+
+    $request->validate([
+        'fname' => 'required|string|max:255',
+        'lname' => 'required|string|max:255',
+        'email' => [
+            'required',
+            'email',
+            'max:255',
+            Rule::unique('users')->ignore($coordinator->user_id)
+        ],
+        'contact' => 'required|string|max:20',
+        'faculty_id' => [
+            'required',
+            'string',
+            'max:20',
+            Rule::unique('coordinators')->ignore($coordinator->id)
+        ],
+        'dept_id' => 'required|exists:departments,dept_id',
+        'can_add_hte' => 'required|boolean'
+    ]);
+
+    try {
+        // Store old data for audit trail
+        $oldUserData = [
+            'fname' => $coordinator->user->fname,
+            'lname' => $coordinator->user->lname,
+            'email' => $coordinator->user->email,
+            'contact' => $coordinator->user->contact
+        ];
+
+        $oldCoordinatorData = [
+            'faculty_id' => $coordinator->faculty_id,
+            'dept_id' => $coordinator->dept_id,
+            'can_add_hte' => $coordinator->can_add_hte
+        ];
+
+        // Update user data
+        $coordinator->user->update([
+            'fname' => $request->fname,
+            'lname' => $request->lname,
+            'email' => $request->email,
+            'contact' => $request->contact
         ]);
 
-        // Create coordinator record
-        $coordinator = Coordinator::create([
-            'faculty_id' => $validated['faculty_id'],
-            'user_id' => $user->id,
-            'dept_id' => $validated['dept_id'],
-            'can_add_hte' => $validated['can_add_hte']
+        // Update coordinator data
+        $coordinator->update([
+            'faculty_id' => $request->faculty_id,
+            'dept_id' => $request->dept_id,
+            'can_add_hte' => $request->can_add_hte
         ]);
 
-        // Generate password setup token (expires in 24 hours)
-        $token = Str::random(60);
-        DB::table('password_setup_tokens')->insert([
-            'email' => $user->email,
-            'token' => $token,
-            'created_at' => now()
-        ]);
-
-        // Send email with setup link
-        $setupLink = route('password.setup', [
-            'token' => $token,
-            'role' => 'coordinator'
-        ]);
-        $coordinatorName = $validated['fname'] . ' ' . $validated['lname'];
-        
-        Mail::to($user->email)->send(new CoordinatorSetupMail(
-            $setupLink, 
-            $coordinatorName,
-            $tempPassword // Include temp password in email (optional)
-        ));
-        
-        return redirect()->route('admin.coordinators')
-            ->with('success', 'Coordinator added successfully. Activation email sent.');
-    }
-
-    public function editCoordinator($id)
-    {
-        $coordinator = Coordinator::with(['user', 'department'])->findOrFail($id);
-        $departments = Department::all();
-        
-        return view('admin.edit-coordinator', compact('coordinator', 'departments'));
-    }
-
-    public function updateCoordinator(Request $request, $id)
-    {
-        $coordinator = Coordinator::with('user')->findOrFail($id);
-
-        $request->validate([
-            'fname' => 'required|string|max:255',
-            'lname' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($coordinator->user_id)
-            ],
-            'contact' => 'required|string|max:20',
-            'faculty_id' => [
-                'required',
-                'string',
-                'max:20',
-                Rule::unique('coordinators')->ignore($coordinator->id)
-            ],
-            'dept_id' => 'required|exists:departments,dept_id',
-            'can_add_hte' => 'required|boolean'
-        ]);
-
-        try {
-            // Update user data
-            $coordinator->user->update([
+        // AUDIT TRAIL: Log user profile update
+        UserAuditTrailService::logUserUpdate(
+            $coordinator->user_id,
+            $oldUserData,
+            [
                 'fname' => $request->fname,
                 'lname' => $request->lname,
                 'email' => $request->email,
                 'contact' => $request->contact
-            ]);
+            ],
+            $request
+        );
 
-            // Update coordinator data
-            $coordinator->update([
-                'faculty_id' => $request->faculty_id,
-                'dept_id' => $request->dept_id,
-                'can_add_hte' => $request->can_add_hte
-            ]);
-
-            return redirect()->route('admin.coordinators')
-                ->with('success', 'Coordinator updated successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error updating coordinator: ' . $e->getMessage())
-                ->withInput();
+        // AUDIT TRAIL: Log coordinator-specific updates
+        $coordinatorChanges = [];
+        if ($oldCoordinatorData['faculty_id'] != $request->faculty_id) {
+            $coordinatorChanges[] = "Faculty ID: {$oldCoordinatorData['faculty_id']} → {$request->faculty_id}";
         }
-    }
-
-    public function destroyCoordinator($id)
-    {
-        try {
-            $coordinator = Coordinator::with('user')->findOrFail($id);
-            
-            // Delete coordinator (this should cascade to coordinator_documents if set up properly)
-            $coordinator->delete();
-            
-            // Also delete the associated user
-            $coordinator->user->delete();
-            
-            return redirect()->route('admin.coordinators')
-                ->with('success', 'Coordinator deleted successfully!');
-                
-        } catch (\Exception $e) {
-            return redirect()->route('admin.coordinators')
-                ->with('error', 'Error deleting coordinator: ' . $e->getMessage());
+        if ($oldCoordinatorData['dept_id'] != $request->dept_id) {
+            $oldDept = Department::find($oldCoordinatorData['dept_id']);
+            $newDept = Department::find($request->dept_id);
+            $coordinatorChanges[] = "Department: {$oldDept->dept_name} → {$newDept->dept_name}";
         }
+        if ($oldCoordinatorData['can_add_hte'] != $request->can_add_hte) {
+            $oldHtePermission = $oldCoordinatorData['can_add_hte'] ? 'Allowed' : 'Not Allowed';
+            $newHtePermission = $request->can_add_hte ? 'Allowed' : 'Not Allowed';
+            $coordinatorChanges[] = "HTE Permission: {$oldHtePermission} → {$newHtePermission}";
+        }
+
+        if (!empty($coordinatorChanges)) {
+            UserAuditTrailService::logRoleUpdate(
+                $coordinator->user_id,
+                'coordinator',
+                $oldCoordinatorData,
+                [
+                    'faculty_id' => $request->faculty_id,
+                    'dept_id' => $request->dept_id,
+                    'can_add_hte' => $request->can_add_hte
+                ],
+                $request
+            );
+        }
+
+        return redirect()->route('admin.coordinators')
+            ->with('success', 'Coordinator updated successfully!');
+
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Error updating coordinator: ' . $e->getMessage())
+            ->withInput();
     }
+}
+
+public function destroyCoordinator($id)
+{
+    try {
+        $coordinator = Coordinator::with('user')->findOrFail($id);
+        
+        // Store user data for audit trail before deletion
+        $userData = [
+            'fname' => $coordinator->user->fname,
+            'lname' => $coordinator->user->lname,
+            'email' => $coordinator->user->email,
+            'contact' => $coordinator->user->contact,
+            'faculty_id' => $coordinator->faculty_id
+        ];
+        
+        // Delete coordinator (this should cascade to coordinator_documents if set up properly)
+        $coordinator->delete();
+        
+        // Also delete the associated user
+        $coordinator->user->delete();
+
+        // AUDIT TRAIL: Log coordinator deletion
+        UserAuditTrailService::logUserDeletion(
+            $coordinator->user_id,
+            $userData,
+            'coordinator',
+            request()
+        );
+        
+        return redirect()->route('admin.coordinators')
+            ->with('success', 'Coordinator deleted successfully!');
+            
+    } catch (\Exception $e) {
+        return redirect()->route('admin.coordinators')
+            ->with('error', 'Error deleting coordinator: ' . $e->getMessage());
+    }
+}
 
 
 
@@ -389,7 +479,7 @@ public function deleteSkill($id)
         ]);
     }
 
-    // AUDIT TRAILING
+    // AUDIT TRAILING : Sessions
     public function sessionAuditTrail(Request $request)
     {
         return view('admin.audit-trail.sessions');
@@ -437,6 +527,33 @@ public function deleteSkill($id)
             'last_page' => $sessions->lastPage(),
             'total' => $sessions->total(),
             'per_page' => $sessions->perPage(),
+        ]);
+    }
+
+    // AUDIT TRAILING : User Management
+    public function userAuditTrail(Request $request)
+    {
+        return view('admin.audit-trail.users');
+    }
+
+    public function getUserAuditData(Request $request)
+    {
+        $filters = [
+            'action' => $request->get('action'),
+            'user_type' => $request->get('user_type'),
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+            'search' => $request->get('search'),
+        ];
+
+        $userActivities = UserAuditTrailService::getUserManagementAuditTrail($filters)->paginate(25);
+
+        return response()->json([
+            'data' => $userActivities->items(),
+            'current_page' => $userActivities->currentPage(),
+            'last_page' => $userActivities->lastPage(),
+            'total' => $userActivities->total(),
+            'per_page' => $userActivities->perPage(),
         ]);
     }
 }

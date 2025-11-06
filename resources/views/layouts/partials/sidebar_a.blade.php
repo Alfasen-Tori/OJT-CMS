@@ -78,15 +78,15 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="" class="nav-link {{ Request::is('admin/logs/users') ? 'active' : '' }}">
-                                <p>Users</p>
+                            <a href="{{route('admin.audit-trail.users')}}" class="nav-link {{ Request::is('admin/logs/users') ? 'active' : '' }}">
+                                <p>User Management</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="" class="nav-link {{ Request::is('admin/logs/deployments') ? 'active' : '' }}">
                                 <p>Deployments</p>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </li>
 
