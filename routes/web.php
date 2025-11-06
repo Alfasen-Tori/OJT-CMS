@@ -76,6 +76,9 @@ Route::middleware(['auth:web', 'admin'])->prefix('admin')->group(function() {
     Route::post('/skills', [AdminController::class, 'storeSkill'])->name('admin.new_skill');
     Route::put('/skills/{id}', [AdminController::class, 'updateSkill'])->name('admin.update_skill');
     Route::delete('/skills/{id}', [AdminController::class, 'deleteSkill'])->name('admin.delete_skill');
+
+    Route::get('/audit-trail/sessions', [AdminController::class, 'sessionAuditTrail'])->name('admin.audit-trail.sessions');
+    Route::get('/audit-trail/sessions/data', [AdminController::class, 'getSessionAuditData'])->name('admin.audit-trail.sessions.data');
 });
 
 // Protected coordinator routes

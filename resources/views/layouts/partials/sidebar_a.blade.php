@@ -67,20 +67,23 @@
                     <a href="#" class="nav-link {{ Request::is('admin/logs*') ? 'active' : '' }}">
                         <i class="ph{{ Request::is('admin/logs*') ? '-fill' : '' }} ph-clipboard-text nav-link-i"></i>
                         <p>
-                            Logs
+                            Audit Trail
                             <i class="right ph ph-caret-down"></i>
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
+                            <a href="{{route('admin.audit-trail.sessions')}}" class="nav-link {{ Request::is('admin/logs/users') ? 'active' : '' }}">
+                                <p>Sessions</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="" class="nav-link {{ Request::is('admin/logs/users') ? 'active' : '' }}">
-                                <i class="ph ph-users nav-link-i ml-2"></i>
                                 <p>Users</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="" class="nav-link {{ Request::is('admin/logs/deployments') ? 'active' : '' }}">
-                                <i class="ph ph-rocket-launch nav-link-i ml-2"></i>
                                 <p>Deployments</p>
                             </a>
                         </li>

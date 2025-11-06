@@ -9,6 +9,7 @@ use App\Models\Intern;
 use App\Models\Coordinator;
 
 use Illuminate\Http\Request;
+use App\Services\AuditTrailService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail; // For sending emails
@@ -40,6 +41,13 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        $userType = $this->getUserType($user);
+        
+        // Log logout action
+        $sessionAuditId = $request->session()->get('session_audit_id');
+        AuditTrailService::logLogout($user, $userType, $request, $sessionAuditId);
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -53,7 +61,6 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Eager load the user relationship
         $admin = Admin::with('user')->where('faculty_id', $credentials['faculty_id'])->first();
 
         if (!$admin || !$admin->user) {
@@ -62,12 +69,16 @@ class AuthController extends Controller
             ])->onlyInput('faculty_id');
         }
 
-        // Attempt authentication
         if (Auth::attempt([
             'email' => $admin->user->email,
             'password' => $credentials['password']
         ], $request->remember)) {
             $request->session()->regenerate();
+            
+            // Log login action
+            $sessionAudit = AuditTrailService::logLogin(Auth::user(), 'admin', $request);
+            $request->session()->put('session_audit_id', $sessionAudit->id);
+            
             return redirect()->intended('admin/dashboard');
         }
 
@@ -96,6 +107,11 @@ class AuthController extends Controller
             'password' => $credentials['password']
         ], $request->remember)) {
             $request->session()->regenerate();
+            
+            // Log login action
+            $sessionAudit = AuditTrailService::logLogin(Auth::user(), 'coordinator', $request);
+            $request->session()->put('session_audit_id', $sessionAudit->id);
+            
             return redirect()->intended('coordinator/dashboard');
         }
 
@@ -111,7 +127,6 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Find intern by student_id with user relationship
         $intern = Intern::with('user')->where('student_id', $credentials['student_id'])->first();
 
         if (!$intern || !$intern->user) {
@@ -120,12 +135,16 @@ class AuthController extends Controller
             ])->onlyInput('student_id');
         }
 
-        // Attempt login using the associated user's email
         if (Auth::attempt([
             'email' => $intern->user->email,
             'password' => $credentials['password']
         ], $request->remember)) {
             $request->session()->regenerate();
+            
+            // Log login action
+            $sessionAudit = AuditTrailService::logLogin(Auth::user(), 'intern', $request);
+            $request->session()->put('session_audit_id', $sessionAudit->id);
+            
             return redirect()->intended('intern/dashboard');
         }
 
@@ -141,7 +160,6 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Find HTE by email with user relationship
         $hte = Hte::with('user')->whereHas('user', function($query) use ($credentials) {
             $query->where('email', $credentials['email']);
         })->first();
@@ -152,12 +170,10 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
-        // Attempt login
         if (Auth::attempt([
             'email' => $credentials['email'],
             'password' => $credentials['password']
         ], $request->remember)) {
-            // Check if user is actually an HTE
             if (!auth()->user()->hte) {
                 Auth::logout();
                 return back()->withErrors([
@@ -166,12 +182,26 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
+            
+            // Log login action
+            $sessionAudit = AuditTrailService::logLogin(Auth::user(), 'hte', $request);
+            $request->session()->put('session_audit_id', $sessionAudit->id);
+            
             return redirect()->intended('hte/dashboard');
         }
 
         return back()->withErrors([
             'password' => 'The provided password is incorrect.',
         ])->onlyInput('email');
+    }
+
+    private function getUserType($user)
+    {
+        if ($user->admin) return 'admin';
+        if ($user->coordinator) return 'coordinator';
+        if ($user->intern) return 'intern';
+        if ($user->hte) return 'hte';
+        return 'unknown';
     }
 
 public function showSetupForm($token, $role)

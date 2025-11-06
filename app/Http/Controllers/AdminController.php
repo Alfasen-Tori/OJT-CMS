@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 
+use App\Services\AuditTrailService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -388,5 +389,54 @@ public function deleteSkill($id)
         ]);
     }
 
-    
+    // AUDIT TRAILING
+    public function sessionAuditTrail(Request $request)
+    {
+        return view('admin.audit-trail.sessions');
+    }
+
+    public function getSessionAuditData(Request $request)
+    {
+        $filters = [
+            'user_type' => $request->get('user_type'),
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+            'search' => $request->get('search'),
+        ];
+
+        $sessions = AuditTrailService::getSessionAuditData($filters)->paginate(25);
+
+        // Transform the data to include accessor values
+        $transformedData = $sessions->getCollection()->map(function ($session) {
+            return [
+                'id' => $session->id,
+                'user_id' => $session->user_id,
+                'user_type' => $session->user_type,
+                'action' => $session->action,
+                'ip_address' => $session->ip_address,
+                'user_agent' => $session->user_agent,
+                'login_at' => $session->login_at,
+                'logout_at' => $session->logout_at,
+                'session_duration' => $session->session_duration,
+                'formatted_duration' => $session->formatted_duration,
+                'user_display_name' => $session->user_display_name,
+                'user' => $session->user ? [
+                    'id' => $session->user->id,
+                    'fname' => $session->user->fname,
+                    'lname' => $session->user->lname,
+                    'email' => $session->user->email,
+                ] : null,
+                'created_at' => $session->created_at,
+                'updated_at' => $session->updated_at,
+            ];
+        });
+
+        return response()->json([
+            'data' => $transformedData,
+            'current_page' => $sessions->currentPage(),
+            'last_page' => $sessions->lastPage(),
+            'total' => $sessions->total(),
+            'per_page' => $sessions->perPage(),
+        ]);
+    }
 }
