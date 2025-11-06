@@ -71,7 +71,7 @@ class HTEEndorsementSeeder extends Seeder
                 'user_id' => $user->id,
                 'dept_id' => $coordinatorData['dept_id'],
                 'can_add_hte' => '1',
-                'status' => 'eligible for claim',
+                'status' => 'pending documents',
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

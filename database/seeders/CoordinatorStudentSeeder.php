@@ -40,7 +40,7 @@ class CoordinatorStudentSeeder extends Seeder
             'user_id' => $markUser->id,
             'dept_id' => $itDept->dept_id,
             'can_add_hte' => '1',
-            'status' => 'eligible for claim',
+            'status' => 'pending documents',
             'created_at' => $now,
             'updated_at' => $now,
         ]);
