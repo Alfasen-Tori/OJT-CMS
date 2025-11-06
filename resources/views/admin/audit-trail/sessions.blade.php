@@ -151,6 +151,18 @@ $(document).ready(function() {
 
         currentFilters = filters;
 
+        // Show loading state
+        $('#sessionsTableBody').html(`
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <div class="mt-2">Loading session data...</div>
+                </td>
+            </tr>
+        `);
+
         $.ajax({
             url: '{{ route("admin.audit-trail.sessions.data") }}',
             type: 'GET',
@@ -164,7 +176,14 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 console.error('Error loading session data:', xhr);
-                alert('Error loading session data. Please try again.');
+                $('#sessionsTableBody').html(`
+                    <tr>
+                        <td colspan="7" class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
+                            Error loading session data. Please try again.
+                        </td>
+                    </tr>
+                `);
             }
         });
     }
@@ -232,14 +251,21 @@ $(document).ready(function() {
                 <tr>
                     <td>${userDisplayName}</td>
                     <td>${userTypeBadge}</td>
-                    <td>${loginTime}</td>
-                    <td>${logoutTime}</td>
-                    <td>${duration}</td>
-                    <td><code>${session.ip_address || 'N/A'}</code></td>
-                    <td class="small text-muted">${session.user_agent || 'N/A'}</td>
+                    <td class="small">${loginTime}</td>
+                    <td class="small">${logoutTime}</td>
+                    <td><span class="fw-medium text-primary">${duration}</span></td>
+                    <td><code class="small">${session.ip_address || 'N/A'}</code></td>
+                    <td class="small text-muted" title="${session.user_agent || 'N/A'}">
+                        ${truncateUserAgent(session.user_agent)}
+                    </td>
                 </tr>
             `);
         });
+    }
+
+    function truncateUserAgent(userAgent) {
+        if (!userAgent) return 'N/A';
+        return userAgent.length > 50 ? userAgent.substring(0, 50) + '...' : userAgent;
     }
 
     function getUserTypeBadge(userType) {
@@ -266,20 +292,75 @@ $(document).ready(function() {
         const end = Math.min(response.current_page * response.per_page, response.total);
         paginationInfo.text(`Showing ${start} to ${end} of ${response.total} entries`);
 
+        // Don't show pagination if only one page
+        if (response.last_page <= 1) {
+            return;
+        }
+
         // Previous page
         const prevDisabled = response.current_page === 1 ? 'disabled' : '';
         paginationLinks.append(`
             <li class="page-item ${prevDisabled}">
-                <a class="page-link" href="#" data-page="${response.current_page - 1}">Previous</a>
+                <a class="page-link" href="#" data-page="${response.current_page - 1}" ${prevDisabled ? 'tabindex="-1" aria-disabled="true"' : ''}>
+                    <i class="fas fa-chevron-left"></i>
+                </a>
             </li>
         `);
 
+        // Page numbers - show limited pages for better UX
+        const totalPages = response.last_page;
+        const currentPage = response.current_page;
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        // Adjust if we're at the beginning
+        if (currentPage <= 3) {
+            endPage = Math.min(5, totalPages);
+        }
+        
+        // Adjust if we're at the end
+        if (currentPage >= totalPages - 2) {
+            startPage = Math.max(1, totalPages - 4);
+        }
+
+        // First page and ellipsis
+        if (startPage > 1) {
+            paginationLinks.append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="1">1</a>
+                </li>
+            `);
+            if (startPage > 2) {
+                paginationLinks.append(`
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                `);
+            }
+        }
+
         // Page numbers
-        for (let i = 1; i <= response.last_page; i++) {
-            const active = i === response.current_page ? 'active' : '';
+        for (let i = startPage; i <= endPage; i++) {
+            const active = i === currentPage ? 'active' : '';
             paginationLinks.append(`
                 <li class="page-item ${active}">
                     <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `);
+        }
+
+        // Last page and ellipsis
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                paginationLinks.append(`
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                `);
+            }
+            paginationLinks.append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
                 </li>
             `);
         }
@@ -288,17 +369,24 @@ $(document).ready(function() {
         const nextDisabled = response.current_page === response.last_page ? 'disabled' : '';
         paginationLinks.append(`
             <li class="page-item ${nextDisabled}">
-                <a class="page-link" href="#" data-page="${response.current_page + 1}">Next</a>
+                <a class="page-link" href="#" data-page="${response.current_page + 1}" ${nextDisabled ? 'tabindex="-1" aria-disabled="true"' : ''}>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
             </li>
         `);
 
         // Add click handlers
-        $('.page-link').click(function(e) {
+        $('.page-link[data-page]').click(function(e) {
             e.preventDefault();
             const page = $(this).data('page');
             if (page && page !== currentPage) {
                 currentPage = page;
                 loadSessionData();
+                
+                // Scroll to top of table
+                $('html, body').animate({
+                    scrollTop: $('.card').offset().top - 20
+                }, 300);
             }
         });
     }

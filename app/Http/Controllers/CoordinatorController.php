@@ -5,34 +5,35 @@ namespace App\Http\Controllers;
 use import;
 use Exception;
 
-use App\Models\Hte;
+use Carbon\Carbon;
 
+use App\Models\Hte;
 use App\Models\User;
 use App\Models\Intern;
 use App\Mail\HteSetupMail;
 use App\Models\InternsHte;
-use Illuminate\Support\Str;
-
-use App\Mail\InternSetupMail;
-use App\Imports\InternsImport;
-
-
-use Illuminate\Support\Facades\DB;
-use App\Mail\StudentDeploymentMail;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
 
 use App\Models\Coordinator;
-use App\Models\CoordinatorDocument;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
+
+use Illuminate\Http\Request;
+use App\Mail\InternSetupMail;
+use App\Imports\InternsImport;
+use Illuminate\Support\Facades\DB;
+use App\Mail\StudentDeploymentMail;
+use App\Models\CoordinatorDocument;
+
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+
+use App\Services\UserAuditTrailService;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\TemplateProcessor;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 
 class CoordinatorController extends Controller
@@ -233,7 +234,7 @@ public function dashboard() {
             'lname' => $validated['last_name'],
             'contact' => $validated['contact'],
             'sex' => $validated['sex'],
-            'pic' => 'profile-pictures/profile.jpg', // Default profile picture
+            'pic' => null, // Default profile picture
             'temp_password' => true,
             'username' => $validated['student_id']
         ]);
@@ -251,6 +252,22 @@ public function dashboard() {
             'semester' => $validated['semester'],
             'status' => 'pending requirements' // Default status, 
         ]);
+
+        // AUDIT TRAIL: Log intern creation
+        UserAuditTrailService::logUserCreation(
+            $user->id,
+            [
+                'fname' => $validated['first_name'],
+                'lname' => $validated['last_name'],
+                'email' => $validated['email'],
+                'contact' => $validated['contact'],
+                'student_id' => $validated['student_id'],
+                'year_level' => $validated['year_level'],
+                'section' => $validated['section']
+            ],
+            'intern',
+            $request
+        );
 
         // Generate activation token
         $token = Str::random(60);
@@ -276,56 +293,6 @@ public function dashboard() {
         return redirect()->route('coordinator.interns')
             ->with('success', 'Intern registered successfully. Activation email sent.');
     }
-
-public function showIntern($id)
-{
-    $intern = Intern::with([
-            'user', 
-            'department', 
-            'skills', 
-            'coordinator.user',
-            'weeklyReports'
-        ])
-        ->findOrFail($id);
-    
-    // Get current deployment if any
-    $currentDeployment = \App\Models\InternsHte::with('evaluation')
-        ->where('intern_id', $id)
-        ->whereIn('status', ['deployed', 'completed'])
-        ->latest()
-        ->first();
-    
-    $progress = [];
-    $evaluation = null;
-    
-    if ($currentDeployment) {
-        // Calculate progress
-        $totalHours = \App\Models\Attendance::where('intern_hte_id', $currentDeployment->id)
-            ->sum('hours_rendered');
-        $requiredHours = $currentDeployment->no_of_hours;
-        $percentage = $requiredHours > 0 ? min(100, ($totalHours / $requiredHours) * 100) : 0;
-        
-        $progress = [
-            'total_rendered' => $totalHours,
-            'required_hours' => $requiredHours,
-            'percentage' => round($percentage, 1)
-        ];
-        
-        // Get evaluation if exists
-        $evaluation = $currentDeployment->evaluation;
-    }
-    
-    // Get weekly reports
-    $weeklyReports = $intern->weeklyReports()->orderBy('week_no')->get();
-
-    return view('coordinator.intern_show', compact(
-        'intern', 
-        'currentDeployment', 
-        'progress', 
-        'evaluation',
-        'weeklyReports'
-    ));
-}
 
     public function editIntern($id)
     {
@@ -368,6 +335,24 @@ public function showIntern($id)
         try {
             DB::beginTransaction();
             
+            // Store old data for audit trail
+            $oldUserData = [
+                'fname' => $intern->user->fname,
+                'lname' => $intern->user->lname,
+                'email' => $intern->user->email,
+                'contact' => $intern->user->contact,
+                'sex' => $intern->user->sex
+            ];
+
+            $oldInternData = [
+                'student_id' => $intern->student_id,
+                'birthdate' => $intern->birthdate,
+                'academic_year' => $intern->academic_year,
+                'semester' => $intern->semester,
+                'year_level' => $intern->year_level,
+                'section' => $intern->section
+            ];
+            
             // Update user information
             $user = User::findOrFail($intern->user_id);
             $user->update([
@@ -387,6 +372,58 @@ public function showIntern($id)
                 'year_level' => $validated['year_level'],
                 'section' => $validated['section'],
             ]);
+
+            // AUDIT TRAIL: Log user profile update
+            UserAuditTrailService::logUserUpdate(
+                $intern->user_id,
+                $oldUserData,
+                [
+                    'fname' => $validated['first_name'],
+                    'lname' => $validated['last_name'],
+                    'email' => $validated['email'],
+                    'contact' => $validated['contact'],
+                    'sex' => $validated['sex']
+                ],
+                $request
+            );
+
+            // AUDIT TRAIL: Log intern-specific updates
+            $internChanges = [];
+            if ($oldInternData['student_id'] != $validated['student_id']) {
+                $internChanges[] = "Student ID: {$oldInternData['student_id']} → {$validated['student_id']}";
+            }
+            if ($oldInternData['birthdate'] != $validated['birthdate']) {
+                $internChanges[] = "Birthdate: {$oldInternData['birthdate']} → {$validated['birthdate']}";
+            }
+            if ($oldInternData['academic_year'] != $validated['academic_year']) {
+                $internChanges[] = "Academic Year: {$oldInternData['academic_year']} → {$validated['academic_year']}";
+            }
+            if ($oldInternData['semester'] != $validated['semester']) {
+                $internChanges[] = "Semester: {$oldInternData['semester']} → {$validated['semester']}";
+            }
+            if ($oldInternData['year_level'] != $validated['year_level']) {
+                $internChanges[] = "Year Level: {$oldInternData['year_level']} → {$validated['year_level']}";
+            }
+            if ($oldInternData['section'] != $validated['section']) {
+                $internChanges[] = "Section: {$oldInternData['section']} → {$validated['section']}";
+            }
+
+            if (!empty($internChanges)) {
+                UserAuditTrailService::logRoleUpdate(
+                    $intern->user_id,
+                    'intern',
+                    $oldInternData,
+                    [
+                        'student_id' => $validated['student_id'],
+                        'birthdate' => $validated['birthdate'],
+                        'academic_year' => $validated['academic_year'],
+                        'semester' => $validated['semester'],
+                        'year_level' => $validated['year_level'],
+                        'section' => $validated['section']
+                    ],
+                    $request
+                );
+            }
             
             DB::commit();
             
@@ -405,6 +442,15 @@ public function showIntern($id)
 
             $intern = Intern::findOrFail($id);
             $userId = $intern->user_id;
+
+            // Store user data for audit trail before deletion
+            $userData = [
+                'fname' => $intern->user->fname,
+                'lname' => $intern->user->lname,
+                'email' => $intern->user->email,
+                'contact' => $intern->user->contact,
+                'student_id' => $intern->student_id
+            ];
             
             $intern->delete();
 
@@ -416,6 +462,14 @@ public function showIntern($id)
             if (!$userStillHasRoles) {
                 User::destroy($userId);
             }
+
+            // AUDIT TRAIL: Log intern deletion
+            UserAuditTrailService::logUserDeletion(
+                $userId,
+                $userData,
+                'intern',
+                request()
+            );
 
             DB::commit();
 
@@ -429,6 +483,56 @@ public function showIntern($id)
         }
     }
 
+    public function showIntern($id)
+    {
+        $intern = Intern::with([
+                'user', 
+                'department', 
+                'skills', 
+                'coordinator.user',
+                'weeklyReports'
+            ])
+            ->findOrFail($id);
+        
+        // Get current deployment if any
+        $currentDeployment = \App\Models\InternsHte::with('evaluation')
+            ->where('intern_id', $id)
+            ->whereIn('status', ['deployed', 'completed'])
+            ->latest()
+            ->first();
+        
+        $progress = [];
+        $evaluation = null;
+        
+        if ($currentDeployment) {
+            // Calculate progress
+            $totalHours = \App\Models\Attendance::where('intern_hte_id', $currentDeployment->id)
+                ->sum('hours_rendered');
+            $requiredHours = $currentDeployment->no_of_hours;
+            $percentage = $requiredHours > 0 ? min(100, ($totalHours / $requiredHours) * 100) : 0;
+            
+            $progress = [
+                'total_rendered' => $totalHours,
+                'required_hours' => $requiredHours,
+                'percentage' => round($percentage, 1)
+            ];
+            
+            // Get evaluation if exists
+            $evaluation = $currentDeployment->evaluation;
+        }
+        
+        // Get weekly reports
+        $weeklyReports = $intern->weeklyReports()->orderBy('week_no')->get();
+
+        return view('coordinator.intern_show', compact(
+            'intern', 
+            'currentDeployment', 
+            'progress', 
+            'evaluation',
+            'weeklyReports'
+        ));
+    }
+
     // HTE Methods
     public function htes() {
         $htes = Hte::withCount('internsHte')->get();
@@ -439,110 +543,301 @@ public function showIntern($id)
         return view('coordinator.new-hte');
     }
 
-    public function registerHTE(Request $request)
-    {
-        $validated = $request->validate([
-            'contact_email' => 'required|email|unique:users,email',
-            'contact_first_name' => 'required|string|max:255',
-            'contact_last_name' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
-            'address' => 'required|string|max:255',
-            'organization_name' => 'required|string|max:255',
-            'organization_type' => 'required|in:private,government,ngo,educational,other',
-            'hte_status' => 'required|in:active,new',
-            'description' => 'nullable|string',
-            'coordinator_id' => 'required|exists:coordinators,id'
-        ]);
+public function registerHTE(Request $request)
+{
+    $validated = $request->validate([
+        'contact_email' => 'required|email|unique:users,email',
+        'contact_first_name' => 'required|string|max:255',
+        'contact_last_name' => 'required|string|max:255',
+        'contact_number' => 'required|string|max:20',
+        'address' => 'required|string|max:255',
+        'organization_name' => 'required|string|max:255',
+        'organization_type' => 'required|in:private,government,ngo,educational,other',
+        'hte_status' => 'required|in:active,new',
+        'description' => 'nullable|string',
+        'coordinator_id' => 'required|exists:coordinators,id'
+    ]);
 
-        $tempPassword = Str::random(16);
+    $tempPassword = Str::random(16);
 
-        $user = User::create([
-            'email' => $validated['contact_email'],
-            'password' => Hash::make($tempPassword),
+    $user = User::create([
+        'email' => $validated['contact_email'],
+        'password' => Hash::make($tempPassword),
+        'fname' => $validated['contact_first_name'],
+        'lname' => $validated['contact_last_name'],
+        'contact' => $validated['contact_number'],
+        'pic' => 'profile-pictures/profile.jpg',
+        'temp_password' => true,
+        'username' => $validated['contact_email']
+    ]);
+
+    $hte = Hte::create([
+        'user_id' => $user->id,
+        'status' => $validated['hte_status'],
+        'type' => $validated['organization_type'],
+        'address' => $validated['address'],
+        'description' => $validated['description'],
+        'organization_name' => $validated['organization_name'],
+        'slots' => 0,
+        'moa_path' => null
+    ]);
+
+    // AUDIT TRAIL: Log HTE creation
+    UserAuditTrailService::logUserCreation(
+        $user->id,
+        [
             'fname' => $validated['contact_first_name'],
             'lname' => $validated['contact_last_name'],
+            'email' => $validated['contact_email'],
             'contact' => $validated['contact_number'],
-            'pic' => 'profile-pictures/profile.jpg',
-            'temp_password' => true,
-            'username' => $validated['contact_email']
-        ]);
-
-        $hte = Hte::create([
-            'user_id' => $user->id,
-            'status' => $validated['hte_status'],
-            'type' => $validated['organization_type'],
-            'address' => $validated['address'],
-            'description' => $validated['description'],
             'organization_name' => $validated['organization_name'],
-            'slots' => 0,
-            'moa_path' => null
-        ]);
+            'organization_type' => $validated['organization_type'],
+            'hte_status' => $validated['hte_status']
+        ],
+        'hte',
+        $request
+    );
 
-        $token = Str::random(60);
-        DB::table('password_setup_tokens')->insert([
-            'email' => $user->email,
-            'token' => $token,
-            'created_at' => now()
-        ]);
+    $token = Str::random(60);
+    DB::table('password_setup_tokens')->insert([
+        'email' => $user->email,
+        'token' => $token,
+        'created_at' => now()
+    ]);
 
-        $setupLink = route('password.setup', [
-            'token' => $token,
-            'role' => 'hte'
-        ]);
-        $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
+    $setupLink = route('password.setup', [
+        'token' => $token,
+        'role' => 'hte'
+    ]);
+    $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
 
-        $moaAttachmentPath = null;
-        $generatedDocxPath = null; // Declare outside if block to track for deletion
+    $moaAttachmentPath = null;
+    $generatedDocxPath = null; // Declare outside if block to track for deletion
 
-        if ($validated['hte_status'] === 'new') {
-            $templatePath = public_path('templates/moa-template.docx');
-            $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
+    if ($validated['hte_status'] === 'new') {
+        $templatePath = public_path('templates/moa-template.docx');
+        $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
 
-            // Fill DOCX template
-            $templateProcessor = new TemplateProcessor($templatePath);
-            $templateProcessor->setValue('organization_name', $validated['organization_name']);
-            $templateProcessor->setValue('org_name', strtoupper($validated['organization_name']));
-            $templateProcessor->setValue('address', $validated['address']);
-            $templateProcessor->setValue('contact_name', $contactName);
-            // Add more placeholders as needed
-            $templateProcessor->saveAs($generatedDocxPath);
+        // Fill DOCX template
+        $templateProcessor = new TemplateProcessor($templatePath);
+        $templateProcessor->setValue('organization_name', $validated['organization_name']);
+        $templateProcessor->setValue('org_name', strtoupper($validated['organization_name']));
+        $templateProcessor->setValue('address', $validated['address']);
+        $templateProcessor->setValue('contact_name', $contactName);
+        // Add more placeholders as needed
+        $templateProcessor->saveAs($generatedDocxPath);
 
-            if (file_exists($generatedDocxPath)) {
-                $moaAttachmentPath = $generatedDocxPath;
-            }
-        }
-
-        // Send email synchronously and delete file only on success
-        try {
-            Mail::to($user->email)->send(new HteSetupMail(
-                $setupLink,
-                $contactName,
-                $validated['organization_name'],
-                $tempPassword,
-                $moaAttachmentPath,
-                $user->email
-            ));
-
-            // Delete the generated DOCX only if email sent successfully
-            if ($generatedDocxPath && file_exists($generatedDocxPath)) {
-                unlink($generatedDocxPath);
-            }
-
-            return redirect()->route('coordinator.htes')
-                ->with('success', 'HTE registered successfully. Activation email sent.');
-        } catch (\Exception $e) {
-            // Log the error for debugging
-            
-            // Optional: Delete the file even on failure to avoid leftovers (uncomment if preferred)
-            // if ($generatedDocxPath && file_exists($generatedDocxPath)) {
-            //     unlink($generatedDocxPath);
-            //     \Log::info('Temporary DOCX deleted after email failure: ' . $generatedDocxPath);
-            // }
-
-            return redirect()->route('coordinator.htes')
-                ->with('error', 'HTE registered, but failed to send activation email. Please check logs and retry.');
+        if (file_exists($generatedDocxPath)) {
+            $moaAttachmentPath = $generatedDocxPath;
         }
     }
+
+    // Send email synchronously and delete file only on success
+    try {
+        Mail::to($user->email)->send(new HteSetupMail(
+            $setupLink,
+            $contactName,
+            $validated['organization_name'],
+            $tempPassword,
+            $moaAttachmentPath,
+            $user->email
+        ));
+
+        // Delete the generated DOCX only if email sent successfully
+        if ($generatedDocxPath && file_exists($generatedDocxPath)) {
+            unlink($generatedDocxPath);
+        }
+
+        return redirect()->route('coordinator.htes')
+            ->with('success', 'HTE registered successfully. Activation email sent.');
+    } catch (\Exception $e) {
+        // Log the error for debugging
+        
+        // Optional: Delete the file even on failure to avoid leftovers (uncomment if preferred)
+        // if ($generatedDocxPath && file_exists($generatedDocxPath)) {
+        //     unlink($generatedDocxPath);
+        //     \Log::info('Temporary DOCX deleted after email failure: ' . $generatedDocxPath);
+        // }
+
+        return redirect()->route('coordinator.htes')
+            ->with('error', 'HTE registered, but failed to send activation email. Please check logs and retry.');
+    }
+}
+
+public function updateHte(Request $request, $id)
+{
+    // Find the HTE
+    $hte = Hte::findOrFail($id);
+    
+    // Validation rules (same as registration)
+    $validated = $request->validate([
+        'contact_first_name' => 'required|string|max:255',
+        'contact_last_name' => 'required|string|max:255',
+        'contact_email' => 'required|email|unique:users,email,' . $hte->user_id,
+        'contact_number' => 'required|string|max:20',
+        'address' => 'required|string|max:500',
+        'organization_name' => 'required|string|max:255',
+        'organization_type' => 'required|in:private,government,ngo,educational,other',
+        'description' => 'nullable|string',
+    ]);
+    
+    try {
+        DB::beginTransaction();
+        
+        // Store old data for audit trail
+        $oldUserData = [
+            'fname' => $hte->user->fname,
+            'lname' => $hte->user->lname,
+            'email' => $hte->user->email,
+            'contact' => $hte->user->contact
+        ];
+
+        $oldHteData = [
+            'organization_name' => $hte->organization_name,
+            'type' => $hte->type,
+            'address' => $hte->address,
+            'description' => $hte->description
+        ];
+        
+        // Update user information
+        $user = User::findOrFail($hte->user_id);
+        $user->update([
+            'fname' => $validated['contact_first_name'],
+            'lname' => $validated['contact_last_name'],
+            'email' => $validated['contact_email'],
+            'contact' => $validated['contact_number'],
+        ]);
+        
+        // Update HTE information
+        $hte->update([
+            'organization_name' => $validated['organization_name'],
+            'type' => $validated['organization_type'],
+            'address' => $validated['address'],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        // AUDIT TRAIL: Log user profile update
+        UserAuditTrailService::logUserUpdate(
+            $hte->user_id,
+            $oldUserData,
+            [
+                'fname' => $validated['contact_first_name'],
+                'lname' => $validated['contact_last_name'],
+                'email' => $validated['contact_email'],
+                'contact' => $validated['contact_number']
+            ],
+            $request
+        );
+
+        // AUDIT TRAIL: Log HTE-specific updates
+        $hteChanges = [];
+        if ($oldHteData['organization_name'] != $validated['organization_name']) {
+            $hteChanges[] = "Organization Name: {$oldHteData['organization_name']} → {$validated['organization_name']}";
+        }
+        if ($oldHteData['type'] != $validated['organization_type']) {
+            $hteChanges[] = "Organization Type: {$oldHteData['type']} → {$validated['organization_type']}";
+        }
+        if ($oldHteData['address'] != $validated['address']) {
+            $hteChanges[] = "Address updated";
+        }
+        if ($oldHteData['description'] != $validated['description']) {
+            $hteChanges[] = "Description updated";
+        }
+
+        if (!empty($hteChanges)) {
+            UserAuditTrailService::logRoleUpdate(
+                $hte->user_id,
+                'hte',
+                $oldHteData,
+                [
+                    'organization_name' => $validated['organization_name'],
+                    'type' => $validated['organization_type'],
+                    'address' => $validated['address'],
+                    'description' => $validated['description'] ?? null
+                ],
+                $request
+            );
+        }
+        
+        DB::commit();
+        
+        return redirect()->route('coordinator.htes')->with('success', 'HTE updated successfully.');
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Failed to update HTE: ' . $e->getMessage());
+    }
+}   
+
+public function destroyHTE($id)
+{
+    try {
+        DB::beginTransaction();
+
+        // Find the HTE
+        $hte = HTE::findOrFail($id);
+
+        // Store user data for audit trail before deletion
+        $userData = [
+            'fname' => $hte->user->fname,
+            'lname' => $hte->user->lname,
+            'email' => $hte->user->email,
+            'contact' => $hte->user->contact,
+            'organization_name' => $hte->organization_name
+        ];
+
+        // Store user ID for later check
+        $userId = $hte->user_id;
+
+        // Delete the HTE record (cascade will handle related records like hte_skill)
+        $hte->delete();
+
+        // Check if user has other roles
+        $hasOtherRoles = DB::table('admins')
+            ->where('user_id', $userId)
+            ->orWhereExists(function ($query) use ($userId) {
+                $query->select(DB::raw(1))
+                      ->from('coordinators')
+                      ->where('user_id', $userId);
+            })
+            ->orWhereExists(function ($query) use ($userId) {
+                $query->select(DB::raw(1))
+                      ->from('interns')
+                      ->where('user_id', $userId);
+            })
+            ->exists();
+
+        // Delete user only if they don't have other roles
+        if (!$hasOtherRoles) {
+            User::where('id', $userId)->delete();
+        }
+
+        // AUDIT TRAIL: Log HTE deletion
+        UserAuditTrailService::logUserDeletion(
+            $userId,
+            $userData,
+            'hte',
+            request()
+        );
+
+        DB::commit();
+
+        return redirect()->route('coordinator.htes')
+            ->with('success', 'HTE account unregistered successfully.');
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        DB::rollBack();
+        Log::error('HTE not found: ' . $e->getMessage());
+        return redirect()->route('coordinator.htes')
+            ->with('error', 'HTE account not found.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error deleting HTE: ' . $e->getMessage());
+        return redirect()->route('coordinator.htes')
+            ->with('error', 'An error occurred while unregistering the HTE: ' . $e->getMessage());
+    }
+}
 
     public function showHTE($id)
     {
@@ -597,106 +892,6 @@ public function showIntern($id)
         $hte = Hte::with('user')->findOrFail($id);
         
         return view('coordinator.htes-edit', compact('hte'));
-    }
-
-    public function updateHte(Request $request, $id)
-    {
-        // Find the HTE
-        $hte = Hte::findOrFail($id);
-        
-        // Validation rules (same as registration)
-        $validated = $request->validate([
-            'contact_first_name' => 'required|string|max:255',
-            'contact_last_name' => 'required|string|max:255',
-            'contact_email' => 'required|email|unique:users,email,' . $hte->user_id,
-            'contact_number' => 'required|string|max:20',
-            'address' => 'required|string|max:500',
-            'organization_name' => 'required|string|max:255',
-            'organization_type' => 'required|in:private,government,ngo,educational,other',
-            'description' => 'nullable|string',
-        ]);
-        
-        try {
-            DB::beginTransaction();
-            
-            // Update user information
-            $user = User::findOrFail($hte->user_id);
-            $user->update([
-                'fname' => $validated['contact_first_name'],
-                'lname' => $validated['contact_last_name'],
-                'email' => $validated['contact_email'],
-                'contact' => $validated['contact_number'],
-            ]);
-            
-            // Update HTE information
-            $hte->update([
-                'organization_name' => $validated['organization_name'],
-                'type' => $validated['organization_type'],
-                'address' => $validated['address'],
-                'description' => $validated['description'] ?? null,
-            ]);
-            
-            DB::commit();
-            
-            return redirect()->route('coordinator.htes')->with('success', 'HTE updated successfully.');
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Failed to update HTE: ' . $e->getMessage());
-        }
-    }   
-
-    public function destroyHTE($id)
-    {
-        try {
-            DB::beginTransaction();
-
-            // Find the HTE
-            $hte = HTE::findOrFail($id);
-
-            // Store user ID for later check
-            $userId = $hte->user_id;
-
-            // Delete the HTE record (cascade will handle related records like hte_skill)
-            $hte->delete();
-
-            // Check if user has other roles
-            $hasOtherRoles = DB::table('admins')
-                ->where('user_id', $userId)
-                ->orWhereExists(function ($query) use ($userId) {
-                    $query->select(DB::raw(1))
-                          ->from('coordinators')
-                          ->where('user_id', $userId);
-                })
-                ->orWhereExists(function ($query) use ($userId) {
-                    $query->select(DB::raw(1))
-                          ->from('interns')
-                          ->where('user_id', $userId);
-                })
-                ->exists();
-
-            // Delete user only if they don't have other roles
-            if (!$hasOtherRoles) {
-                User::where('id', $userId)->delete();
-            }
-
-            DB::commit();
-
-            return redirect()->route('coordinator.htes')
-                ->with('success', 'HTE account unregistered successfully.');
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            DB::rollBack();
-            Log::error('HTE not found: ' . $e->getMessage());
-            return redirect()->route('coordinator.htes')
-                ->with('error', 'HTE account not found.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error deleting HTE: ' . $e->getMessage());
-            return redirect()->route('coordinator.htes')
-                ->with('error', 'An error occurred while unregistering the HTE: ' . $e->getMessage());
-        }
     }
 
     public function removeEndorsement($id)
