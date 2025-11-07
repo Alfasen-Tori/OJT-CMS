@@ -420,7 +420,7 @@
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
                         <i class="ph-fill ph-chart-donut custom-icons-i me-1 text-primary"></i>
-                        Internship Progress
+                        Your Progress
                     </h5>
                 </div>
                 <div class="card-body text-center d-flex flex-column">
@@ -476,32 +476,39 @@
                 </div>
                 <div class="card-body d-flex flex-column">
                     <div class="row text-center flex-grow-1">
+                        <!-- Current Week -->
                         <div class="col-6 mb-3 d-flex">
                             <div class="border rounded p-3 w-100 d-flex flex-column justify-content-center align-items-center">
-                                <i class="fas fa-calendar-week fa-2x text-primary mb-2"></i>
-                                <h5 class="fw-bold mb-1">Week 8</h5>
+                                <i class="ph-fill ph-calendar-dot fa-2x text-primary mb-2"></i>
+                                <h5 class="fw-bold mb-1">Week {{ $currentWeek ?? 'N/A' }}</h5>
                                 <small class="text-muted">Current Week</small>
                             </div>
                         </div>
+                        
+                        <!-- Reports Done -->
                         <div class="col-6 mb-3 d-flex">
                             <div class="border rounded p-3 w-100 d-flex flex-column justify-content-center align-items-center">
-                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                                <h5 class="fw-bold mb-1">7/22</h5>
-                                <small class="text-muted">Reports Done</small>
+                                <i class="ph-fill ph-notebook fa-2x text-success mb-2"></i>
+                                <h5 class="fw-bold mb-1">{{ $completedReportsCount ?? 0 }}/{{ $totalReportsCount ?? 0 }}</h5>
+                                <small class="text-muted">Journal Entries</small>
                             </div>
                         </div>
+                        
+                        <!-- Progress -->
                         <div class="col-6 d-flex">
                             <div class="border rounded p-3 w-100 d-flex flex-column justify-content-center align-items-center">
-                                <i class="fas fa-bullseye fa-2x text-info mb-2"></i>
-                                <h5 class="fw-bold mb-1">84%</h5>
-                                <small class="text-muted">Attendance</small>
+                                <i class="ph-fill ph-chart-pie-slice fa-2x text-info mb-2"></i>
+                                <h5 class="fw-bold mb-1">{{ $progress['percentage'] ?? 0 }}%</h5>
+                                <small class="text-muted">Internship  Progress</small>
                             </div>
                         </div>
+                        
+                        <!-- Weeks Left -->
                         <div class="col-6 d-flex">
                             <div class="border rounded p-3 w-100 d-flex flex-column justify-content-center align-items-center">
-                                <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
-                                <h5 class="fw-bold mb-1">6</h5>
-                                <small class="text-muted">Weeks Left</small>
+                                <i class="ph-fill ph-flag-pennant fa-2x text-warning mb-2"></i>
+                                <h5 class="fw-bold mb-1">{{ $weeksLeft ?? 0 }}</h5>
+                                <small class="text-muted">Estimated Weeks Left</small>
                             </div>
                         </div>
                     </div>

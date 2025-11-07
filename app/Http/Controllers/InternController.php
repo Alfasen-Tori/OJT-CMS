@@ -19,63 +19,117 @@ use Illuminate\Support\Facades\Storage;
 
 class InternController extends Controller
 {
-    public function dashboard()
-    {
-        $intern = auth()->user()->intern;
+public function dashboard()
+{
+    $intern = auth()->user()->intern;
 
-        if ($intern->first_login) {
-            return redirect()->route('intern.skills.select');
-        }
-
-        $internHte = $intern->hteAssignment;
-        $hteDetails = $internHte ? $internHte->hte : null;
-
-        // Get today's attendance (if any)
-        $today = Carbon::today();
-        $attendance = null;
-        if ($internHte) {
-            $attendance = Attendance::where('intern_hte_id', $internHte->id)
-                ->whereDate('date', $today)
-                ->first();
-        }
-
-        // Calculate progress if deployed AND check for completion
-        $progress = null;
-        $completionMessage = null;
-        
-        if ($intern->status === 'deployed' && $internHte) {
-            $totalRendered = Attendance::where('intern_hte_id', $internHte->id)
-                ->sum('hours_rendered');
-
-            $requiredHours = $internHte->no_of_hours ?? 0;
-            $percentage = $requiredHours > 0 ? min(100, round(($totalRendered / $requiredHours) * 100)) : 0;
-
-            $progress = [
-                'total_rendered' => round($totalRendered, 1),
-                'required_hours' => $requiredHours,
-                'percentage' => $percentage
-            ];
-
-            // ✅ Check and update internship completion
-            if ($this->checkInternshipCompletion($internHte, $totalRendered)) {
-                $completionMessage = 'Congratulations! You have completed your internship hours!';
-                // Refresh the internship data since status changed
-                $internHte->refresh();
-            }
-        }
-
-        return view('student.dashboard', [
-            'status' => $intern->status,
-            'semester' => $intern->semester,
-            'academic_year' => $intern->academic_year,
-            'documents' => $intern->documents,
-            'hteDetails' => $hteDetails,
-            'internHte' => $internHte,
-            'attendance' => $attendance,
-            'progress' => $progress,
-            'completionMessage' => $completionMessage
-        ]);
+    if ($intern->first_login) {
+        return redirect()->route('intern.skills.select');
     }
+
+    $internHte = $intern->hteAssignment;
+    $hteDetails = $internHte ? $internHte->hte : null;
+
+    // Get today's attendance (if any)
+    $today = Carbon::today();
+    $attendance = null;
+    if ($internHte) {
+        $attendance = Attendance::where('intern_hte_id', $internHte->id)
+            ->whereDate('date', $today)
+            ->first();
+    }
+
+    // Calculate progress if deployed AND check for completion
+    $progress = null;
+    $completionMessage = null;
+    
+    if ($intern->status === 'deployed' && $internHte) {
+        $totalRendered = Attendance::where('intern_hte_id', $internHte->id)
+            ->sum('hours_rendered');
+
+        $requiredHours = $internHte->no_of_hours ?? 0;
+        $percentage = $requiredHours > 0 ? min(100, round(($totalRendered / $requiredHours) * 100)) : 0;
+
+        $progress = [
+            'total_rendered' => round($totalRendered, 1),
+            'required_hours' => $requiredHours,
+            'percentage' => $percentage
+        ];
+
+        // ✅ Check and update internship completion
+        if ($this->checkInternshipCompletion($internHte, $totalRendered)) {
+            $completionMessage = 'Congratulations! You have completed your internship hours!';
+            // Refresh the internship data since status changed
+            $internHte->refresh();
+        }
+    }
+
+    // Quick Stats Calculations
+    $currentWeek = $this->calculateCurrentWeek($internHte);
+    $reportsData = $this->calculateReports($intern);
+    $completedReportsCount = $reportsData['completed'];
+    $totalReportsCount = $reportsData['total'];
+    $weeksLeft = $this->calculateWeeksLeft($internHte);
+
+    return view('student.dashboard', [
+        'status' => $intern->status,
+        'semester' => $intern->semester,
+        'academic_year' => $intern->academic_year,
+        'documents' => $intern->documents,
+        'hteDetails' => $hteDetails,
+        'internHte' => $internHte,
+        'attendance' => $attendance,
+        'progress' => $progress,
+        'completionMessage' => $completionMessage,
+        'currentWeek' => $currentWeek,
+        'completedReportsCount' => $completedReportsCount,
+        'totalReportsCount' => $totalReportsCount,
+        'weeksLeft' => $weeksLeft
+    ]);
+}
+
+// Helper methods for Quick Stats
+private function calculateCurrentWeek($internHte) {
+    if (!$internHte || !$internHte->start_date) {
+        return 'N/A';
+    }
+    
+    $startDate = Carbon::parse($internHte->start_date);
+    $currentDate = Carbon::now();
+    
+    $weekNumber = $startDate->diffInWeeks($currentDate) + 1;
+    
+    return min($weekNumber, $internHte->no_of_weeks ?? 16);
+}
+
+private function calculateReports($intern) {
+    $weeklyReports = $intern->weeklyReports;
+    $completedReports = $weeklyReports->whereNotNull('report_path')->count();
+    
+    // Total expected reports based on deployment weeks
+    $totalReports = $weeklyReports->count();
+    
+    return [
+        'completed' => $completedReports,
+        'total' => $totalReports
+    ];
+}
+
+private function calculateWeeksLeft($internHte) {
+    if (!$internHte || !$internHte->end_date) {
+        return 0;
+    }
+    
+    $endDate = Carbon::parse($internHte->end_date);
+    $currentDate = Carbon::now();
+    
+    if ($currentDate->greaterThan($endDate)) {
+        return 0;
+    }
+    
+    $weeksLeft = $currentDate->diffInWeeks($endDate);
+    return max(0, $weeksLeft);
+}
 
     /**
      * Check if internship hours are completed and update status

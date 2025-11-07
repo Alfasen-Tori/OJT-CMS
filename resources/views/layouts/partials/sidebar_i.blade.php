@@ -10,12 +10,36 @@
     <div class="sidebar">
       <!-- Sidebar user (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-          <img src="{{ asset('storage/' . auth()->user()->pic) }}" class="img-circle elevation-2" alt="User Image" style="width: 32px; height: 32px; object-fit: cover;">
-        </div>
-        <div class="info">
-          <a href="{{route('intern.profile')}}" class="d-block">{{ Auth::user()->fname }} {{ Auth::user()->lname }}</a>
-        </div>
+          <div class="image">
+              @if(auth()->user()->pic)
+                  <img src="{{ asset('storage/' . auth()->user()->pic) }}" class="img-circle elevation-2" alt="User Image" style="width: 32px; height: 32px; object-fit: cover;">
+              @else
+                  @php
+                      // Generate a consistent random color based on user's name
+                      $name = auth()->user()->fname . auth()->user()->lname;
+                      $colors = [
+                          'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                          'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                          'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                          'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                          'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                          'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                      ];
+                      
+                      // Generate a consistent index based on the user's name
+                      $colorIndex = crc32($name) % count($colors);
+                      $randomGradient = $colors[$colorIndex];
+                  @endphp
+                  
+                  <div class="img-circle elevation-2 d-flex align-items-center justify-content-center text-white font-weight-bold" 
+                      style="width: 32px; height: 32px; font-size: 12px; background: {{ $randomGradient }};">
+                      {{ strtoupper(substr(auth()->user()->fname, 0, 1) . substr(auth()->user()->lname, 0, 1)) }}
+                  </div>
+              @endif
+          </div>
+          <div class="info">
+              <a href="{{ route('intern.profile') }}" class="d-block">{{ Auth::user()->fname }} {{ Auth::user()->lname }}</a>
+          </div>
       </div>
 
       <!-- Sidebar Menu -->
