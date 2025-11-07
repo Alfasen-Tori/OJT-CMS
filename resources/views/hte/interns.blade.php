@@ -4,6 +4,18 @@
 @section('title', 'HTE | Interns')
 
 @section('content')
+<style>
+  .dropdown-toggle .position-absolute {
+      width: 8px;
+      height: 8px;
+      font-size: 0;
+  }
+
+  .dropdown-toggle:hover .position-absolute {
+      border-color: #fff !important;
+  }
+
+</style>
 <section class="content-header">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -83,79 +95,144 @@
                 $gpa = $grade ? number_format((100 - $grade) / 20, 1) : null;
             @endphp
             <tr>
-              <td class="align-middle">{{ $intern->student_id }}</td>
-              <td class="align-middle">
-                <img src="{{ asset('storage/' . $intern->user->pic) }}" 
-                  alt="Profile Picture" 
-                  class="rounded-circle me-2 table-pfp" 
-                  width="30" height="30">
-                {{ $intern->user->lname }}, {{ $intern->user->fname }} 
-              </td>         
-              <td class="align-middle">{{ $intern->department->dept_name ?? 'N/A' }}</td>
-              <td class="align-middle">
-                <div class="d-flex align-items-center">
-                  <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
-                    alt="Coordinator Picture" 
-                    class="rounded-circle me-2 table-pfp" 
-                    width="25" height="25">
-                  <div>
-                    <strong>{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</strong>
-                    <br>
-                    <small class="text-muted">{{ $coordinator->faculty_id }}</small>
-                  </div>
-                </div>
-              </td>
-              <td class="align-middle">
-                <span class="small badge py-2 px-3 rounded-pill {{ $statusClass }}" style="font-size: 14px">
-                  {{ ucwords($status) }}
-                </span>
-              </td>
-              @php
-                  // Check if evaluated and get grade
-                  $isEvaluated = $deployment->evaluation !== null;
-                  $grade = $isEvaluated ? $deployment->evaluation->grade : null;
-                  $gpa = $isEvaluated ? $deployment->evaluation->calculateGPA() : null;
-                  
-                  // Get GPA color for the badge
-                  $gpaColorClass = 'bg-success-subtle text-success'; // Default green
-                  if ($gpa) {
-                      if ($gpa >= 4.00) $gpaColorClass = 'bg-danger-subtle text-danger';
-                      elseif ($gpa >= 3.00) $gpaColorClass = 'bg-warning-subtle text-warning';
-                      elseif ($gpa >= 2.00) $gpaColorClass = 'bg-info-subtle text-info';
-                  }
-              @endphp
-
-              <td class="align-middle text-center">
-                  @if($isEvaluated)
-                      <span class="small badge {{ $gpaColorClass }} py-2 px-3 rounded-pill" style="font-size: 14px">
-                          {{ number_format($gpa, 2) }}
-                      </span>
-                  @else
-                      <span class="small badge bg-danger-subtle text-danger py-2 px-3 rounded-pill" style="font-size: 14px">
-                          No Evaluation
-                      </span>
-                  @endif
-              </td>
-              <td class="text-center px-2 align-middle">
-                <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="ph-fill ph-gear custom-icons-i"></i>
-                  </button>
-                  <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-                    <!-- View Option -->
-                    <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('hte.intern.show', $intern->id) }}">
-                      <i class="ph ph-eye custom-icons-i mr-2"></i>View
-                    </a>
-                    
-                    <!-- Evaluate Option - Only show if completed and not evaluated -->
-                    @if($isCompleted && !$isEvaluated)
-                      <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="#" data-toggle="modal" data-target="#evaluateModal{{ $deployment->id }}">
-                        <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>Evaluate
-                      </a>
+                <td class="align-middle">{{ $intern->student_id }}</td>
+                <td class="align-middle">
+                    @if($intern->user->pic)
+                        <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                            alt="Profile Picture" 
+                            class="rounded-circle me-2 table-pfp" 
+                            width="30" height="30">
+                    @else
+                        @php
+                            // Generate a consistent random color based on user's name
+                            $name = $intern->user->fname . $intern->user->lname;
+                            $colors = [
+                                'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                                'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                                'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                                'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                                'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                                'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                            ];
+                            
+                            // Generate a consistent index based on the user's name
+                            $colorIndex = crc32($name) % count($colors);
+                            $randomGradient = $colors[$colorIndex];
+                        @endphp
+                        
+                        <div class="rounded-circle me-2 d-inline-flex align-items-center justify-content-center text-white fw-bold" 
+                            style="width: 30px; height: 30px; font-size: 11px; background: {{ $randomGradient }};">
+                            {{ strtoupper(substr($intern->user->fname, 0, 1) . substr($intern->user->lname, 0, 1)) }}
+                        </div>
                     @endif
-                  </div>
-                </div>
-              </td>
+                    {{ $intern->user->lname }}, {{ $intern->user->fname }} 
+                </td>      
+                <td class="align-middle">{{ $intern->department->dept_name ?? 'N/A' }}</td>
+                <td class="align-middle">
+                    <div class="d-flex align-items-center">
+                        @if($coordinator->user->pic)
+                            <img src="{{ asset('storage/' . $coordinator->user->pic) }}" 
+                                alt="Coordinator Picture" 
+                                class="rounded-circle me-2 table-pfp" 
+                                width="25" height="25">
+                        @else
+                            @php
+                                // Generate a consistent random color based on user's name
+                                $name = $coordinator->user->fname . $coordinator->user->lname;
+                                $colors = [
+                                    'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                                    'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                                    'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                                    'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                                    'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                                    'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                                ];
+                                
+                                // Generate a consistent index based on the user's name
+                                $colorIndex = crc32($name) % count($colors);
+                                $randomGradient = $colors[$colorIndex];
+                            @endphp
+                            
+                            <div class="rounded-circle me-2 d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" 
+                                style="width: 25px; height: 25px; font-size: 10px; background: {{ $randomGradient }};">
+                                {{ strtoupper(substr($coordinator->user->fname, 0, 1) . substr($coordinator->user->lname, 0, 1)) }}
+                            </div>
+                        @endif
+                        <div>
+                            <strong>{{ $coordinator->user->fname }} {{ $coordinator->user->lname }}</strong>
+                        </div>
+                    </div>
+                </td>
+                <td class="align-middle">
+                    <span class="small badge py-2 px-3 rounded-pill {{ $statusClass }}" style="font-size: 14px">
+                        {{ ucwords($status) }}
+                    </span>
+                </td>
+                @php
+                    // Check if evaluated and get grade
+                    $isEvaluated = $deployment->evaluation !== null;
+                    $grade = $isEvaluated ? $deployment->evaluation->grade : null;
+                    $gpa = $isEvaluated ? $deployment->evaluation->calculateGPA() : null;
+                    
+                    // Get GPA color for the badge
+                    $gpaColorClass = 'bg-success-subtle text-success'; // Default green
+                    if ($gpa) {
+                        if ($gpa >= 4.00) $gpaColorClass = 'bg-danger-subtle text-danger';
+                        elseif ($gpa >= 3.00) $gpaColorClass = 'bg-warning-subtle text-warning';
+                        elseif ($gpa >= 2.00) $gpaColorClass = 'bg-info-subtle text-info';
+                    }
+                    
+                    // Check if needs evaluation (completed status but not evaluated)
+                    $needsEvaluation = $isCompleted && !$isEvaluated;
+                @endphp
+
+                <td class="align-middle text-center">
+                    @if($isEvaluated)
+                        <span class="small badge {{ $gpaColorClass }} py-2 px-3 rounded-pill" style="font-size: 14px">
+                            {{ number_format($gpa, 2) }}
+                        </span>
+                    @else
+                        <span class="small badge bg-danger-subtle text-danger py-2 px-3 rounded-pill" style="font-size: 14px">
+                            No Evaluation
+                        </span>
+                    @endif
+                </td>
+                <td class="text-center px-2 align-middle">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle rounded-pill position-relative" 
+                                type="button" 
+                                id="actionDropdown" 
+                                data-toggle="dropdown" 
+                                aria-haspopup="true" 
+                                aria-expanded="false">
+                            <i class="ph-fill ph-gear custom-icons-i"></i>
+                            
+                            <!-- Notification Badge -->
+                            @if($needsEvaluation)
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                    <span class="visually-hidden">Evaluation needed</span>
+                                </span>
+                            @endif
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
+                            <!-- View Option -->
+                            <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('hte.intern.show', $intern->id) }}">
+                                <i class="ph ph-eye custom-icons-i mr-2"></i>View
+                            </a>
+                            
+                            <!-- Evaluate Option - Only show if completed and not evaluated -->
+                            @if($needsEvaluation)
+                                <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-primary" 
+                                  href="#" 
+                                  data-toggle="modal" 
+                                  data-target="#evaluateModal{{ $deployment->id }}">
+                                    <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>
+                                    <span>Evaluate</span>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </td>
             </tr>
 
             <!-- Evaluation Modal -->
@@ -176,12 +253,36 @@
                     @csrf
                     <div class="modal-body">
                       <div class="text-center mb-4">
-                        <img src="{{ asset('storage/' . $intern->user->pic) }}" 
-                          alt="Profile Picture" 
-                          class="rounded-circle mb-3" 
-                          width="80" height="80">
-                        <h5>{{ $intern->user->fname }} {{ $intern->user->lname }}</h5>
-                        <p class="text-muted">{{ $intern->student_id }} • {{ $intern->department->dept_name ?? 'N/A' }}</p>
+                          @if($intern->user->pic)
+                              <img src="{{ asset('storage/' . $intern->user->pic) }}" 
+                                  alt="Profile Picture" 
+                                  class="rounded-circle mb-3" 
+                                  width="80" height="80">
+                          @else
+                              @php
+                                  // Generate a consistent random color based on user's name
+                                  $name = $intern->user->fname . $intern->user->lname;
+                                  $colors = [
+                                      'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
+                                      'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
+                                      'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
+                                      'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
+                                      'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
+                                      'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                                  ];
+                                  
+                                  // Generate a consistent index based on the user's name
+                                  $colorIndex = crc32($name) % count($colors);
+                                  $randomGradient = $colors[$colorIndex];
+                              @endphp
+                              
+                              <div class="rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center text-white fw-bold" 
+                                  style="width: 80px; height: 80px; font-size: 24px; background: {{ $randomGradient }};">
+                                  {{ strtoupper(substr($intern->user->fname, 0, 1) . substr($intern->user->lname, 0, 1)) }}
+                              </div>
+                          @endif
+                          <h5>{{ $intern->user->fname }} {{ $intern->user->lname }}</h5>
+                          <p class="text-muted">{{ $intern->student_id }} • {{ $intern->department->dept_name ?? 'N/A' }}</p>
                       </div>
                       
                       <div class="alert bg-info-subtle text-info">
