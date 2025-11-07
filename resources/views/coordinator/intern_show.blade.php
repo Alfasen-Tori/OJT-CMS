@@ -192,7 +192,7 @@
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-chart-donut custom-icons-i me-1 text-primary"></i>
+                        <i class="ph ph-chart-pie-slice custom-icons-i me-1"></i>
                         Progress
                     </h5>
                 </div>
@@ -244,7 +244,7 @@
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-file-text custom-icons-i me-1 text-info"></i>
+                        <i class="ph ph-file-text custom-icons-i me-1"></i>
                         Weekly Reports
                     </h5>
                 </div>
@@ -290,7 +290,7 @@
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-clipboard-text custom-icons-i me-1 text-success"></i>
+                        <i class="ph ph-clipboard-text custom-icons-i me-1"></i>
                         HTE Evaluation
                     </h5>
                 </div>
