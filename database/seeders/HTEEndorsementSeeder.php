@@ -179,7 +179,7 @@ class HTEEndorsementSeeder extends Seeder
                 'updated_at' => $now,
             ]);
 
-            $hte = HTE::create([
+            $hte = Hte::create([
                 'user_id' => $hteUser->id,
                 'organization_name' => $hteData['organization_name'],
                 'type' => $hteData['type'],
