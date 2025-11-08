@@ -984,7 +984,7 @@ public function cancelEndorsement($hteId)
 public function endorse() {
     $coordinatorId = auth()->user()->coordinator->id;
     
-    $htes = \App\Models\HTE::with('skills')
+    $htes = \App\Models\Hte::with('skills')
         ->where('moa_is_signed', 'yes')
         ->withCount('internsHte')
         ->where(function($query) use ($coordinatorId) {
