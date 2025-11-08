@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Models\HTE;
+use App\Models\Hte;
 use App\Models\Coordinator;
 use App\Models\Intern;
 use Carbon\Carbon;
