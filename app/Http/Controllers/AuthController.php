@@ -225,7 +225,7 @@ public function showSetupForm($token, $role)
     // Check if user exists and has the correct role
     $user = User::where('email', $tokenData->email)->first();
     if (!$user) {
-        return redirect()->route('login')
+        return redirect()->route('home')
             ->with('error', 'User account not found.');
     }
 
