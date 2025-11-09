@@ -388,12 +388,12 @@
   margin-right: 1rem;
 }
 
-.status-pending .status-icon { color: #ffc107; }
-.status-ready .status-icon { color: #17a2b8; }
+.status-pending .status-icon { color: #dc3545; }
+.status-ready .status-icon { color: #ffc107; }
 .status-endorsed .status-icon { color: #007bff; }
-.status-processing .status-icon { color: #6c757d; }
+.status-processing .status-icon { color: #17a2b8; }
 .status-deployed .status-icon { color: #28a745; }
-.status-completed .status-icon { color: #343a40; }
+.status-completed .status-icon { color: #6c757d; }
 
 .status-info {
   flex: 1;
