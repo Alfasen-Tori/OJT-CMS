@@ -110,7 +110,7 @@
                   </div>
                   <div class="status-progress">
                     <div class="progress">
-                      <div class="progress-bar bg-warning" style="width: {{ $myStudentsCount > 0 ? ($pendingRequirementsCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                      <div class="progress-bar bg-danger" style="width: {{ $myStudentsCount > 0 ? ($pendingRequirementsCount / $myStudentsCount) * 100 : 0 }}%"></div>
                     </div>
                     <div class="status-percentage">
                       {{ $myStudentsCount > 0 ? number_format(($pendingRequirementsCount / $myStudentsCount) * 100, 1) : 0 }}%
@@ -130,7 +130,7 @@
                   </div>
                   <div class="status-progress">
                     <div class="progress">
-                      <div class="progress-bar bg-info" style="width: {{ $myStudentsCount > 0 ? ($readyForDeploymentCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                      <div class="progress-bar bg-warning" style="width: {{ $myStudentsCount > 0 ? ($readyForDeploymentCount / $myStudentsCount) * 100 : 0 }}%"></div>
                     </div>
                     <div class="status-percentage">
                       {{ $myStudentsCount > 0 ? number_format(($readyForDeploymentCount / $myStudentsCount) * 100, 1) : 0 }}%
@@ -171,7 +171,7 @@
                   </div>
                   <div class="status-progress">
                     <div class="progress">
-                      <div class="progress-bar bg-secondary" style="width: {{ $myStudentsCount > 0 ? ($processingCount / $myStudentsCount) * 100 : 0 }}%"></div>
+                      <div class="progress-bar bg-info" style="width: {{ $myStudentsCount > 0 ? ($processingCount / $myStudentsCount) * 100 : 0 }}%"></div>
                     </div>
                     <div class="status-percentage">
                       {{ $myStudentsCount > 0 ? number_format(($processingCount / $myStudentsCount) * 100, 1) : 0 }}%
