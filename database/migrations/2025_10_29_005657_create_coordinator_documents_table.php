@@ -15,7 +15,8 @@ return new class extends Migration
             $table->enum('type', [
                 'consolidated_moas',
                 'consolidated_sics', 
-                'annex_cmo104',
+                'annex_c',
+                'annex_d',
                 'honorarium_request',
                 'special_order',
                 'board_resolution'

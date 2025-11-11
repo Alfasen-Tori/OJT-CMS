@@ -1615,7 +1615,8 @@
             typeLabels: {
                 'consolidated_moas': 'Consolidated Notarized MOAs',
                 'consolidated_sics': 'Consolidated Notarized SICs',
-                'annex_cmo104': 'ANEX CMO104 Series of 2017',
+                'annex_c': 'ANNEX C Series of 2017',
+                'annex_d': 'ANNEX D Series of 2017',
                 'honorarium_request': 'Honorarium Request',
                 'special_order': 'Special Order',
                 'board_resolution': 'Board Resolution'

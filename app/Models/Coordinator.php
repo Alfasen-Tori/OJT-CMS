@@ -108,7 +108,7 @@ class Coordinator extends Model
     public function updateStatus()
     {
         $documentCount = $this->documents()->count();
-        $requiredCount = 6; // Total required documents
+        $requiredCount = 7; // Total required documents
         
         if ($documentCount >= $requiredCount && $this->status === 'pending documents') {
             $this->update(['status' => 'for validation']);

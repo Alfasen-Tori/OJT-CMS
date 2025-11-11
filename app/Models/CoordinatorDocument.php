@@ -21,7 +21,8 @@ class CoordinatorDocument extends Model
         return [
             'consolidated_moas' => 'Consolidated Notarized MOAs',
             'consolidated_sics' => 'Consolidated Notarized SICs',
-            'annex_cmo104' => 'ANEX CMO104 Series of 2017',
+            'annex_c' => 'ANEX CMO104 Series of 2017',
+            'annex_d' => 'ANEX DMO104 Series of 2017',
             'honorarium_request' => 'Honorarium Request',
             'special_order' => 'Special Order',
             'board_resolution' => 'Board Resolution'
