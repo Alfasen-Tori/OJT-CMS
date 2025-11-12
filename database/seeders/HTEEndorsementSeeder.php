@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Hte;
 use App\Models\Coordinator;
 use App\Models\Intern;
+use App\Models\InternEvaluation;
 use Carbon\Carbon;
 
 class HTEEndorsementSeeder extends Seeder
@@ -400,9 +401,37 @@ class HTEEndorsementSeeder extends Seeder
             ->get();
 
         foreach ($completedEndorsements as $endorsement) {
-            DB::table('intern_evaluations')->insert([
+            // Generate individual factor scores that will result in a good total grade
+            $quality_of_work = rand(85, 98); // 20%
+            $dependability = rand(80, 95);   // 15%
+            $timeliness = rand(85, 97);      // 15%
+            $attendance = rand(90, 99);      // 15%
+            $cooperation = rand(88, 98);     // 10%
+            $judgment = rand(82, 95);        // 10%
+            $personality = rand(90, 100);    // 5%
+
+            // Calculate total grade using weighted formula
+            $total_grade = (
+                ($quality_of_work * 0.20) +
+                ($dependability * 0.15) +
+                ($timeliness * 0.15) +
+                ($attendance * 0.15) +
+                ($cooperation * 0.10) +
+                ($judgment * 0.10) +
+                ($personality * 0.05)
+            );
+
+            // Create evaluation with new structure
+            InternEvaluation::create([
                 'intern_hte_id' => $endorsement->id,
-                'grade' => rand(85, 98) + (rand(0, 99) / 100), // 85.00 to 98.99
+                'quality_of_work' => $quality_of_work,
+                'dependability' => $dependability,
+                'timeliness' => $timeliness,
+                'attendance' => $attendance,
+                'cooperation' => $cooperation,
+                'judgment' => $judgment,
+                'personality' => $personality,
+                'total_grade' => $total_grade,
                 'comments' => 'Excellent performance throughout the internship. Demonstrated strong technical skills and good work ethic.',
                 'evaluation_date' => Carbon::parse($endorsement->end_date)->subDays(5),
                 'created_at' => $now,
@@ -416,6 +445,7 @@ class HTEEndorsementSeeder extends Seeder
         $this->command->info('Multi-coordinator scenario created: TechSolutions HTE has endorsements from:');
         $this->command->info('- 2 IT Coordinators (Ramon Javier & Lourdes Mendoza)');
         $this->command->info('- 1 CE Coordinator (Antonio Perez)');
+        $this->command->info('Evaluations created with new job factor structure!');
     }
 
     private function createDefaultSkills($itDept, $ceDept, $now)

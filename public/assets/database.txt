@@ -1,163 +1,3 @@
-select * from users;
-
-faculty_id -  varchar in this format: "2016-70707"
-department - select: (Display all the dept_name from the departments table and the values here will be the primary key of that department)
-can_add_hte - select: Allowed, Not allowed
-
-w
-
-
-describe coordinators;
-describe interns_hte;
-describe intern_documents;
-describe skills;
-describe interns;
-describe wee;
-describe htes;
-select * from attendances;
-use ojtcms_db;
-show tables;
-describe weekly_reports;
-UPDATE interns SET status = 'incomplete' WHERE id = 1;
-
-DELETE from users WHERE id = 9;
-
-
-INSERT INTO departments (dept_id, dept_name, short_name, created_at, updated_at) VALUES
-(1, 'Information Technology', 'IT', NOW(), NOW()),
-(2, 'Civil Engineering', 'CE', NOW(), NOW()),
-(3, 'Electrical Engineering', 'EE', NOW(), NOW());
-
-select * from colleges;
-
--- Replace LAST_INSERT_ID() with the actual ID if not using MySQL or outside a transaction
-INSERT INTO admins (faculty_id, user_id, created_at, updated_at)
-VALUES (
-    '2013-07896',
-    1,
-    NOW(),
-    NOW()
-);
-select * from interns;
-	
-describe interns_hte;
-SET FOREIGN_KEY_CHECKS=0;
-ALTER TABLE interns AUTO_INCREMENT = 2;
-SET FOREIGN_KEY_CHECKS=1;
-delete from users where id = 13;
-
-
-UPDATE coordinators 
-SET can_add_hte = '1'
-WHERE id = 1;
-
-select * from interns;
-	UPDATE interns 
-	SET status = "processing"
-	WHERE id != 99;
-
-select * from htes;
-UPDATE htes 
-SET moa_path = "?"
-WHERE id = 2;
-
-UPDATE htes 
-SET slots = 10
-WHERE id = 2;
-
-select * from attendances;
-DELETE from ATTENDANCES WHERE id != 99;
-
-UPDATE attendances SET hours_rendered = 396 WHERE id = 5;
-
-UPDATE attendances SET time_in = "2025-10-13 8:00:00" WHERE id = 8;
-
-UPDATE interns_hte SET start_date = "2025-10-06" WHERE id = 2;
-
-
-SET @new_id = (SELECT MAX(id) + 1 FROM interns);
-SET @s = CONCAT('ALTER TABLE interns AUTO_INCREMENT = ', @new_id);
-PREPARE stmt FROM @s;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-INSERT INTO attendances (
-    intern_hte_id,
-    date,
-    time_in,
-    time_out,
-    hours_rendered,
-    created_at,
-    updated_at
-)
-VALUES (
-    1, -- change to the actual intern_hte_id
-    DATE_SUB(CURDATE(), INTERVAL 1 DAY),
-    DATE_SUB(CONCAT(CURDATE(), ' 08:00:00'), INTERVAL 1 DAY), -- 8 AM yesterday
-    DATE_SUB(CONCAT(CURDATE(), ' 17:00:00'), INTERVAL 1 DAY), -- 5 PM yesterday
-    9.00, -- hours rendered
-    NOW(),
-    NOW()
-);
-
-
-select * from interns_hte;
-INSERT INTO attendances (intern_hte_id, date, time_in, time_out, hours_rendered, created_at, updated_at)
-VALUES
--- Last week (Mon–Fri)
-(9, DATE_SUB(CURDATE(), INTERVAL 10 DAY), '2025-09-28 08:00:00', '2025-09-28 17:00:00', 9.0, NOW(), NOW()),
-(9, DATE_SUB(CURDATE(), INTERVAL 9 DAY),  '2025-09-29 08:00:00', '2025-09-29 17:00:00', 9.0, NOW(), NOW()),
-(9, DATE_SUB(CURDATE(), INTERVAL 8 DAY),  '2025-09-30 08:00:00', '2025-09-30 17:00:00', 9.0, NOW(), NOW()),
-(9, DATE_SUB(CURDATE(), INTERVAL 7 DAY),  '2025-10-01 08:00:00', '2025-10-01 17:00:00', 9.0, NOW(), NOW()),
-(9, DATE_SUB(CURDATE(), INTERVAL 6 DAY),  '2025-10-02 08:00:00', '2025-10-02 17:00:00', 9.0, NOW(), NOW()),
-
--- This week (Mon–Wed so far)
-(9, DATE_SUB(CURDATE(), INTERVAL 2 DAY), '2025-10-06 08:00:00', '2025-10-06 17:00:00', 9.0, NOW(), NOW()),
-(9, DATE_SUB(CURDATE(), INTERVAL 1 DAY), '2025-10-07 08:00:00', '2025-10-07 17:00:00', 9.0, NOW(), NOW());
-
-
-UPDATE interns_hte SET start_date = "2025-10-22" WHERE id = 9;
-select * from users;
-select * from interns;
-
-UPDATE attendances SET time_in = "2025-10-27 8:00:00" WHERE id = 11;
-UPDATE attendances SET hours_rendered = 32 WHERE id = 12;
-
-DELETE FROM weekly_reports WHERE id != 99;
-DELETE FROM attendances WHERE id = 11;
-DELETE FROM interns_hte WHERE hte_id = 6;
-
-SELECT * FROM weekly_reports;
-SELECT * FROM attendances;
-select  * from htes;
-SELECT * FROM users;
-
-UPDATE coordinators SET status = "for validation" WHERE id = 1;
-
-TRUNCATE weekly_reports;
-TRUNCATE attendances;
-TRUNCATE intern_evaluations;
-
-UPDATE interns_hte SET start_date = "completed" WHERE id = 3;
-
-SHOW tables;
-
-UPDATE users SET pic = null WHERE id = 1;
-SELECT * FROM skills;
-describe htes;
-UPDATE htes SET first_login = 1 WHERE id = 4;
-
-SELECT * FROM intern_evaluations;
-
-UPDATE intern_evaluations SET grade = null WHERE id = 1;
-
-show  tables;
-TRUNCATE intern_evaluations;
-
-UPDATE coordinators SET status = "pending documents" WHERE id != 99;
-
-SELECT * FROM intern_evaluations;
-
 CREATE TABLE `admins` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `faculty_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -184,7 +24,30 @@ CREATE TABLE `attendances` (
   KEY `attendances_date_index` (`date`),
   KEY `attendances_intern_hte_id_date_index` (`intern_hte_id`,`date`),
   CONSTRAINT `attendances_intern_hte_id_foreign` FOREIGN KEY (`intern_hte_id`) REFERENCES `interns_hte` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=121 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `audit_trails` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `table_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `record_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `old_values` json DEFAULT NULL,
+  `new_values` json DEFAULT NULL,
+  `changes` text COLLATE utf8mb4_unicode_ci,
+  `ip_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `user_id` bigint unsigned NOT NULL,
+  `user_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `audit_trails_user_id_foreign` (`user_id`),
+  KEY `audit_trails_table_name_record_id_index` (`table_name`,`record_id`),
+  KEY `audit_trails_action_index` (`action`),
+  KEY `audit_trails_user_type_index` (`user_type`),
+  KEY `audit_trails_created_at_index` (`created_at`),
+  CONSTRAINT `audit_trails_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `colleges` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -199,14 +62,14 @@ CREATE TABLE `colleges` (
 CREATE TABLE `coordinator_documents` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `coordinator_id` bigint unsigned NOT NULL,
-  `type` enum('consolidated_moas','consolidated_sics','annex_cmo104','honorarium_request','special_order','board_resolution') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('consolidated_moas','consolidated_sics','annex_c','annex_d','honorarium_request','special_order','board_resolution') COLLATE utf8mb4_unicode_ci NOT NULL,
   `file_path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `coordinator_documents_coordinator_id_type_unique` (`coordinator_id`,`type`),
   CONSTRAINT `coordinator_documents_coordinator_id_foreign` FOREIGN KEY (`coordinator_id`) REFERENCES `coordinators` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `coordinators` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -248,7 +111,7 @@ CREATE TABLE `hte_skill` (
   KEY `hte_skill_skill_id_foreign` (`skill_id`),
   CONSTRAINT `hte_skill_hte_id_foreign` FOREIGN KEY (`hte_id`) REFERENCES `htes` (`id`) ON DELETE CASCADE,
   CONSTRAINT `hte_skill_skill_id_foreign` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`skill_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `htes` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -295,7 +158,7 @@ CREATE TABLE `intern_evaluations` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `intern_evaluations_intern_hte_id_unique` (`intern_hte_id`),
   CONSTRAINT `intern_evaluations_intern_hte_id_foreign` FOREIGN KEY (`intern_hte_id`) REFERENCES `interns_hte` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `interns` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -377,6 +240,25 @@ CREATE TABLE `personal_access_tokens` (
   KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `session_audit_trail` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned NOT NULL,
+  `user_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `login_at` timestamp NULL DEFAULT NULL,
+  `logout_at` timestamp NULL DEFAULT NULL,
+  `session_duration` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `session_audit_trail_user_id_user_type_index` (`user_id`,`user_type`),
+  KEY `session_audit_trail_action_index` (`action`),
+  KEY `session_audit_trail_login_at_index` (`login_at`),
+  CONSTRAINT `session_audit_trail_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `skills` (
   `skill_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `dept_id` bigint unsigned NOT NULL,
@@ -399,7 +281,7 @@ CREATE TABLE `student_skill` (
   KEY `student_skill_skills_id_foreign` (`skills_id`),
   CONSTRAINT `student_skill_intern_id_foreign` FOREIGN KEY (`intern_id`) REFERENCES `interns` (`id`) ON DELETE CASCADE,
   CONSTRAINT `student_skill_skills_id_foreign` FOREIGN KEY (`skills_id`) REFERENCES `skills` (`skill_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `users` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -431,6 +313,4 @@ CREATE TABLE `weekly_reports` (
   KEY `weekly_reports_week_no_index` (`week_no`),
   KEY `weekly_reports_submitted_at_index` (`submitted_at`),
   CONSTRAINT `weekly_reports_intern_id_foreign` FOREIGN KEY (`intern_id`) REFERENCES `interns` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -175,7 +175,6 @@
     });
     </script>
 
-
     <!-- HTE: MOA Handling -->
     <script>
     $(document).ready(function() {
@@ -562,6 +561,109 @@
             });
         });
     </script>
+
+    <!-- HTE Grade Calculation -->
+<script>
+    // Real-time total grade calculation
+$(document).on('input', '.factor-input', function() {
+    const modal = $(this).closest('.modal');
+    const deploymentId = modal.attr('id').replace('evaluateModal', '');
+    calculateTotalGrade(deploymentId);
+});
+
+function calculateTotalGrade(deploymentId) {
+    let total = 0;
+    
+    const weights = {
+        'quality_of_work': 0.20,
+        'dependability': 0.15,
+        'timeliness': 0.20,
+        'attendance': 0.15,
+        'cooperation': 0.10,
+        'judgment': 0.10,
+        'personality': 0.05
+    };
+    
+    Object.keys(weights).forEach(factor => {
+        const input = $(`#${factor}${deploymentId}`);
+        const value = parseFloat(input.val()) || 0;
+        total += value * weights[factor];
+    });
+    
+    // Update total grade display (max 95)
+    const displayTotal = total.toFixed(2);
+    $(`#totalGradePreview${deploymentId}`).text(displayTotal);
+    
+    // Update progress bar (0-95 scale)
+    const progressPercent = (total / 95) * 100;
+    $(`#gradeProgress${deploymentId}`).css('width', `${progressPercent}%`);
+    
+    // Update all grade previews
+    updateGradePreviews(total, deploymentId);
+}
+
+function updateGradePreviews(totalGrade, deploymentId) {
+    // IMPORTANT: Use the same GPA calculation as PHP model
+    // The PHP model uses total_grade directly (0-95 scale) for GPA calculation
+    let gpa = 0;
+    
+    // This should match exactly with the PHP calculateGPA() method
+    if (totalGrade >= 95) gpa = 1.00;
+    else if (totalGrade >= 90) gpa = 1.25;
+    else if (totalGrade >= 85) gpa = 1.50;
+    else if (totalGrade >= 80) gpa = 1.75;
+    else if (totalGrade >= 75) gpa = 2.00;
+    else if (totalGrade >= 70) gpa = 2.25;
+    else if (totalGrade >= 65) gpa = 2.50;
+    else if (totalGrade >= 60) gpa = 2.75;
+    else if (totalGrade >= 55) gpa = 3.00;
+    else if (totalGrade >= 50) gpa = 4.00;
+    else gpa = 5.00;
+    
+    // Get letter grade
+    const letterGrades = {
+        1.00: 'A+', 1.25: 'A', 1.50: 'A-',
+        1.75: 'B+', 2.00: 'B', 2.25: 'B-',
+        2.50: 'C+', 2.75: 'C', 3.00: 'C-',
+        4.00: 'D', 5.00: 'F'
+    };
+    
+    // Update displays
+    $(`#gpaPreview${deploymentId}`).text(gpa.toFixed(2));
+    $(`#letterGradePreview${deploymentId}`).text(letterGrades[gpa] || 'F');
+    
+    // Update status
+    let status = '-';
+    let statusColor = 'text-warning';
+    if (totalGrade >= 85) {
+        status = 'Excellent';
+        statusColor = 'text-success';
+    } else if (totalGrade >= 75) {
+        status = 'Good';
+        statusColor = 'text-primary';
+    } else if (totalGrade >= 65) {
+        status = 'Fair';
+        statusColor = 'text-warning';
+    } else {
+        status = 'Needs Improvement';
+        statusColor = 'text-danger';
+    }
+    
+    const statusElement = $(`#gradeStatus${deploymentId}`);
+    statusElement.text(status).removeClass('text-success text-primary text-warning text-danger').addClass(statusColor);
+    
+    // Update total grade color
+    const totalElement = $(`#totalGradePreview${deploymentId}`);
+    totalElement.removeClass('text-primary text-success text-warning text-danger');
+    
+    if (totalGrade >= 85) totalElement.addClass('text-success');
+    else if (totalGrade >= 75) totalElement.addClass('text-primary');
+    else if (totalGrade >= 65) totalElement.addClass('text-warning');
+    else totalElement.addClass('text-danger');
+}
+
+// Remove the updateWeightedScores function since we're not showing points anymore
+</script>
 
     <!-- COORDINATOR PROFILE MANAGEMENT -->
     <script>

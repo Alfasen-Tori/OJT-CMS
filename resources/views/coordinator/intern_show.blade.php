@@ -290,8 +290,8 @@
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="ph ph-clipboard-text custom-icons-i me-1"></i>
-                        HTE Evaluation
+                        <i class="ph-fill ph-clipboard-text custom-icons-i me-1 text-success"></i>
+                        Evaluation
                     </h5>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-center">
@@ -302,6 +302,7 @@
                                 $gpa = $evaluation->calculateGPA();
                                 $gpaColor = $evaluation->getGPAColor();
                                 $gpaDescription = $evaluation->getGPADescription();
+                                $letterGrade = $evaluation->grade_with_letter; // Use the accessor
                             @endphp
                             <div class="d-flex justify-content-center align-items-center mb-3">
                                 <div style="width: 100px; height: 100px; background: {{ $gpaColor }}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -315,11 +316,11 @@
                         <div class="border-top pt-3 mt-auto">
                             <div class="row text-center mb-3">
                                 <div class="col-6">
-                                    <h5 class="fw-bold text-primary mb-1">{{ $evaluation->grade }}/100</h5>
-                                    <small class="text-muted">Rating</small>
+                                    <h5 class="fw-bold text-primary mb-1">{{ number_format($evaluation->total_grade, 2) }}</h5>
+                                    <small class="text-muted">Weighted Score</small>
                                 </div>
                                 <div class="col-6">
-                                    <h5 class="fw-bold mb-1" style="color: {{ $gpaColor }}">{{ $evaluation->grade_with_letter }}</h5>
+                                    <h5 class="fw-bold mb-1" style="color: {{ $gpaColor }}">{{ $letterGrade }}</h5>
                                     <small class="text-muted">Letter Grade</small>
                                 </div>
                             </div>
@@ -338,20 +339,40 @@
                             </div>
                         </div>
                     @else
-                        <!-- Show "No Evaluation" state -->
-                        <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
-                            <div>
-                                <i class="ph ph-clock fs-1 mb-2"></i>
-                                <h5 class="text-muted mb-2">Pending</h5>
-                                <p class="mb-0 small">
-                                    @if($intern->status === 'deployed')
-                                        Evaluation will be available after the intern completes their internship.
+                        <!-- Show evaluation button or pending message -->
+                        @if($intern->status === 'completed' && !$evaluation)
+                            <!-- Show Evaluate Button for completed interns without evaluation -->
+                            <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                                <div>
+                                    <i class="ph ph-clipboard-text fs-1 mb-3 text-success"></i>
+                                    <h5 class="text-muted mb-3">Ready for Evaluation</h5>
+                                    <p class="mb-3 small">This intern has completed their internship and is ready for evaluation.</p>
+                                    @if(isset($currentDeployment) && $currentDeployment)
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#evaluateModal{{ $currentDeployment->id }}">
+                                            <i class="ph ph-clipboard-text mr-2"></i>
+                                            Evaluate Intern
+                                        </button>
                                     @else
-                                        No evaluation has been submitted by the HTE yet.
+                                        <button type="button" class="btn btn-success" disabled>
+                                            <i class="ph ph-clipboard-text mr-2"></i>
+                                            Evaluate Intern
+                                        </button>
+                                        <small class="d-block text-muted mt-2">Deployment information missing</small>
                                     @endif
-                                </p>
+                                </div>
                             </div>
-                        </div>
+                        @else
+                            <!-- Show pending message for deployed interns -->
+                            <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                                <div>
+                                    <i class="ph ph-clock fs-1 mb-2"></i>
+                                    <h5 class="text-muted mb-2">Evaluation Pending</h5>
+                                    <p class="mb-0 small">
+                                        Evaluation will be available after the intern completes their internship.
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>

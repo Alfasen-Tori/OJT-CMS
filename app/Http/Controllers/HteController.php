@@ -243,7 +243,13 @@ public function submitEvaluation(Request $request, $deploymentId)
 {
     try {
         $request->validate([
-            'grade' => 'required|numeric|min:0|max:100',
+            'quality_of_work' => 'required|numeric|min:0|max:100',
+            'dependability' => 'required|numeric|min:0|max:100',
+            'timeliness' => 'required|numeric|min:0|max:100',
+            'attendance' => 'required|numeric|min:0|max:100',
+            'cooperation' => 'required|numeric|min:0|max:100',
+            'judgment' => 'required|numeric|min:0|max:100',
+            'personality' => 'required|numeric|min:0|max:100',
             'comments' => 'nullable|string|max:1000'
         ]);
 
@@ -273,10 +279,28 @@ public function submitEvaluation(Request $request, $deploymentId)
             ], 422);
         }
 
+        // Calculate total grade
+        $totalGrade = (
+            ($request->quality_of_work * 0.20) +
+            ($request->dependability * 0.15) +
+            ($request->timeliness * 0.20) +
+            ($request->attendance * 0.15) +
+            ($request->cooperation * 0.10) +
+            ($request->judgment * 0.10) +
+            ($request->personality * 0.05)
+        );
+
         // Create evaluation
-        InternEvaluation::create([
+        $evaluation = InternEvaluation::create([
             'intern_hte_id' => $deploymentId,
-            'grade' => $request->grade,
+            'quality_of_work' => $request->quality_of_work,
+            'dependability' => $request->dependability,
+            'timeliness' => $request->timeliness,
+            'attendance' => $request->attendance,
+            'cooperation' => $request->cooperation,
+            'judgment' => $request->judgment,
+            'personality' => $request->personality,
+            'total_grade' => $totalGrade,
             'comments' => $request->comments,
             'evaluation_date' => now()->toDateString()
         ]);
@@ -284,7 +308,8 @@ public function submitEvaluation(Request $request, $deploymentId)
         return response()->json([
             'success' => true,
             'message' => 'Evaluation submitted successfully!',
-            'gpa' => number_format((100 - $request->grade) / 20, 1)
+            'total_grade' => number_format($totalGrade, 2),
+            'gpa' => number_format($evaluation->calculateGPA(), 2)
         ]);
 
     } catch (\Illuminate\Validation\ValidationException $e) {

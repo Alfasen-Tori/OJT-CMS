@@ -250,6 +250,7 @@
                                 $gpa = $evaluation->calculateGPA();
                                 $gpaColor = $evaluation->getGPAColor();
                                 $gpaDescription = $evaluation->getGPADescription();
+                                $letterGrade = $evaluation->grade_with_letter; // Use the accessor
                             @endphp
                             <div class="d-flex justify-content-center align-items-center mb-3">
                                 <div style="width: 100px; height: 100px; background: {{ $gpaColor }}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -263,11 +264,11 @@
                         <div class="border-top pt-3 mt-auto">
                             <div class="row text-center mb-3">
                                 <div class="col-6">
-                                    <h5 class="fw-bold text-primary mb-1">{{ $evaluation->grade }}/100</h5>
-                                    <small class="text-muted">Rating</small>
+                                    <h5 class="fw-bold text-primary mb-1">{{ number_format($evaluation->total_grade, 2) }}</h5>
+                                    <small class="text-muted">Weighted Score</small>
                                 </div>
                                 <div class="col-6">
-                                    <h5 class="fw-bold mb-1" style="color: {{ $gpaColor }}">{{ $evaluation->grade_with_letter }}</h5>
+                                    <h5 class="fw-bold mb-1" style="color: {{ $gpaColor }}">{{ $letterGrade }}</h5>
                                     <small class="text-muted">Letter Grade</small>
                                 </div>
                             </div>
@@ -294,10 +295,18 @@
                                     <i class="ph ph-clipboard-text fs-1 mb-3 text-success"></i>
                                     <h5 class="text-muted mb-3">Ready for Evaluation</h5>
                                     <p class="mb-3 small">This intern has completed their internship and is ready for evaluation.</p>
-                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#evaluateModal{{ $currentDeployment->id }}">
-                                        <i class="ph ph-clipboard-text mr-2"></i>
-                                        Evaluate Intern
-                                    </button>
+                                    @if(isset($currentDeployment) && $currentDeployment)
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#evaluateModal{{ $currentDeployment->id }}">
+                                            <i class="ph ph-clipboard-text mr-2"></i>
+                                            Evaluate Intern
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-success" disabled>
+                                            <i class="ph ph-clipboard-text mr-2"></i>
+                                            Evaluate Intern
+                                        </button>
+                                        <small class="d-block text-muted mt-2">Deployment information missing</small>
+                                    @endif
                                 </div>
                             </div>
                         @else
@@ -323,75 +332,204 @@
 <!-- Evaluation Modal -->
 @if($intern->status === 'completed' && !$evaluation && $currentDeployment)
 <div class="modal fade" id="evaluateModal{{ $currentDeployment->id }}" tabindex="-1" role="dialog" aria-labelledby="evaluateModalLabel{{ $currentDeployment->id }}" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title" id="evaluateModalLabel{{ $currentDeployment->id }}">
+            <div class="modal-header bg-light text-white py-3">
+                <h5 class="modal-title mb-0" id="evaluateModalLabel{{ $currentDeployment->id }}">
                     <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>
-                    Evaluate Intern
+                    Evaluate Intern Performance
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close text-secondary" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <form id="evaluateForm{{ $currentDeployment->id }}" class="evaluate-form">
                 @csrf
-                <div class="modal-body">
-                    <div class="text-center mb-4">
+                <div class="modal-body p-4">
+                    <!-- Compact Header -->
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
                         @if($intern->user->pic)
                             <img src="{{ asset('storage/' . $intern->user->pic) }}" 
                                 alt="Profile Picture" 
-                                class="rounded-circle mb-3" 
-                                width="80" height="80">
+                                class="rounded-circle me-3" 
+                                width="60" height="60">
                         @else
                             @php
-                                // Generate a consistent random color based on user's name
                                 $name = $intern->user->fname . $intern->user->lname;
                                 $colors = [
-                                    'linear-gradient(135deg, #007bff, #6610f2)', // Blue to Purple
-                                    'linear-gradient(135deg, #28a745, #20c997)', // Green to Teal
-                                    'linear-gradient(135deg, #dc3545, #fd7e14)', // Red to Orange
-                                    'linear-gradient(135deg, #6f42c1, #e83e8c)', // Purple to Pink
-                                    'linear-gradient(135deg, #17a2b8, #6f42c1)', // Teal to Purple
-                                    'linear-gradient(135deg, #fd7e14, #e83e8c)', // Orange to Pink
+                                    'linear-gradient(135deg, #007bff, #6610f2)',
+                                    'linear-gradient(135deg, #28a745, #20c997)',
+                                    'linear-gradient(135deg, #dc3545, #fd7e14)',
+                                    'linear-gradient(135deg, #6f42c1, #e83e8c)',
+                                    'linear-gradient(135deg, #17a2b8, #6f42c1)',
+                                    'linear-gradient(135deg, #fd7e14, #e83e8c)',
                                 ];
-                                
-                                // Generate a consistent index based on the user's name
                                 $colorIndex = crc32($name) % count($colors);
                                 $randomGradient = $colors[$colorIndex];
                             @endphp
                             
-                            <div class="rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center text-white fw-bold" 
-                                style="width: 80px; height: 80px; font-size: 24px; background: {{ $randomGradient }};">
+                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" 
+                                style="width: 60px; height: 60px; font-size: 18px; background: {{ $randomGradient }};">
                                 {{ strtoupper(substr($intern->user->fname, 0, 1) . substr($intern->user->lname, 0, 1)) }}
                             </div>
                         @endif
-                        <h5>{{ $intern->user->fname }} {{ $intern->user->lname }}</h5>
-                        <p class="text-muted">{{ $intern->student_id }} • {{ $intern->department->dept_name ?? 'N/A' }}</p>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ $intern->user->fname }} {{ $intern->user->lname }}</h6>
+                            <p class="text-muted mb-1 small">{{ $intern->student_id }} • {{ $intern->department->dept_name ?? 'N/A' }}</p>
+                            <p class="text-muted mb-0 small">
+                                <i class="ph ph-calendar custom-icons-i mr-1"></i>
+                                {{ \Carbon\Carbon::parse($currentDeployment->start_date)->format('M d') }} - {{ \Carbon\Carbon::parse($currentDeployment->end_date)->format('M d, Y') }}
+                            </p>
+                        </div>
                     </div>
-                    
-                    <div class="alert bg-info-subtle text-info">
-                        <i class="ph ph-info custom-icons-i mr-2"></i>
-                        Provide a grade evaluation for this intern's performance during their internship period.
+
+                    <!-- Info Alert -->
+                    <div class="alert bg-info-subtle border-info text-info mb-4 py-2">
+                        <div class="d-flex align-items-center">
+                            <i class="ph ph-info custom-icons-i mr-2"></i>
+                            <small class="flex-grow-1">
+                                <strong>Note:</strong> Rate each factor (0-100). Total weight: 95% - Maximum possible score is 95.
+                            </small>
+                        </div>
                     </div>
-                    
-                    <!-- Evaluation Form -->
-                    <div class="form-group">
-                        <label for="grade{{ $currentDeployment->id }}" class="form-label">Grade (0-100) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="grade{{ $currentDeployment->id }}" name="grade" min="0" max="100" step="0.01" placeholder="Enter grade from 0 to 100" required>
-                        <small class="form-text text-muted">100 = Excellent, 0 = Poor</small>
-                        <div class="invalid-feedback" id="gradeError{{ $currentDeployment->id }}"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="comments{{ $currentDeployment->id }}" class="form-label">Comments (Optional)</label>
-                        <textarea class="form-control" id="comments{{ $currentDeployment->id }}" name="comments" rows="3" placeholder="Provide feedback on the intern's performance..."></textarea>
+
+                    <div class="row g-5" style="min-height: 500px;">
+                        <!-- Left Column: Compact Job Factors List -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-light py-2">
+                                    <h6 class="mb-0 fw-semibold small">
+                                        <i class="ph ph-chart-line custom-icons-i mr-2"></i>
+                                        Performance Factors
+                                    </h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="factors-list">
+                                        @foreach(App\Models\InternEvaluation::getFactorDescriptions() as $factor => $details)
+                                        <div class="factor-item mb-2 pb-2 border-bottom">
+                                            <div class="row align-items-center g-2">
+                                                <div class="col-md-8">
+                                                    <div class="mb-1">
+                                                        <label for="{{ $factor }}{{ $currentDeployment->id }}" class="form-label fw-semibold mb-0 small">
+                                                            {{ $details['label'] }} <span class="text-success">({{ $details['percentage'] }})</span>
+                                                        </label>
+                                                    </div>
+                                                    <p class="text-muted small mb-1">{{ $details['description'] }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="number" 
+                                                            class="form-control factor-input border" 
+                                                            id="{{ $factor }}{{ $currentDeployment->id }}" 
+                                                            name="{{ $factor }}" 
+                                                            min="0" 
+                                                            max="100" 
+                                                            step="1" 
+                                                            placeholder="0-100"
+                                                            required>
+                                                        <span class="input-group-text bg-white">/100</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="invalid-feedback small" id="{{ $factor }}Error{{ $currentDeployment->id }}"></div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Comments & Grade Summary -->
+                        <div class="col-lg-6 d-flex flex-column justify-content-between">
+                            <!-- Comments Section -->
+                            <div class="card border-0 shadow-sm flex-fill mb-3">
+                                <div class="card-header bg-light py-2">
+                                    <h6 class="mb-0 fw-semibold small">
+                                        <i class="ph ph-chat-text custom-icons-i mr-2"></i>
+                                        Comments & Recommendations on Student's Performance
+                                    </h6>
+                                </div>
+                                <div class="card-body p-3 d-flex flex-column">
+                                    <textarea class="form-control flex-grow-1" 
+                                            id="comments{{ $currentDeployment->id }}" 
+                                            name="comments" 
+                                            placeholder="Overall feedback, strengths, areas for improvement, notable achievements..."></textarea>
+                                    <small class="form-text text-muted mt-2">
+                                        Provide specific examples and constructive feedback.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Grade Summary -->
+                            <div class="card border-primary flex-fill mb-0">
+                                <div class="card-header bg-light text-white py-2">
+                                    <h6 class="mb-0 fw-semibold small">
+                                        <i class="ph ph-calculator custom-icons-i mr-2"></i>
+                                        Grade Summary
+                                    </h6>
+                                </div>
+                                <div class="card-body p-3 d-flex flex-column">
+                                    <!-- Total Grade -->
+                                    <div class="text-center mb-3 flex-fill d-flex flex-column justify-content-center">
+                                        <small class="text-muted d-block mb-1">Weighted Total</small>
+                                        <div id="totalGradePreview{{ $currentDeployment->id }}" class="h2 fw-bold text-primary mb-0">
+                                            0.00
+                                        </div>
+                                        <small class="text-muted">out of 95</small>
+                                        
+                                        <!-- Progress Bar -->
+                                        <div class="progress mt-2 rounded-pill" style="height: 6px;">
+                                            <div id="gradeProgress{{ $currentDeployment->id }}" 
+                                                class="progress-bar bg-success" 
+                                                role="progressbar" 
+                                                style="width: 0%"
+                                                aria-valuenow="0" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="95">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Grade Breakdown -->
+                                    <div class="border-top pt-3">
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <small class="text-muted d-block">GPA</small>
+                                                <div id="gpaPreview{{ $currentDeployment->id }}" class="h5 fw-bold text-success mb-0">
+                                                    0.00
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <small class="text-muted d-block">Letter</small>
+                                                <div id="letterGradePreview{{ $currentDeployment->id }}" class="h5 fw-bold text-info mb-0">
+                                                    -
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <small class="text-muted d-block">Remark</small>
+                                                <div id="gradeStatus{{ $currentDeployment->id }}" class="h5 fw-bold text-warning mb-0">
+                                                    -
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary submit-evaluate-btn">
-                        <span class="submit-text">Submit Evaluation</span>
-                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+
+                <!-- Action Buttons -->
+                <div class="modal-footer bg-light py-3">
+                    <button type="button" class="btn btn-outline-secondary btn-md" data-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-md submit-evaluate-btn">
+                        <span class="submit-text">
+                            Submit Evaluation
+                        </span>
+                        <span class="spinner-border spinner-border-sm d-none mr-2" role="status"></span>
+                        <span class="loading-text d-none">Processing...</span>
                     </button>
                 </div>
             </form>
