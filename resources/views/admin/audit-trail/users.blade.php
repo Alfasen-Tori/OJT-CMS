@@ -80,7 +80,6 @@
                     <th>Performed By</th>
                     <th>Action</th>
                     <th>Description</th>
-                    <th>IP Address</th>
                   </tr>
                 </thead>
                 <tbody id="usersTableBody">
@@ -224,7 +223,6 @@ $(document).ready(function() {
                         <div class="activity-changes">${activity.changes}</div>
                         ${renderValueChanges(activity.old_values, activity.new_values)}
                     </td>
-                    <td><code class="small text-muted">${activity.ip_address || 'N/A'}</code></td>
                 </tr>
             `);
         });

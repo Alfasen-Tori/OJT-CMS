@@ -75,7 +75,6 @@
                     <th>Login Time</th>
                     <th>Logout Time</th>
                     <th>Duration</th>
-                    <th>IP Address</th>
                     <th>User Agent</th>
                   </tr>
                 </thead>
@@ -254,7 +253,6 @@ $(document).ready(function() {
                     <td class="small">${loginTime}</td>
                     <td class="small">${logoutTime}</td>
                     <td><span class="fw-medium text-primary">${duration}</span></td>
-                    <td><code class="small">${session.ip_address || 'N/A'}</code></td>
                     <td class="small text-muted" title="${session.user_agent || 'N/A'}">
                         ${truncateUserAgent(session.user_agent)}
                     </td>
