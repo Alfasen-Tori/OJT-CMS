@@ -290,7 +290,7 @@
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-clipboard-text custom-icons-i me-1 text-success"></i>
+                        <i class="ph ph-clipboard-text custom-icons-i me-1"></i>
                         Evaluation
                     </h5>
                 </div>
@@ -339,40 +339,35 @@
                             </div>
                         </div>
                     @else
-                        <!-- Show evaluation button or pending message -->
-                        @if($intern->status === 'completed' && !$evaluation)
-                            <!-- Show Evaluate Button for completed interns without evaluation -->
-                            <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
-                                <div>
-                                    <i class="ph ph-clipboard-text fs-1 mb-3 text-success"></i>
-                                    <h5 class="text-muted mb-3">Ready for Evaluation</h5>
-                                    <p class="mb-3 small">This intern has completed their internship and is ready for evaluation.</p>
-                                    @if(isset($currentDeployment) && $currentDeployment)
-                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#evaluateModal{{ $currentDeployment->id }}">
-                                            <i class="ph ph-clipboard-text mr-2"></i>
-                                            Evaluate Intern
-                                        </button>
-                                    @else
-                                        <button type="button" class="btn btn-success" disabled>
-                                            <i class="ph ph-clipboard-text mr-2"></i>
-                                            Evaluate Intern
-                                        </button>
-                                        <small class="d-block text-muted mt-2">Deployment information missing</small>
-                                    @endif
+                    <!-- Show evaluation status message -->
+                    @if($intern->status === 'completed' && !$evaluation)
+                        <!-- Show Awaiting Evaluation message for completed interns without evaluation -->
+                        <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                            <div>
+                                <i class="ph ph-hourglass-medium fs-1 mb-3 text-warning"></i>
+                                <h5 class="text-warning mb-2">Awaiting Evaluation</h5>
+                                <p class="mb-3 small text-muted">
+                                    This intern has completed their internship.<br>
+                                    Waiting for HTE supervisor evaluation.
+                                </p>
+                                <div class="badge bg-warning-subtle text-warning py-2 px-3 rounded-pill">
+                                    <i class="ph ph-clock mr-1"></i>
+                                    Evaluation Pending
                                 </div>
                             </div>
-                        @else
-                            <!-- Show pending message for deployed interns -->
-                            <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
-                                <div>
-                                    <i class="ph ph-clock fs-1 mb-2"></i>
-                                    <h5 class="text-muted mb-2">Evaluation Pending</h5>
-                                    <p class="mb-0 small">
-                                        Evaluation will be available after the intern completes their internship.
-                                    </p>
-                                </div>
+                        </div>
+                    @else
+                        <!-- Show pending message for deployed interns -->
+                        <div class="text-center text-muted py-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                            <div>
+                                <i class="ph ph-clock fs-1 mb-2"></i>
+                                <h5 class="text-muted mb-2">Evaluation Pending</h5>
+                                <p class="mb-0 small">
+                                    Evaluation will be available after the intern completes their internship.
+                                </p>
                             </div>
-                        @endif
+                        </div>
+                    @endif
                     @endif
                 </div>
             </div>
