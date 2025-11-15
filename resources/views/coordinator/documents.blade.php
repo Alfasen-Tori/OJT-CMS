@@ -72,8 +72,8 @@
                                         @switch($type)
                                             @case('consolidated_moas') Consolidated and notarized Memorandum of Agreements for all interns @break
                                             @case('consolidated_sics') Consolidated and notarized Student Internship Contracts @break
-                                            @case('annex_c') ANEXX CMO104 Series of 2017 compliance document @break
-                                            @case('annex_d') ANEXX CMO104 Series of 2017 compliance document @break
+                                            @case('annex_c') ANNEX C CMO104 Series of 2017 compliance document @break
+                                            @case('annex_d') ANNEX D CMO104 Series of 2017 compliance document @break
                                             @case('honorarium_request') Official honorarium request form from the President's office @break
                                             @case('special_order') Special Order issued by the President @break
                                             @case('board_resolution') Board Resolution approving the honorarium @break
