@@ -122,25 +122,29 @@
               </td>
               <td class="text-center px-2 align-middle">
                 <div class="dropdown">
-                  <button class="btn btn-sm btn-outline-dark px-2 rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="ph-fill ph-gear custom-icons-i"></i>
-                  </button>
-                  <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-                    <!-- View Option -->
-                    <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('admin.coordinators.documents', $coordinator->id) }}">
-                      <i class="ph ph-eye custom-icons-i mr-2"></i>View
-                    </a>
-                    
-                    <!-- Update Option -->
-                    <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('admin.coordinators.edit', $coordinator->id) }}">
-                      <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
-                    </a>
-                    
-                    <!-- Delete Option -->
-                    <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#deleteCoordinator{{ $coordinator->id }}">
-                      <i class="ph ph-trash custom-icons-i mr-2"></i>Delete
-                    </a>
-                  </div>
+                    <button class="btn btn-sm btn-outline-primary px-2 rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="ph-fill ph-gear custom-icons-i"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right shadow-sm border py-0" aria-labelledby="actionDropdown">
+                        <!-- View Option -->
+                        <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('admin.coordinators.documents', $coordinator->id) }}">
+                            <i class="ph ph-eye custom-icons-i mr-2"></i>View
+                        </a>
+                        
+                        <div class="dropdown-divider my-1"></div>
+                        
+                        <!-- Update Option -->
+                        <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('admin.coordinators.edit', $coordinator->id) }}">
+                            <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
+                        </a>
+                        
+                        <div class="dropdown-divider my-1"></div>
+                        
+                        <!-- Delete Option -->
+                        <a class="dropdown-item d-flex align-items-center py-2 text-danger" href="#" data-toggle="modal" data-target="#deleteCoordinator{{ $coordinator->id }}">
+                            <i class="ph ph-trash custom-icons-i mr-2"></i>Delete
+                        </a>
+                    </div>
                 </div>
                 
                 <!-- Delete Confirmation Modal -->

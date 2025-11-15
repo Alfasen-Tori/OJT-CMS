@@ -28,7 +28,7 @@
       <div class="col-md-4 d-flex flex-column justify-content-between">
         <!-- Coordinator Info Card -->
         <div class="card">
-          <div class="card-header bg-white">
+          <div class="card-header">
             <h5 class="card-title mb-0">Coordinator Information</h5>
           </div>
           <div class="card-body">
@@ -88,7 +88,7 @@
 
         <!-- Status Card - Takes remaining space -->
         <div class="card mt-1 flex-grow-1 mb-0">
-          <div class="card-header bg-white">
+          <div class="card-header">
             <h5 class="card-title mb-0">Honorarium Status</h5>
           </div>
           <div class="card-body d-flex flex-column">
@@ -137,7 +137,7 @@
       <div class="col-md-8">
         <!-- Documents Card - Full height -->
         <div class="card h-100">
-          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">Required Documents</h5>
             <span class="badge ml-auto {{ $documents->count() >= 6 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-danger' }}">
               {{ $documents->count() }}/6 Submitted
@@ -221,7 +221,7 @@
                 </tbody>
               </table>
             </div>
-            <div class="card-footer bg-light mt-auto">
+            <div class="card-footer mt-auto">
               <div class="row">
                 <div class="col-md-6">
                   <small class="text-muted">

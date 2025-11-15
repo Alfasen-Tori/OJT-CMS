@@ -143,7 +143,7 @@
                         </div>
                     </div>
 
-                    <div class="card-footer d-flex justify-content-end bg-white px-0 pt-4">
+                    <div class="card-footer d-flex justify-content-end py-3">
                         <button type="submit" class="btn btn-primary">
                             <i class="ph-fill ph-floppy-disk-back custom-icons-i mr-1"></i>Save Changes
                         </button>
@@ -154,7 +154,7 @@
     </div>
 </section>
 
-@include('layouts.partials.scripts')
+@include('layouts.partials.scripts-main')
 
 <script>
 $(document).ready(function() {
