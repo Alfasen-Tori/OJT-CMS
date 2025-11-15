@@ -29,12 +29,29 @@
             <h3 class="card-title">User Session Logs</h3>
             
             <div class="card-tools">
-              <div class="input-group input-group-sm">
+              <div class="input-group input-group-sm" style="width: 300px;">
+                <div class="input-group-prepend">
+                  <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-success" id="printBtn">
+                      <i class="fas fa-print"></i>
+                      Print
+                    </button>
+                    <button type="button" class="btn btn-sm  btn-success dropdown-toggle dropdown-icon" data-toggle="dropdown">
+                      <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <div class="dropdown-menu" role="menu">
+                      <a class="dropdown-item" href="#" id="printCurrentView">
+                        <i class="fas fa-print mr-2"></i>Print Current View
+                      </a>
+                      <a class="dropdown-item" href="#" id="printAllData">
+                        <i class="fas fa-file-pdf mr-2"></i>Print All Data
+                      </a>
+                    </div>
+                  </div>
+                </div>
                 <input type="text" class="form-control" placeholder="Search..." id="searchInput">
                 <div class="input-group-append">
-                  <button class="btn btn-primary" id="searchBtn">
-                    <i class="fas fa-search"></i>
-                  </button>
+
                 </div>
               </div>
             </div>
@@ -45,7 +62,7 @@
             <div class="row mb-3">
               <div class="col-md-3">
                 <select class="form-control" id="userTypeFilter">
-                  <option value="">All</option>
+                  <option value="">All User Types</option>
                   <option value="admin">Admin</option>
                   <option value="coordinator">Coordinator</option>
                   <option value="intern">Intern</option>
@@ -67,7 +84,7 @@
 
             <!-- Session Logs Table -->
             <div class="table-responsive">
-              <table class="table table-bordered table-striped">
+              <table class="table table-bordered table-striped" id="sessionsTable">
                 <thead>
                   <tr>
                     <th>User</th>
@@ -99,6 +116,41 @@
     </div>
   </div>
 </section>
+
+<!-- Print Styles and Script -->
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-section, .print-section * {
+    visibility: visible;
+  }
+  .print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+  }
+  .badge {
+    border: 1px solid #000 !important;
+    color: #000 !important;
+    background-color: transparent !important;
+  }
+}
+</style>
 
 @include('layouts.partials.scripts')
 
@@ -140,6 +192,262 @@ $(document).ready(function() {
         loadSessionData();
     });
 
+    // Print functionality
+    $('#printCurrentView').click(function(e) {
+        e.preventDefault();
+        printCurrentView();
+    });
+
+    $('#printAllData').click(function(e) {
+        e.preventDefault();
+        printAllData();
+    });
+
+    $('#printBtn').click(function() {
+        printCurrentView();
+    });
+
+    function printCurrentView() {
+        // Create a print-friendly version of the current table
+        const printContent = createPrintContent('Current View Session Audit Trail');
+        
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        
+        // Wait for content to load then print
+        printWindow.onload = function() {
+            printWindow.print();
+            // printWindow.close(); // Optional: close after printing
+        };
+    }
+
+    function printAllData() {
+        // Show loading state
+        $('#sessionsTableBody').html(`
+            <tr>
+                <td colspan="6" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <div class="mt-2">Preparing all data for printing...</div>
+                </td>
+            </tr>
+        `);
+
+        // Get all data without pagination
+        $.ajax({
+            url: '{{ route("admin.audit-trail.sessions.data") }}',
+            type: 'GET',
+            data: {
+                ...currentFilters,
+                all_data: true // Add this parameter to your backend
+            },
+            success: function(response) {
+                const printContent = createPrintContent('Complete Session Audit Trail', response.data);
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                
+                printWindow.onload = function() {
+                    printWindow.print();
+                };
+
+                // Reload the normal view
+                loadSessionData();
+            },
+            error: function(xhr) {
+                console.error('Error loading all data:', xhr);
+                alert('Error loading data for printing. Please try again.');
+                loadSessionData();
+            }
+        });
+    }
+
+    function createPrintContent(title, sessions = null) {
+        const currentDate = new Date().toLocaleString();
+        const filtersInfo = getCurrentFiltersInfo();
+        
+        // Use provided sessions or current table data
+        const tableRows = sessions ? generateTableRows(sessions) : $('#sessionsTableBody').html();
+
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${title}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+            color: #000;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            color: #000;
+        }
+        .print-info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        .print-info p {
+            margin: 2px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th {
+            background-color: #f8f9fa !important;
+            border: 1px solid #000 !important;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            border: 1px solid #000 !important;
+            padding: 6px;
+        }
+        .badge {
+            border: 1px solid #000 !important;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${title}</h1>
+    </div>
+    
+    <div class="print-info">
+        <p><strong>Generated on:</strong> ${currentDate}</p>
+        <p><strong>Filters applied:</strong> ${filtersInfo}</p>
+        <p><strong>Generated by:</strong> {{ auth()->user()->name ?? 'System Admin' }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>User Type</th>
+                <th>Login Time</th>
+                <th>Logout Time</th>
+                <th>Duration</th>
+                <th>User Agent</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${tableRows}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Session Audit Trail Report - Generated by Internship Management System</p>
+        <p>Page generated on ${currentDate}</p>
+    </div>
+</body>
+</html>`;
+    }
+
+    function getCurrentFiltersInfo() {
+        const filters = [];
+        
+        if ($('#userTypeFilter').val()) {
+            filters.push('User Type: ' + $('#userTypeFilter').val());
+        }
+        if ($('#dateFromFilter').val()) {
+            filters.push('From: ' + $('#dateFromFilter').val());
+        }
+        if ($('#dateToFilter').val()) {
+            filters.push('To: ' + $('#dateToFilter').val());
+        }
+        if ($('#searchInput').val()) {
+            filters.push('Search: ' + $('#searchInput').val());
+        }
+
+        return filters.length > 0 ? filters.join(', ') : 'All sessions';
+    }
+
+    function generateTableRows(sessions) {
+        if (!sessions || sessions.length === 0) {
+            return '<tr><td colspan="6" style="text-align: center; padding: 20px;">No session data found</td></tr>';
+        }
+
+        return sessions.map(session => {
+            const loginTime = session.login_at ? new Date(session.login_at).toLocaleString() : 'N/A';
+            const logoutTime = session.logout_at ? new Date(session.logout_at).toLocaleString() : 'N/A';
+            
+            let duration = 'N/A';
+            if (session.login_at && session.logout_at) {
+                const login = new Date(session.login_at);
+                const logout = new Date(session.logout_at);
+                const diffMs = logout - login;
+                const diffSecs = Math.floor(diffMs / 1000);
+                
+                const hours = Math.floor(diffSecs / 3600);
+                const minutes = Math.floor((diffSecs % 3600) / 60);
+                const seconds = diffSecs % 60;
+                
+                if (hours > 0) {
+                    duration = `${hours}h ${minutes}m ${seconds}s`;
+                } else if (minutes > 0) {
+                    duration = `${minutes}m ${seconds}s`;
+                } else {
+                    duration = `${seconds}s`;
+                }
+            }
+            
+            const userDisplayName = session.user ? 
+                `${session.user.fname} ${session.user.lname}` : 'Unknown User';
+
+            const userTypeBadge = `<span class="badge">${session.user_type.toUpperCase()}</span>`;
+
+            return `
+                <tr>
+                    <td>${escapeHtml(userDisplayName)}</td>
+                    <td>${userTypeBadge}</td>
+                    <td>${loginTime}</td>
+                    <td>${logoutTime}</td>
+                    <td><strong>${duration}</strong></td>
+                    <td>${escapeHtml(session.user_agent || 'N/A')}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function loadSessionData() {
         const filters = {
             user_type: $('#userTypeFilter').val(),
@@ -153,7 +461,7 @@ $(document).ready(function() {
         // Show loading state
         $('#sessionsTableBody').html(`
             <tr>
-                <td colspan="7" class="text-center py-4">
+                <td colspan="6" class="text-center py-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
@@ -177,7 +485,7 @@ $(document).ready(function() {
                 console.error('Error loading session data:', xhr);
                 $('#sessionsTableBody').html(`
                     <tr>
-                        <td colspan="7" class="text-center text-danger py-4">
+                        <td colspan="6" class="text-center text-danger py-4">
                             <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
                             Error loading session data. Please try again.
                         </td>
@@ -194,7 +502,7 @@ $(document).ready(function() {
         if (sessions.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         <i class="fas fa-info-circle fa-2x mb-2"></i><br>
                         No session logs found matching your criteria.
                     </td>
@@ -391,6 +699,3 @@ $(document).ready(function() {
 });
 </script>
 @endsection
-
-
-

@@ -29,12 +29,29 @@
             <h3 class="card-title">User Management Activities</h3>
             
             <div class="card-tools">
-              <div class="input-group input-group-sm">
+              <div class="input-group input-group-sm" style="width: 300px;">
+                <div class="input-group-prepend">
+                  <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-success" id="printBtn">
+                      <i class="fas fa-print"></i>
+                      Print
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success dropdown-toggle dropdown-icon" data-toggle="dropdown">
+                      <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <div class="dropdown-menu" role="menu">
+                      <a class="dropdown-item" href="#" id="printCurrentView">
+                        <i class="fas fa-print mr-2"></i>Print Current View
+                      </a>
+                      <a class="dropdown-item" href="#" id="printAllData">
+                        <i class="fas fa-file-pdf mr-2"></i>Print All Data
+                      </a>
+                    </div>
+                  </div>
+                </div>
                 <input type="text" class="form-control" placeholder="Search activities..." id="searchInput">
                 <div class="input-group-append">
-                  <button class="btn btn-primary" id="searchBtn">
-                    <i class="fas fa-search"></i>
-                  </button>
+
                 </div>
               </div>
             </div>
@@ -73,7 +90,7 @@
 
             <!-- User Activities Table -->
             <div class="table-responsive">
-              <table class="table table-bordered table-striped">
+              <table class="table table-bordered table-striped" id="usersTable">
                 <thead>
                   <tr>
                     <th>Timestamp</th>
@@ -104,6 +121,44 @@
   </div>
 </section>
 
+<!-- Print Styles and Script -->
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-section, .print-section * {
+    visibility: visible;
+  }
+  .print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+  }
+  .badge {
+    border: 1px solid #000 !important;
+    color: #000 !important;
+    background-color: transparent !important;
+  }
+  .change-item {
+    margin: 2px 0;
+  }
+}
+</style>
+
 @include('layouts.partials.scripts')
 
 <script>
@@ -127,7 +182,7 @@ $(document).ready(function() {
     });
 
     // Filter functionality
-    $('#actionFilter, #userTypeFilter, #dateFromFilter, #dateToFilter').change(function() {
+    $('#actionFilter, #userTypeFilter, #dateFromFilter').change(function() {
         currentPage = 1;
         loadUserData();
     });
@@ -137,25 +192,309 @@ $(document).ready(function() {
         $('#actionFilter').val('');
         $('#userTypeFilter').val('');
         $('#dateFromFilter').val('');
-        $('#dateToFilter').val('');
         $('#searchInput').val('');
         currentPage = 1;
         loadUserData();
     });
+
+    // Print functionality
+    $('#printCurrentView').click(function(e) {
+        e.preventDefault();
+        printCurrentView();
+    });
+
+    $('#printAllData').click(function(e) {
+        e.preventDefault();
+        printAllData();
+    });
+
+    $('#printBtn').click(function() {
+        printCurrentView();
+    });
+
+    function printCurrentView() {
+        // Create a print-friendly version of the current table
+        const printContent = createPrintContent('Current View - User Management Audit Trail');
+        
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        
+        // Wait for content to load then print
+        printWindow.onload = function() {
+            printWindow.print();
+        };
+    }
+
+    function printAllData() {
+        // Show loading state
+        $('#usersTableBody').html(`
+            <tr>
+                <td colspan="4" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <div class="mt-2">Preparing all data for printing...</div>
+                </td>
+            </tr>
+        `);
+
+        // Get all data without pagination
+        $.ajax({
+            url: '{{ route("admin.audit-trail.users.data") }}',
+            type: 'GET',
+            data: {
+                action: $('#actionFilter').val(),
+                user_type: $('#userTypeFilter').val(),
+                date_from: $('#dateFromFilter').val(),
+                search: $('#searchInput').val(),
+                all_data: true
+            },
+            success: function(response) {
+                const printContent = createPrintContent('Complete User Management Audit Trail', response.data);
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                
+                printWindow.onload = function() {
+                    printWindow.print();
+                };
+
+                // Reload the normal view
+                loadUserData();
+            },
+            error: function(xhr) {
+                console.error('Error loading all data:', xhr);
+                alert('Error loading data for printing. Please try again.');
+                loadUserData();
+            }
+        });
+    }
+
+    function createPrintContent(title, activities = null) {
+        const currentDate = new Date().toLocaleString();
+        const filtersInfo = getCurrentFiltersInfo();
+        
+        // Use provided activities or current table data
+        const tableRows = activities ? generateTableRows(activities) : $('#usersTableBody').html();
+
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${title}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+            color: #000;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            color: #000;
+        }
+        .print-info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        .print-info p {
+            margin: 2px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th {
+            background-color: #f8f9fa !important;
+            border: 1px solid #000 !important;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            border: 1px solid #000 !important;
+            padding: 6px;
+            vertical-align: top;
+        }
+        .badge {
+            border: 1px solid #000 !important;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .change-item {
+            margin: 1px 0;
+            font-size: 11px;
+        }
+        .text-danger s {
+            color: #dc3545 !important;
+        }
+        .text-success {
+            color: #28a745 !important;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${title}</h1>
+    </div>
+    
+    <div class="print-info">
+        <p><strong>Generated on:</strong> ${currentDate}</p>
+        <p><strong>Filters applied:</strong> ${filtersInfo}</p>
+        <p><strong>Generated by:</strong> {{ auth()->user()->name ?? 'System Admin' }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Performed By</th>
+                <th>Action</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${tableRows}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>User Management Audit Trail Report - Generated by Internship Management System</p>
+        <p>Page generated on ${currentDate}</p>
+    </div>
+</body>
+</html>`;
+    }
+
+    function getCurrentFiltersInfo() {
+        const filters = [];
+        
+        if ($('#actionFilter').val()) {
+            filters.push('Action: ' + $('#actionFilter option:selected').text());
+        }
+        if ($('#userTypeFilter').val()) {
+            filters.push('Performer Type: ' + $('#userTypeFilter option:selected').text());
+        }
+        if ($('#dateFromFilter').val()) {
+            filters.push('From: ' + $('#dateFromFilter').val());
+        }
+        if ($('#searchInput').val()) {
+            filters.push('Search: ' + $('#searchInput').val());
+        }
+
+        return filters.length > 0 ? filters.join(', ') : 'All activities';
+    }
+
+    function generateTableRows(activities) {
+        if (!activities || activities.length === 0) {
+            return '<tr><td colspan="4" style="text-align: center; padding: 20px;">No user management activities found</td></tr>';
+        }
+
+        return activities.map(activity => {
+            const actionBadge = getPrintActionBadge(activity.action);
+            const timestamp = new Date(activity.created_at).toLocaleString();
+            const userTypeDisplay = getUserTypeDisplay(activity.user_type);
+            const changesHtml = renderPrintValueChanges(activity.old_values, activity.new_values);
+
+            return `
+                <tr>
+                    <td>${timestamp}</td>
+                    <td>
+                        <strong>${escapeHtml(activity.user_display_name)}</strong><br>
+                        <small>${userTypeDisplay}</small>
+                    </td>
+                    <td>${actionBadge}</td>
+                    <td>
+                        <div>${escapeHtml(activity.changes || 'User management activity')}</div>
+                        ${changesHtml}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderPrintValueChanges(oldValues, newValues) {
+        if (!oldValues || !newValues) return '';
+        
+        let changesHtml = '<div style="margin-top: 5px;">';
+        
+        Object.keys(newValues).forEach(key => {
+            const oldVal = oldValues[key] || 'empty';
+            const newVal = newValues[key];
+            
+            if (oldVal !== newVal) {
+                changesHtml += `
+                    <div class="change-item">
+                        <span>${formatKey(key)}:</span> 
+                        <span class="text-danger"><s>${formatValue(oldVal)}</s></span> → 
+                        <span class="text-success">${formatValue(newVal)}</span>
+                    </div>
+                `;
+            }
+        });
+        
+        changesHtml += '</div>';
+        return changesHtml;
+    }
+
+    function getPrintActionBadge(action) {
+        const badges = {
+            'created': 'badge badge-success',
+            'updated': 'badge badge-primary', 
+            'deleted': 'badge badge-danger',
+            'role_assigned': 'badge badge-info'
+        };
+        
+        const badgeClass = badges[action] || 'badge badge-secondary';
+        const actionText = action.replace('_', ' ').toUpperCase();
+        return `<span class="${badgeClass}">${actionText}</span>`;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
     function loadUserData() {
         const filters = {
             action: $('#actionFilter').val(),
             user_type: $('#userTypeFilter').val(),
             date_from: $('#dateFromFilter').val(),
-            date_to: $('#dateToFilter').val(),
             search: $('#searchInput').val()
         };
 
         // Show loading state
         $('#usersTableBody').html(`
             <tr>
-                <td colspan="5" class="text-center py-4">
+                <td colspan="4" class="text-center py-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
@@ -179,7 +518,7 @@ $(document).ready(function() {
                 console.error('Error loading user data:', xhr);
                 $('#usersTableBody').html(`
                     <tr>
-                        <td colspan="5" class="text-center text-danger py-4">
+                        <td colspan="4" class="text-center text-danger py-4">
                             <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
                             Error loading user activities. Please try again.
                         </td>
@@ -196,7 +535,7 @@ $(document).ready(function() {
         if (activities.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
+                    <td colspan="4" class="text-center text-muted py-4">
                         <i class="fas fa-search fa-2x mb-2"></i><br>
                         No user management activities found matching your criteria.
                     </td>
@@ -419,6 +758,3 @@ $(document).ready(function() {
 });
 </script>
 @endsection
-
-
-
