@@ -24,7 +24,7 @@
     <div class="row justify-content-center align-items-center min-vh-80">
       <div class="col-sm-6 col-lg-10">
         <div class="card shadow">
-          <div class="card-header bg-white text-white">
+          <div class="card-header">
             <h3 class="card-title">MOA Submission</h3>
           </div>
           

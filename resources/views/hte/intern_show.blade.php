@@ -8,7 +8,7 @@
     <div class="row mb-1">
         <div class="col-md-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-white text-dark">
+                <div class="card-header">
                     <h3 class="card-title mb-0">
                         <i class="ph ph-graduation-cap details-icons-i mr-2"></i>
                         Intern Details
@@ -184,9 +184,9 @@
         @if($currentDeployment)
         <div class="col-lg-6 col-md-6 mb-4">
             <div class="card shadow-sm h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-chart-donut custom-icons-i me-1 text-primary"></i>
+                        <i class="ph ph-chart-donut custom-icons-i me-1"></i>
                         Progress
                     </h5>
                 </div>
@@ -236,9 +236,9 @@
         <!-- 2. Evaluation Section -->
         <div class="col-lg-6 col-md-6 mb-4">
             <div class="card shadow-sm h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-clipboard-text custom-icons-i me-1 text-success"></i>
+                        <i class="ph ph-clipboard-text custom-icons-i me-1"></i>
                         Evaluation
                     </h5>
                 </div>
@@ -419,7 +419,7 @@
                                                 <div class="col-md-4">
                                                     <div class="input-group input-group-sm">
                                                         <input type="number" 
-                                                            class="form-control factor-input border" 
+                                                            class="form-control factor-input" 
                                                             id="{{ $factor }}{{ $currentDeployment->id }}" 
                                                             name="{{ $factor }}" 
                                                             min="0" 
@@ -427,7 +427,7 @@
                                                             step="1" 
                                                             placeholder="0-100"
                                                             required>
-                                                        <span class="input-group-text bg-white">/100</span>
+                                                        <span class="input-group-text">/100</span>
                                                     </div>
                                                 </div>
                                             </div>

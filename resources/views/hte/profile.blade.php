@@ -154,7 +154,7 @@
                         </div>
                     </div> -->
 
-                    <div class="card-footer d-flex justify-content-end bg-white px-0">
+                    <div class="card-footer d-flex justify-content-end py-3 rounded-3 mt-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="ph-fill ph-floppy-disk-back custom-icons-i mr-1"></i>Save Changes
                         </button>

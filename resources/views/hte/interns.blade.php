@@ -198,40 +198,41 @@
                     @endif
                 </td>
                 <td class="text-center px-2 align-middle">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-dark dropdown-toggle rounded-pill position-relative" 
-                                type="button" 
-                                id="actionDropdown" 
-                                data-toggle="dropdown" 
-                                aria-haspopup="true" 
-                                aria-expanded="false">
-                            <i class="ph-fill ph-gear custom-icons-i"></i>
-                            
-                            <!-- Notification Badge -->
-                            @if($needsEvaluation)
-                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                                    <span class="visually-hidden">Evaluation needed</span>
-                                </span>
-                            @endif
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-                            <!-- View Option -->
-                            <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('hte.intern.show', $intern->id) }}">
-                                <i class="ph ph-eye custom-icons-i mr-2"></i>View
-                            </a>
-                            
-                            <!-- Evaluate Option - Only show if completed and not evaluated -->
-                            @if($needsEvaluation)
-                                <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-primary" 
-                                  href="#" 
-                                  data-toggle="modal" 
-                                  data-target="#evaluateModal{{ $deployment->id }}">
-                                    <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>
-                                    <span>Evaluate</span>
-                                </a>
-                            @endif
-                        </div>
-                    </div>
+                  <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-primary dropdown-toggle rounded-pill position-relative" 
+                              type="button" 
+                              id="actionDropdown" 
+                              data-toggle="dropdown" 
+                              aria-haspopup="true" 
+                              aria-expanded="false">
+                          <i class="ph-fill ph-gear custom-icons-i"></i>
+                          
+                          <!-- Notification Badge -->
+                          @if($needsEvaluation)
+                              <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                  <span class="visually-hidden">Evaluation needed</span>
+                              </span>
+                          @endif
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-right shadow border-0" aria-labelledby="actionDropdown">
+                          <!-- View Option -->
+                          <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('hte.intern.show', $intern->id) }}">
+                              <i class="ph ph-eye custom-icons-i mr-2"></i>View
+                          </a>
+                          
+                          <!-- Evaluate Option - Only show if completed and not evaluated -->
+                          @if($needsEvaluation)
+                              <div class="dropdown-divider my-1"></div>
+                              <a class="dropdown-item d-flex align-items-center py-2 text-primary font-weight-bold" 
+                                href="#" 
+                                data-toggle="modal" 
+                                data-target="#evaluateModal{{ $deployment->id }}">
+                                  <i class="ph ph-clipboard-text custom-icons-i mr-2"></i>
+                                  <span>Evaluate</span>
+                              </a>
+                          @endif
+                      </div>
+                  </div>
                 </td>
             </tr>
 
@@ -325,7 +326,7 @@
                         <div class="col-md-4">
                           <div class="input-group input-group-sm">
                             <input type="number" 
-                                   class="form-control factor-input border" 
+                                   class="form-control factor-input" 
                                    id="{{ $factor }}{{ $deployment->id }}" 
                                    name="{{ $factor }}" 
                                    min="0" 
@@ -333,7 +334,7 @@
                                    step="1" 
                                    placeholder="0-100"
                                    required>
-                            <span class="input-group-text bg-white">/100</span>
+                            <span class="input-group-text">/100</span>
                           </div>
                         </div>
                       </div>

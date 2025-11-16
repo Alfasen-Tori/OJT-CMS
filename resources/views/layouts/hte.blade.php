@@ -1,4 +1,3 @@
-<!-- resources/views/layouts/app.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title', 'HTE | Dashboard')</title>
 
-  @include('layouts.partials.styles') {{-- Extract styles to a separate file --}}
+  <!-- Apply dark mode BEFORE any content renders -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
+
+  @include('layouts.partials.styles')
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 <div class="wrapper">
@@ -20,6 +29,6 @@
 
 </div>
 
-@include('layouts.partials.scripts') {{-- Extract scripts to a separate file --}}
+@include('layouts.partials.scripts')
 </body>
 </html>
