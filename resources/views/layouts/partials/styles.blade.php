@@ -515,6 +515,98 @@
   background: #5a6268;
 }
 
+/* Light Mode Scrollbar */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 6px;
+    border: 2px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+::-webkit-scrollbar-corner {
+    background: #f1f1f1;
+}
+
+/* Firefox Light Mode Scrollbar */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Dark Mode Scrollbar */
+html.dark-mode ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+html.dark-mode ::-webkit-scrollbar-track {
+    background: #2d3338;
+    border-radius: 6px;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb {
+    background: #495057;
+    border-radius: 6px;
+    border: 2px solid #2d3338;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #5a6268;
+}
+
+html.dark-mode ::-webkit-scrollbar-corner {
+    background: #2d3338;
+}
+
+/* Firefox Dark Mode Scrollbar */
+html.dark-mode {
+    scrollbar-width: thin;
+    scrollbar-color: #495057 #2d3338;
+}
+
+/* Specific scrollbar styling for sidebar */
+.sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+html.dark-mode .sidebar {
+    scrollbar-color: #495057 #2d3338;
+}
+
+/* Modal scrollbar styling */
+.modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+html.dark-mode .modal-body {
+    scrollbar-color: #495057 #2d3338;
+}
+
+/* DataTables scrollbar styling */
+.dataTables_scrollBody {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+html.dark-mode .dataTables_scrollBody {
+    scrollbar-color: #495057 #2d3338;
+}
+
 /* ===== FIX TD TEXT COLOR IN DARK MODE ===== */
 /* Target only table cells that don't have text color utilities */
 .dark-mode table.dataTable tbody td:not([class*="text-"]) {

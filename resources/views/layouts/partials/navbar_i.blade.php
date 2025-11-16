@@ -12,7 +12,7 @@
     <!-- Dark Mode Toggle -->
     <li class="nav-item">
       <a class="nav-link" href="#" id="darkModeToggle" role="button" title="Toggle Dark Mode">
-        <i class="fas fa-moon" id="darkModeIcon"></i>
+        <i class="ph-fill ph-moon custom-icons-i" id="darkModeIcon"></i>
       </a>
     </li>
     
@@ -96,8 +96,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Check current theme and update icon
   function updateDarkModeIcon() {
     const isDarkMode = html.classList.contains('dark-mode');
-    darkModeIcon.classList.toggle('fa-moon', !isDarkMode);
-    darkModeIcon.classList.toggle('fa-sun', isDarkMode);
+    darkModeIcon.classList.toggle('ph-moon', !isDarkMode);
+    darkModeIcon.classList.toggle('ph-sun', isDarkMode);
   }
 
   // Toggle dark mode

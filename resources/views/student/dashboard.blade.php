@@ -275,7 +275,7 @@
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header border-0">
           <h6 class="mb-0 fw-bold">
-            <i class="fas fa-clipboard-list text-primary me-2"></i>
+            <i class="ph ph-clipboard custom-icons-i me-2"></i>
             Pre-Deployment Requirements
           </h6>
         </div>
