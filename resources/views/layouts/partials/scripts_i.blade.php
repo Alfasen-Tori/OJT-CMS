@@ -148,12 +148,12 @@ $(document).ready(function() {
                 tableRow.find('td:eq(2)').html(`
                     <span class="badge bg-success-subtle text-success py-2 px-3 rounded-pill w-100">Submitted</span>
                     <br>
-                    <small>${response.created_at}</small>
+                    <small  class="text-muted">${response.created_at}</small>
                 `);
                 
                 tableRow.find('td:eq(3)').html(`
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn  btn-outline-primary rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="ph-fill ph-gear custom-icons-i"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-right py-0 overflow-hidden" aria-labelledby="actionDropdown">

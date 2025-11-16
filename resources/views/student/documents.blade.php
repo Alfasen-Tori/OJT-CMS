@@ -85,7 +85,7 @@
                                     <td class="text-center align-middle">
                                         @if($document)
                                             <span class="badge bg-success-subtle text-success py-2 px-3 rounded-4 w-100 status-badge">Submitted</span><br>
-                                            <small>{{ $document->created_at->format('Y-m-d') }}</small>
+                                            <small class="text-muted">{{ $document->created_at->format('Y-m-d') }}</small>
                                         @else
                                             <span class="badge bg-danger-subtle text-danger py-2 px-3 rounded-pill w-100 status-badge">Missing</span>
                                         @endif
@@ -93,11 +93,11 @@
                                     <td class="text-center align-middle">
                                         @if($document)
                                         <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <button class="btn btn-outline-primary rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="ph-fill ph-gear custom-icons-i"></i>
                                             </button>
-                                            <div class="dropdown-menu dropdown-menu-right py-0 overflow-hidden" aria-labelledby="actionDropdown">
-                                                <button class="dropdown-item btn btn-outline-light view-document w-100 fw-medium border-bottom border-lightgray btn-flat text-dark py-2" 
+                                            <div class="dropdown-menu dropdown-menu-right p-0 overflow-hidden" aria-labelledby="actionDropdown">
+                                                <button class="dropdown-item btn btn-outline-primary view-document w-100 fw-medium border-bottom border-lightgray btn-flat py-2" 
                                                         data-url="{{ Storage::url($document->file_path) }}">
                                                     <i class="ph ph-eye custom-icons-i"></i>
                                                     <span>View</span>
@@ -233,7 +233,10 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="documentFile">Select PDF File (max 5MB)</label>
-                        <input type="file" class="form-control" id="documentFile" name="document" accept=".pdf" required>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="documentFile" name="document" accept=".pdf" required>
+                            <label class="custom-file-label" for="documentFile">Choose file</label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">

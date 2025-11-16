@@ -489,7 +489,7 @@
 }
 
 .dark-mode .text-muted {
-  color: #6c757d !important;
+  color: #b6b6b6ff !important;
 }
 
 /* Badges */
@@ -655,6 +655,20 @@ html.dark-mode .btn-outline-primary:hover {
 
 html.dark-mode .dropdown-toggle::after {
     border-top-color: rgba(255, 255, 255, 0.8);
+}
+
+html.dark-mode .knob-center {
+    background: #343a40;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .knob-center h3 {
+color: #f8f9fa;
+}
+
+html.dark-mode .offcanvas {
+    background: #343a40;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 

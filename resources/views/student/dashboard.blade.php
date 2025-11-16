@@ -214,13 +214,13 @@
     {{-- HTE ASSIGNMENT CARD --}}
     @if(isset($hteDetails))
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white border-bottom-0 pb-2 fw-bold">
+            <div class="card-header pb-2 fw-bold">
                 <div class="d-flex align-items-center">
-                    <i class="ph-fill ph-building-apartment text-primary me-2 fs-5"></i>
+                    <i class="ph ph-building-apartment me-2 fs-5"></i>
                     <span>HTE Assignment</span>
                 </div>
             </div>
-            <div class="card-body pt-0">
+            <div class="card-body">
                 {{-- Organization Name --}}
                 <h5 class="fw-bold text-primary mb-1 text-break">{{ $hteDetails->organization_name }}</h5>
                 
@@ -273,7 +273,7 @@
     {{-- DOCUMENT REQUIREMENTS CHECKLIST --}}
     @if(in_array($status, ['pending requirements', 'ready for deployment']))
       <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0">
+        <div class="card-header border-0">
           <h6 class="mb-0 fw-bold">
             <i class="fas fa-clipboard-list text-primary me-2"></i>
             Pre-Deployment Requirements
@@ -284,7 +284,6 @@
           {{-- Completion Badge --}}
           <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="fw-medium text-muted">
-              Submission Status:
               @if($documents->count() >= 9)
                 <span class="badge bg-success-subtle text-success px-3 py-2">
                   <i class="fas fa-check-circle me-1"></i>Complete ({{ $documents->count() }}/9)
@@ -296,8 +295,8 @@
               @endif
             </span>
 
-            <a href="{{ route('intern.docs') }}" class="btn btn-sm btn-outline-primary fw-medium">
-              <i class="fas fa-folder-open me-2"></i>Submit Requirements
+            <a href="{{ route('intern.docs') }}" class="fw-medium">
+              Upload <i class="ph ph-arrow-right custom-icons-i"></i>
             </a>
           </div>
 
@@ -341,9 +340,9 @@
         <!-- Time Tracking Section -->
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-clock custom-icons-i me-1 text-success"></i>
+                        <i class="ph ph-clock custom-icons-i me-1"></i>
                         Time Tracking
                     </h5>
                 </div>
@@ -417,9 +416,9 @@
         <!-- Progress Section -->
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="ph-fill ph-chart-donut custom-icons-i me-1 text-primary"></i>
+                        <i class="ph ph-chart-donut custom-icons-i me-1"></i>
                         Your Progress
                     </h5>
                 </div>
@@ -468,9 +467,9 @@
         <!-- Quick Stats -->
         <div class="col-lg-4 col-md-12 mb-4">
             <div class="card h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-tachometer-alt me-2 text-warning"></i>
+                        <i class="ph ph-info custom-icons-i me-2"></i>
                         Quick Stats
                     </h5>
                 </div>
@@ -521,219 +520,219 @@
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const timeDisplay = document.getElementById('currentTime');
-    const dateDisplay = document.getElementById('currentDate');
-    const punchBtnContainer = document.getElementById('attendanceControls');
-    const summaryCard = document.getElementById('attendanceSummary');
-    const studentIdInput = document.getElementById('studentIdInput');
-    const todayIn = document.getElementById('todayIn');
-    const todayOut = document.getElementById('todayOut');
-    const todayHours = document.getElementById('todayHours');
-    const startDate = new Date(document.getElementById('internStartDate').value);
-    const hoursCompleted = document.getElementById('hoursCompleted').value === 'true';
+    document.addEventListener('DOMContentLoaded', function () {
+        const timeDisplay = document.getElementById('currentTime');
+        const dateDisplay = document.getElementById('currentDate');
+        const punchBtnContainer = document.getElementById('attendanceControls');
+        const summaryCard = document.getElementById('attendanceSummary');
+        const studentIdInput = document.getElementById('studentIdInput');
+        const todayIn = document.getElementById('todayIn');
+        const todayOut = document.getElementById('todayOut');
+        const todayHours = document.getElementById('todayHours');
+        const startDate = new Date(document.getElementById('internStartDate').value);
+        const hoursCompleted = document.getElementById('hoursCompleted').value === 'true';
 
-    // Real-time clock
-    setInterval(() => {
-        const now = new Date();
-        timeDisplay.textContent = now.toLocaleTimeString();
-        dateDisplay.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-    }, 1000);
-
-    // Load initial progress (without showing completion toast)
-    updateProgress(false);
-
-    // Only set up attendance tracking if hours are not completed
-    if (!hoursCompleted) {
-        fetchAttendanceStatus();
-    }
-
-    function fetchAttendanceStatus() {
-        if (hoursCompleted) return;
-
-        fetch("{{ route('intern.getAttendanceStatus') }}")
-            .then(res => res.json())
-            .then(data => {
-                const now = new Date();
-                if (now < startDate) {
-                    startCountdown();
-                    return;
-                }
-
-                if (!data.attendance) {
-                    renderPunchIn();
-                } else if (data.attendance.time_in && !data.attendance.time_out) {
-                    renderPunchOut(data.attendance.time_in, data.attendance.time_in_raw);
-                } else {
-                    renderSummary(data.attendance);
-                }
-            });
-    }
-
-    function renderPunchIn() {
-        if (hoursCompleted) return;
-
-        punchBtnContainer.innerHTML = `
-            <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
-                <i class="ph-bold ph-sign-in custom-icons-i me-1"></i> Punch In
-            </button>`;
-        summaryCard.classList.add('d-none');
-
-        document.getElementById('punchInBtn').addEventListener('click', function () {
-            const sid = studentIdInput.value.trim();
-            if (!sid) return toastr.warning('Please enter your Student ID.');
-
-            fetch("{{ route('intern.punchIn') }}", {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ student_id: sid })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success(data.message);
-                    studentIdInput.value = '';
-                    renderPunchOut(data.time_in, new Date());
-                } else {
-                    toastr.error(data.error || 'Error punching in.');
-                }
-            });
-        });
-    }
-
-    function renderPunchOut(timeIn, timeInRaw) {
-        if (hoursCompleted) return;
-
-        punchBtnContainer.innerHTML = `
-            <button class="btn btn-danger w-100 py-3 fw-bold" id="punchOutBtn">
-                <i class="ph-bold ph-sign-out me-1"></i> Punch Out
-                <small class="d-block" id="runningTime">Running: 00:00:00</small>
-            </button>`;
-        summaryCard.classList.add('d-none');
-        studentIdInput.value = '';
-
-        const start = new Date(timeInRaw);
-        const timeInterval = setInterval(() => {
-            const diff = new Date() - start;
-            const hrs = String(Math.floor(diff / 3600000)).padStart(2, '0');
-            const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-            const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-            document.getElementById('runningTime').textContent = `Running: ${hrs}:${mins}:${secs}`;
-        }, 1000);
-
-        document.getElementById('punchOutBtn').addEventListener('click', function () {
-            const sid = studentIdInput.value.trim();
-            if (!sid) return toastr.warning('Please enter your Student ID.');
-
-            // Clear the running time interval
-            clearInterval(timeInterval);
-
-            fetch("{{ route('intern.punchOut') }}", {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ student_id: sid })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success(data.message);
-                    renderSummary(data);
-                    
-                    // Check if hours are now completed after this punch out
-                    if (data.progress_data && data.progress_data.hours_rendered >= data.progress_data.hours_required) {
-                        // Show completion toast and reload
-                        toastr.success('Internship hours completed! 🎉');
-                        setTimeout(() => {
-                            location.reload(); // Reload to show completed state
-                        }, 1500);
-                    } else {
-                        // Update progress without showing completion toast
-                        updateProgress(false);
-                    }
-                } else {
-                    toastr.error(data.error || 'Error punching out.');
-                }
-            });
-        });
-    }
-
-    function renderSummary(data) {
-        if (hoursCompleted) return;
-
-        punchBtnContainer.innerHTML = `
-            <button class="btn btn-secondary w-100 py-3 fw-bold" disabled>
-                <i class="ph-fill ph-calendar-check custom-icons-i me-1"></i>
-                Attendance Saved
-            </button>`;
-        document.getElementById('studentIdWrapper').classList.add('d-none');
-        todayIn.textContent = data.time_in;
-        todayOut.textContent = data.time_out;
-        todayHours.textContent = data.hours;
-        summaryCard.classList.remove('d-none');
-    }
-
-    function startCountdown() {
-        if (hoursCompleted) return;
-
-        punchBtnContainer.innerHTML = `<button class="btn btn-secondary w-100 py-3 fw-bold" disabled id="countdownBtn"></button>`;
-        const btn = document.getElementById('countdownBtn');
-        const interval = setInterval(() => {
+        // Real-time clock
+        setInterval(() => {
             const now = new Date();
-            const diff = startDate - now;
-            if (diff <= 0) { clearInterval(interval); fetchAttendanceStatus(); return; }
-            const d = Math.floor(diff / (1000*60*60*24));
-            const h = Math.floor((diff / (1000*60*60)) % 24);
-            const m = Math.floor((diff / (1000*60)) % 60);
-            const s = Math.floor((diff / 1000) % 60);
-            btn.innerHTML = `Internship starts in<br><strong>${d}d ${h}h ${m}m ${s}s</strong>`;
+            timeDisplay.textContent = now.toLocaleTimeString();
+            dateDisplay.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
         }, 1000);
-    }
 
-    // Update progress using CSS knob
-    function updateProgress(showCompletionToast = false) {
-        fetch("{{ route('intern.getProgress') }}")
-            .then(res => {
-                if (!res.ok) throw new Error('Network error');
-                return res.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    console.warn('Progress fetch error:', data.error);
-                    return;
-                }
+        // Load initial progress (without showing completion toast)
+        updateProgress(false);
 
-                const percentage = data.percentage;
-                const totalRendered = data.total_rendered;
-                const requiredHours = data.required_hours;
+        // Only set up attendance tracking if hours are not completed
+        if (!hoursCompleted) {
+            fetchAttendanceStatus();
+        }
 
-                // Update CSS Knob
-                const knob = document.getElementById('progressKnob');
-                if (knob) {
-                    const color = percentage >= 100 ? '#28a745' : '#007bff';
-                    knob.style.background = `conic-gradient(${color} ${percentage * 3.6}deg, #e9ecef 0)`;
-                }
+        function fetchAttendanceStatus() {
+            if (hoursCompleted) return;
 
-                // Update center text
-                const progressPercent = document.getElementById('progressPercent');
-                const progressLabel = document.getElementById('progressLabel');
-                if (progressPercent && progressLabel) {
-                    progressPercent.textContent = percentage + '%';
-                    progressLabel.textContent = percentage >= 100 ? 'Completed!' : 'Complete';
-                }
+            fetch("{{ route('intern.getAttendanceStatus') }}")
+                .then(res => res.json())
+                .then(data => {
+                    const now = new Date();
+                    if (now < startDate) {
+                        startCountdown();
+                        return;
+                    }
 
-                // Update hours display
-                document.getElementById('totalRendered').textContent = totalRendered;
-                document.getElementById('requiredHours').textContent = requiredHours;
+                    if (!data.attendance) {
+                        renderPunchIn();
+                    } else if (data.attendance.time_in && !data.attendance.time_out) {
+                        renderPunchOut(data.attendance.time_in, data.attendance.time_in_raw);
+                    } else {
+                        renderSummary(data.attendance);
+                    }
+                });
+        }
 
-                // Only show completion message if explicitly requested (during punch out)
-                if (percentage >= 100 && showCompletionToast) {
-                    toastr.success('Internship hours completed! 🎉');
-                }
-            })
-            .catch(err => {
-                console.error('Progress update error:', err);
+        function renderPunchIn() {
+            if (hoursCompleted) return;
+
+            punchBtnContainer.innerHTML = `
+                <button class="btn btn-success w-100 py-3 fw-bold" id="punchInBtn">
+                    <i class="ph-bold ph-sign-in custom-icons-i me-1"></i> Punch In
+                </button>`;
+            summaryCard.classList.add('d-none');
+
+            document.getElementById('punchInBtn').addEventListener('click', function () {
+                const sid = studentIdInput.value.trim();
+                if (!sid) return toastr.warning('Please enter your Student ID.');
+
+                fetch("{{ route('intern.punchIn') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id: sid })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        toastr.success(data.message);
+                        studentIdInput.value = '';
+                        renderPunchOut(data.time_in, new Date());
+                    } else {
+                        toastr.error(data.error || 'Error punching in.');
+                    }
+                });
             });
-    }
-});
+        }
+
+        function renderPunchOut(timeIn, timeInRaw) {
+            if (hoursCompleted) return;
+
+            punchBtnContainer.innerHTML = `
+                <button class="btn btn-danger w-100 py-3 fw-bold" id="punchOutBtn">
+                    <i class="ph-bold ph-sign-out me-1"></i> Punch Out
+                    <small class="d-block" id="runningTime">Running: 00:00:00</small>
+                </button>`;
+            summaryCard.classList.add('d-none');
+            studentIdInput.value = '';
+
+            const start = new Date(timeInRaw);
+            const timeInterval = setInterval(() => {
+                const diff = new Date() - start;
+                const hrs = String(Math.floor(diff / 3600000)).padStart(2, '0');
+                const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                document.getElementById('runningTime').textContent = `Running: ${hrs}:${mins}:${secs}`;
+            }, 1000);
+
+            document.getElementById('punchOutBtn').addEventListener('click', function () {
+                const sid = studentIdInput.value.trim();
+                if (!sid) return toastr.warning('Please enter your Student ID.');
+
+                // Clear the running time interval
+                clearInterval(timeInterval);
+
+                fetch("{{ route('intern.punchOut') }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id: sid })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        toastr.success(data.message);
+                        renderSummary(data);
+                        
+                        // Check if hours are now completed after this punch out
+                        if (data.progress_data && data.progress_data.hours_rendered >= data.progress_data.hours_required) {
+                            // Show completion toast and reload
+                            toastr.success('Internship hours completed! 🎉');
+                            setTimeout(() => {
+                                location.reload(); // Reload to show completed state
+                            }, 1500);
+                        } else {
+                            // Update progress without showing completion toast
+                            updateProgress(false);
+                        }
+                    } else {
+                        toastr.error(data.error || 'Error punching out.');
+                    }
+                });
+            });
+        }
+
+        function renderSummary(data) {
+            if (hoursCompleted) return;
+
+            punchBtnContainer.innerHTML = `
+                <button class="btn btn-secondary w-100 py-3 fw-bold" disabled>
+                    <i class="ph-fill ph-calendar-check custom-icons-i me-1"></i>
+                    Attendance Saved
+                </button>`;
+            document.getElementById('studentIdWrapper').classList.add('d-none');
+            todayIn.textContent = data.time_in;
+            todayOut.textContent = data.time_out;
+            todayHours.textContent = data.hours;
+            summaryCard.classList.remove('d-none');
+        }
+
+        function startCountdown() {
+            if (hoursCompleted) return;
+
+            punchBtnContainer.innerHTML = `<button class="btn btn-secondary w-100 py-3 fw-bold" disabled id="countdownBtn"></button>`;
+            const btn = document.getElementById('countdownBtn');
+            const interval = setInterval(() => {
+                const now = new Date();
+                const diff = startDate - now;
+                if (diff <= 0) { clearInterval(interval); fetchAttendanceStatus(); return; }
+                const d = Math.floor(diff / (1000*60*60*24));
+                const h = Math.floor((diff / (1000*60*60)) % 24);
+                const m = Math.floor((diff / (1000*60)) % 60);
+                const s = Math.floor((diff / 1000) % 60);
+                btn.innerHTML = `Internship starts in<br><strong>${d}d ${h}h ${m}m ${s}s</strong>`;
+            }, 1000);
+        }
+
+        // Update progress using CSS knob
+        function updateProgress(showCompletionToast = false) {
+            fetch("{{ route('intern.getProgress') }}")
+                .then(res => {
+                    if (!res.ok) throw new Error('Network error');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.warn('Progress fetch error:', data.error);
+                        return;
+                    }
+
+                    const percentage = data.percentage;
+                    const totalRendered = data.total_rendered;
+                    const requiredHours = data.required_hours;
+
+                    // Update CSS Knob
+                    const knob = document.getElementById('progressKnob');
+                    if (knob) {
+                        const color = percentage >= 100 ? '#28a745' : '#007bff';
+                        knob.style.background = `conic-gradient(${color} ${percentage * 3.6}deg, #e9ecef 0)`;
+                    }
+
+                    // Update center text
+                    const progressPercent = document.getElementById('progressPercent');
+                    const progressLabel = document.getElementById('progressLabel');
+                    if (progressPercent && progressLabel) {
+                        progressPercent.textContent = percentage + '%';
+                        progressLabel.textContent = percentage >= 100 ? 'Completed!' : 'Complete';
+                    }
+
+                    // Update hours display
+                    document.getElementById('totalRendered').textContent = totalRendered;
+                    document.getElementById('requiredHours').textContent = requiredHours;
+
+                    // Only show completion message if explicitly requested (during punch out)
+                    if (percentage >= 100 && showCompletionToast) {
+                        toastr.success('Internship hours completed! 🎉');
+                    }
+                })
+                .catch(err => {
+                    console.error('Progress update error:', err);
+                });
+        }
+    });
 </script>
 @endsection
