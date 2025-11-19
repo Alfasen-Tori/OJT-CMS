@@ -555,112 +555,140 @@ public function registerHTE(Request $request)
         'organization_type' => 'required|in:private,government,ngo,educational,other',
         'hte_status' => 'required|in:active,new',
         'description' => 'nullable|string',
-        'coordinator_id' => 'required|exists:coordinators,id'
+        'coordinator_id' => 'required|exists:coordinators,id',
+        'internship_plan' => 'required|file|mimes:pdf|max:10240', // 10MB max
+        'moa_document' => 'required_if:hte_status,active|file|mimes:pdf|max:10240' // Conditional required
     ]);
 
-    $tempPassword = Str::random(16);
+    DB::beginTransaction();
+    try {
+        $tempPassword = Str::random(16);
 
-    $user = User::create([
-        'email' => $validated['contact_email'],
-        'password' => Hash::make($tempPassword),
-        'fname' => $validated['contact_first_name'],
-        'lname' => $validated['contact_last_name'],
-        'contact' => $validated['contact_number'],
-        'pic' => 'profile-pictures/profile.jpg',
-        'temp_password' => true,
-        'username' => $validated['contact_email']
-    ]);
-
-    $hte = Hte::create([
-        'user_id' => $user->id,
-        'status' => $validated['hte_status'],
-        'type' => $validated['organization_type'],
-        'address' => $validated['address'],
-        'description' => $validated['description'],
-        'organization_name' => $validated['organization_name'],
-        'slots' => 0,
-        'moa_path' => null
-    ]);
-
-    // AUDIT TRAIL: Log HTE creation
-    UserAuditTrailService::logUserCreation(
-        $user->id,
-        [
+        $user = User::create([
+            'email' => $validated['contact_email'],
+            'password' => Hash::make($tempPassword),
             'fname' => $validated['contact_first_name'],
             'lname' => $validated['contact_last_name'],
-            'email' => $validated['contact_email'],
             'contact' => $validated['contact_number'],
-            'organization_name' => $validated['organization_name'],
-            'organization_type' => $validated['organization_type'],
-            'hte_status' => $validated['hte_status']
-        ],
-        'hte',
-        $request
-    );
+            'pic' => 'profile-pictures/profile.jpg',
+            'temp_password' => true,
+            'username' => $validated['contact_email']
+        ]);
 
-    $token = Str::random(60);
-    DB::table('password_setup_tokens')->insert([
-        'email' => $user->email,
-        'token' => $token,
-        'created_at' => now()
-    ]);
-
-    $setupLink = route('password.setup', [
-        'token' => $token,
-        'role' => 'hte'
-    ]);
-    $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
-
-    $moaAttachmentPath = null;
-    $generatedDocxPath = null; // Declare outside if block to track for deletion
-
-    if ($validated['hte_status'] === 'new') {
-        $templatePath = public_path('templates/moa-template.docx');
-        $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
-
-        // Fill DOCX template
-        $templateProcessor = new TemplateProcessor($templatePath);
-        $templateProcessor->setValue('organization_name', $validated['organization_name']);
-        $templateProcessor->setValue('org_name', strtoupper($validated['organization_name']));
-        $templateProcessor->setValue('address', $validated['address']);
-        $templateProcessor->setValue('contact_name', $contactName);
-        // Add more placeholders as needed
-        $templateProcessor->saveAs($generatedDocxPath);
-
-        if (file_exists($generatedDocxPath)) {
-            $moaAttachmentPath = $generatedDocxPath;
+        // Handle MOA file upload for active HTEs
+        $moaPath = null;
+        if ($validated['hte_status'] === 'active' && $request->hasFile('moa_document')) {
+            $moaFile = $request->file('moa_document');
+            $moaPath = $moaFile->store('moa-documents', 'public');
         }
-    }
 
-    // Send email synchronously and delete file only on success
-    try {
+        $hte = Hte::create([
+            'user_id' => $user->id,
+            'status' => $validated['hte_status'],
+            'type' => $validated['organization_type'],
+            'address' => $validated['address'],
+            'description' => $validated['description'],
+            'organization_name' => $validated['organization_name'],
+            'slots' => 10,
+            'moa_path' => $moaPath,
+            'moa_is_signed' => $validated['hte_status'] === 'active' ? 'yes' : 'no'
+        ]);
+
+        // Handle Student Internship Plan upload
+        $internshipPlanPath = null;
+        if ($request->hasFile('internship_plan')) {
+            $internshipPlanFile = $request->file('internship_plan');
+            $internshipPlanPath = $internshipPlanFile->store('internship-plans', 'public');
+            
+            // Store internship plan reference (you might want to create a new table for this)
+            // For now, we'll attach it to the email
+        }
+
+        // AUDIT TRAIL: Log HTE creation
+        UserAuditTrailService::logUserCreation(
+            $user->id,
+            [
+                'fname' => $validated['contact_first_name'],
+                'lname' => $validated['contact_last_name'],
+                'email' => $validated['contact_email'],
+                'contact' => $validated['contact_number'],
+                'organization_name' => $validated['organization_name'],
+                'organization_type' => $validated['organization_type'],
+                'hte_status' => $validated['hte_status']
+            ],
+            'hte',
+            $request
+        );
+
+        $token = Str::random(60);
+        DB::table('password_setup_tokens')->insert([
+            'email' => $user->email,
+            'token' => $token,
+            'created_at' => now()
+        ]);
+
+        $setupLink = route('password.setup', [
+            'token' => $token,
+            'role' => 'hte'
+        ]);
+        $contactName = $validated['contact_first_name'] . ' ' . $validated['contact_last_name'];
+
+        $moaAttachmentPath = null;
+        $generatedDocxPath = null;
+
+        if ($validated['hte_status'] === 'new') {
+            $templatePath = public_path('templates/moa-template.docx');
+            $generatedDocxPath = storage_path('app/public/moa-documents/generated-moa-' . $hte->id . '.docx');
+
+            // Fill DOCX template
+            $templateProcessor = new TemplateProcessor($templatePath);
+            $templateProcessor->setValue('organization_name', $validated['organization_name']);
+            $templateProcessor->setValue('org_name', strtoupper($validated['organization_name']));
+            $templateProcessor->setValue('address', $validated['address']);
+            $templateProcessor->setValue('contact_name', $contactName);
+            $templateProcessor->saveAs($generatedDocxPath);
+
+            if (file_exists($generatedDocxPath)) {
+                $moaAttachmentPath = $generatedDocxPath;
+            }
+        }
+
+        // Get the internship plan file path for email attachment
+        $internshipPlanAttachmentPath = $internshipPlanPath ? storage_path('app/public/' . $internshipPlanPath) : null;
+
+        // Send email with both attachments
         Mail::to($user->email)->send(new HteSetupMail(
             $setupLink,
             $contactName,
             $validated['organization_name'],
             $tempPassword,
-            $moaAttachmentPath,
-            $user->email
+            $moaAttachmentPath, // Generated MOA for new HTEs
+            $user->email,
+            $internshipPlanAttachmentPath // Student Internship Plan for all HTEs
         ));
 
-        // Delete the generated DOCX only if email sent successfully
+        // Clean up temporary files
         if ($generatedDocxPath && file_exists($generatedDocxPath)) {
             unlink($generatedDocxPath);
         }
 
-        return redirect()->route('coordinator.htes')
-            ->with('success', 'HTE registered successfully. Activation email sent.');
-    } catch (\Exception $e) {
-        // Log the error for debugging
-        
-        // Optional: Delete the file even on failure to avoid leftovers (uncomment if preferred)
-        // if ($generatedDocxPath && file_exists($generatedDocxPath)) {
-        //     unlink($generatedDocxPath);
-        //     \Log::info('Temporary DOCX deleted after email failure: ' . $generatedDocxPath);
-        // }
+        DB::commit();
 
         return redirect()->route('coordinator.htes')
-            ->with('error', 'HTE registered, but failed to send activation email. Please check logs and retry.');
+            ->with('success', 'HTE registered successfully. Activation email sent with Student Internship Plan.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('HTE Registration Error: ' . $e->getMessage());
+
+        // Clean up temporary files on error
+        if (isset($generatedDocxPath) && $generatedDocxPath && file_exists($generatedDocxPath)) {
+            unlink($generatedDocxPath);
+        }
+
+        return redirect()->back()
+            ->with('error', 'Failed to register HTE. Please try again.')
+            ->withInput();
     }
 }
 

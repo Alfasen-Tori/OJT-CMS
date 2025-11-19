@@ -21,9 +21,11 @@ class HteSetupMail extends Mailable implements ShouldQueue
     public $tempPassword;
     public $contactEmail;
     public $hasMoa;
+    public $hasInternshipPlan;
     
-    // Protected property for internal use only
+    // Protected properties for internal use only
     protected $moaAttachmentPath;
+    protected $internshipPlanPath;
 
     /**
      * Create a new message instance.
@@ -34,7 +36,8 @@ class HteSetupMail extends Mailable implements ShouldQueue
         string $organizationName,
         string $tempPassword,
         ?string $moaAttachmentPath = null,
-        string $contactEmail
+        string $contactEmail,
+        ?string $internshipPlanPath = null
     ) {
         $this->setupLink = $setupLink;
         $this->contactName = $contactName;
@@ -42,7 +45,9 @@ class HteSetupMail extends Mailable implements ShouldQueue
         $this->tempPassword = $tempPassword;
         $this->contactEmail = $contactEmail;
         $this->hasMoa = !is_null($moaAttachmentPath);
+        $this->hasInternshipPlan = !is_null($internshipPlanPath);
         $this->moaAttachmentPath = $moaAttachmentPath;
+        $this->internshipPlanPath = $internshipPlanPath;
     }
 
     /**
@@ -69,6 +74,7 @@ class HteSetupMail extends Mailable implements ShouldQueue
                 'tempPassword' => $this->tempPassword,
                 'contactEmail' => $this->contactEmail,
                 'hasMoa' => $this->hasMoa,
+                'hasInternshipPlan' => $this->hasInternshipPlan,
             ]
         );
     }
@@ -80,14 +86,22 @@ class HteSetupMail extends Mailable implements ShouldQueue
      */
     public function attachments(): array
     {
+        $attachments = [];
+
+        // Attach MOA template for new HTEs
         if ($this->hasMoa && file_exists($this->moaAttachmentPath)) {
-            return [
-                Attachment::fromPath($this->moaAttachmentPath)
-                    ->as('MOA-Template-' . $this->organizationName . '.docx')
-                    ->withMime('application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
-            ];
+            $attachments[] = Attachment::fromPath($this->moaAttachmentPath)
+                ->as('MOA-Template-' . $this->organizationName . '.docx')
+                ->withMime('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
 
-        return [];
+        // Attach Student Internship Plan (always attached when provided)
+        if ($this->hasInternshipPlan && file_exists($this->internshipPlanPath)) {
+            $attachments[] = Attachment::fromPath($this->internshipPlanPath)
+                ->as('Student-Internship-Plan-' . $this->organizationName . '.pdf')
+                ->withMime('application/pdf');
+        }
+
+        return $attachments;
     }
 }

@@ -786,5 +786,35 @@ html.dark-mode .offcanvas {
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Force dark mode styles for all inputs except file */
+html.dark-mode .form-control:not([type="file"]) {
+    background-color: #343a40 !important;
+    color: #e9ecef !important;
+    border-color: #6c757d !important;
+}
+
+/* File inputs in dark mode */
+html.dark-mode .form-control[type="file"] {
+    background-color: #343a40 !important;
+    border-color: #6c757d !important;
+    color: #e9ecef !important;
+}
+
+html.dark-mode .form-control[type="file"]::file-selector-button {
+    background-color: #495057 !important;
+    border-color: #6c757d !important;
+    color: #e9ecef !important;
+}
+
+/* Autofill fix for dark mode */
+html.dark-mode input:not([type="file"]):-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #343a40 inset !important;
+    -webkit-text-fill-color: #e9ecef !important;
+}
+
+
+
+
+
 
 </style>
