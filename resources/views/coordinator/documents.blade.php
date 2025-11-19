@@ -230,10 +230,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="documentFile">Select PDF File (max 5MB)</label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="documentFile" name="document" accept=".pdf" required>
-                            <label class="custom-file-label" for="documentFile">Choose file</label>
-                        </div>
+                        <input type="file" class="form-control" id="documentFile" name="document" accept=".pdf" required>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">

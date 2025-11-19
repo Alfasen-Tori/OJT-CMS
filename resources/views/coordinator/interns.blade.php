@@ -205,11 +205,10 @@
                   
                   <div class="modal-body">
                       <div class="form-group">
-                          <label for="importFile" class="form-label">Excel File</label>
-                          <div class="custom-file">
-                              <input type="file" class="custom-file-input" id="importFile" name="import_file" accept=".xlsx,.xls,.csv" required>
-                              <label class="custom-file-label" for="importFile">Choose file</label>
-                          </div>
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Excel File</label>
+                            <input type="file" class="form-control" id="importFile" name="import_file" accept=".xlsx,.xls,.csv" required>
+                        </div>
                           <small class="form-text text-muted">Download the <a href="{{ asset('templates/intern_import_template.xlsx') }}" download>import template</a> for reference</small>
                       </div>
                       

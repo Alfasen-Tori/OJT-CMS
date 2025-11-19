@@ -144,16 +144,19 @@
 
           <div class="form-group">
             <label for="report_file" class="font-weight-bold">Select PDF File</label>
-            <div class="custom-file">
-              <input 
-                type="file" 
-                class="custom-file-input" 
-                id="report_file" 
-                name="report_file" 
-                accept=".pdf" 
-                required
-              >
-              <label class="custom-file-label" for="report_file">Choose file...</label>
+            <div class="mb-3">
+                <label for="report_file" class="fw-bold">Select PDF File</label>
+                <input 
+                    type="file" 
+                    class="form-control" 
+                    id="report_file" 
+                    name="report_file" 
+                    accept=".pdf" 
+                    required
+                >
+                <div class="form-text mt-1">
+                    Maximum file size: 5MB.
+                </div>
             </div>
             <small class="form-text text-muted mt-1">
               Maximum file size: 5MB.
@@ -211,17 +214,14 @@
 
       <div class="form-group">
         <label for="report_file_mobile" class="font-weight-bold">Select PDF File</label>
-        <div class="custom-file">
-          <input 
+        <input 
             type="file" 
-            class="custom-file-input" 
+            class="form-control" 
             id="report_file_mobile" 
             name="report_file" 
             accept=".pdf" 
             required
-          >
-          <label class="custom-file-label" for="report_file_mobile">Choose file...</label>
-        </div>
+        >
         <small class="form-text text-muted mt-1">
          Maximum file size: 5MB.
         </small>

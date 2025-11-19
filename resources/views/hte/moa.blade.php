@@ -72,30 +72,27 @@
                       enctype="multipart/form-data"
                       class="w-100"
                       style="max-width: 500px;">
-                  @csrf
-                  
-                  <div class="form-group">
-                    <div class="custom-file">
-                      <input type="file" 
-                             class="custom-file-input" 
-                             id="moaFile" 
-                             name="moa_file"
-                             accept=".pdf"
-                             required>
-                      <label class="custom-file-label" for="moaFile">Choose PDF file (max 5MB)</label>
+                    @csrf
+                    
+                    <div class="mb-3">
+                        <input type="file" 
+                              class="form-control" 
+                              id="moaFile" 
+                              name="moa_file"
+                              accept=".pdf"
+                              required>
+                        <div class="form-text text-center text-muted">
+                            Please upload in PDF format (max 5MB).
+                        </div>
                     </div>
-                    <small class="form-text text-muted text-center">
-                      Please upload in PDF format.
-                    </small>
-                  </div>
-                  
-                  <div class="text-center mt-4">
-                    <button type="submit" 
-                            class="btn btn-success btn-lg"
-                            id="uploadBtn">
-                      <i class="fas fa-upload mr-1"></i> Upload MOA
-                    </button>
-                  </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" 
+                                class="btn btn-success btn-lg"
+                                id="uploadBtn">
+                            <i class="fas fa-upload me-1"></i> Upload MOA
+                        </button>
+                    </div>
                 </form>
               </div>
             @endif
