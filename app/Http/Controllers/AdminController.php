@@ -14,7 +14,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 
+use App\Models\CoordinatorDocument;
 use App\Services\AuditTrailService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Services\UserAuditTrailService;
@@ -556,4 +558,66 @@ public function deleteSkill($id)
             'per_page' => $userActivities->perPage(),
         ]);
     }
+
+public function consolidatedSics()
+{
+    // Get all consolidated SICs with coordinator, user, department, and college relationships
+    $consolidatedSics = CoordinatorDocument::with([
+        'coordinator.user',
+        'coordinator.department.college'
+    ])
+    ->where('type', 'consolidated_sics')
+    ->orderBy('created_at', 'desc')
+    ->get();
+
+    return view('admin.sics', compact('consolidatedSics'));
+}
+
+public function viewSic($id)
+{
+    $sic = CoordinatorDocument::findOrFail($id);
+    
+    // Assuming files are stored in storage/app/public/coordinator_documents
+    $filePath = storage_path('app/public/' . $sic->file_path);
+    
+    // If the path already includes 'public/', adjust accordingly
+    if (strpos($sic->file_path, 'public/') === 0) {
+        $filePath = storage_path('app/' . $sic->file_path);
+    }
+    
+    Log::info('Attempting to view file:', [
+        'original_path' => $sic->file_path,
+        'resolved_path' => $filePath,
+        'file_exists' => file_exists($filePath)
+    ]);
+
+    if (!file_exists($filePath)) {
+        abort(404, "File not found at: " . $filePath);
+    }
+
+    return response()->file($filePath);
+}
+
+public function downloadSic($id)
+{
+    $sic = CoordinatorDocument::findOrFail($id);
+    
+    $filePath = storage_path('app/public/' . $sic->file_path);
+    
+    if (strpos($sic->file_path, 'public/') === 0) {
+        $filePath = storage_path('app/' . $sic->file_path);
+    }
+
+    Log::info('Attempting to download file:', [
+        'original_path' => $sic->file_path,
+        'resolved_path' => $filePath,
+        'file_exists' => file_exists($filePath)
+    ]);
+
+    if (!file_exists($filePath)) {
+        abort(404, "File not found at: " . $filePath);
+    }
+
+    return response()->download($filePath, basename($sic->file_path));
+}
 }

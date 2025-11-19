@@ -214,9 +214,32 @@
         padding: 1rem;
     }
 
-    #internsTable, #htesTable, #deploymentsTable, #internAttendanceTable, #internsTableHTE thead th {
-        border-right: 1px solid #dee2e6 !important;
+    #sicsTable_wrapper .row:first-child {
+        padding-top: 1rem;
     }
+    #sicsTable_wrapper .row:last-child {
+        padding: 1rem;
+    }
+
+/* Light mode (default) */
+#internsTable thead th,
+#htesTable thead th,
+#deploymentsTable thead th,
+#internAttendanceTable thead th,
+#internsTableHTE thead th,
+#sicsTable thead th {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+/* Dark mode - more specific */
+html.dark-mode #internsTable thead th,
+html.dark-mode #htesTable thead th,
+html.dark-mode #deploymentsTable thead th,
+html.dark-mode #internAttendanceTable thead th,
+html.dark-mode #internsTableHTE thead th,
+html.dark-mode #sicsTable thead th {
+    border-right: 1px solid #454d55 !important;
+}
 
     #allStudentsTable thead th {
         border: 1px solid #dee2e6 !important;

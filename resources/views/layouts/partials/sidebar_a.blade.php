@@ -62,6 +62,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a href="{{route('admin.consolidated-sics')}}" class="nav-link {{ Request::is('admin/consolidated-sics*') ? 'current-page' : '' }}">
+                        <i class="ph{{ Request::is('admin/consolidated-sics*') ? '-fill' : '' }} ph-file-text nav-link-i "></i>
+                        <p>Consolidated SICs</p>
+                    </a>
+                </li>
+
                 <!-- Logs Treeview Menu -->
                 <li class="nav-item {{ Request::is('admin/logs*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ Request::is('admin/logs*') ? 'active' : '' }}">
