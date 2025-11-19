@@ -4,6 +4,8 @@
 
 @section('content')
 <section class="content-header">
+  @include('layouts.partials.scripts-main')
+
   <div class="container-fluid px-3">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -113,12 +115,12 @@
                     {{ $status }}
                   </span>
                 </td>
-                <td class="align-middle text-center">
+                <td class="align-middle">
                   <span class="fw-bold">{{ $studentCount }}</span>
                 </td>
                 <td class="text-center px-2 align-middle">
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-dark rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="ph-fill ph-gear custom-icons-i"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
@@ -143,6 +145,41 @@
     </div>
   </div>
 </section>
+
+    <!-- Coordinator Deployments Management Table -->
+    <script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#deploymentsTable').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "language": {
+            "emptyTable": "No deployments found.",
+            "search": "_INPUT_",
+            "searchPlaceholder": "Search...",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ deployments",
+            "paginate": {
+            "previous": "«",
+            "next": "»"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": [5] }
+        ],
+        "initComplete": function() {
+            // Hide loading overlay when table is ready
+            $('#tableLoadingOverlay').fadeOut();
+        }
+        });
+    });
+    </script>
+
 
 <!-- Modals for each HTE -->
 @foreach($deployments as $hteId => $endorsements)

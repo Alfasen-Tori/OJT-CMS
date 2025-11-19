@@ -4,6 +4,8 @@
 
 @section('content')
 <section class="content-header">
+    @include('layouts.partials.scripts-main')
+
     <div class="container-fluid px-0 px-sm-2">
         <div class="row mb-2">
             <div class="col-sm-6">
@@ -103,7 +105,7 @@
                         </div>
                     </div>
 
-                    <div class="card-footer d-flex justify-content-end bg-white px-0">
+                    <div class="card-footer d-flex justify-content-end py-3 rounded-3">
                         <button type="submit" class="btn btn-primary">
                             <i class="ph-fill ph-floppy-disk-back custom-icons-i mr-1"></i>Save Changes
                         </button>
@@ -113,4 +115,40 @@
         </div>
     </div>
 </section>
+
+    <!-- COORDINATOR PROFILE MANAGEMENT -->
+    <script>
+        $(document).ready(function() {
+            // Profile Picture Upload
+            $('#profileUpload').change(function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size must be less than 2MB');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('profile_pic', file);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                $.ajax({
+                    url: '{{ route("coordinator.profile.picture") }}',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#profileImage').attr('src', response.url);
+                        toastr.success('Profile picture updated successfully');
+                    },
+                    error: function(xhr) {
+                        toastr.error(xhr.responseJSON.message || 'Error uploading picture');
+                    }
+                });
+            });
+        });
+    </script>
+
 @endsection

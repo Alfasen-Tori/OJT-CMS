@@ -5,6 +5,8 @@
 
 @section('content')
 <section class="content-header">
+  @include('layouts.partials.scripts-main')
+
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -61,12 +63,12 @@
                     <div class="col-md-6 mb-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="first_name" class="form-label">First Name*</label>
+                                <label for="first_name" class="form-label">First Name<span class="text-danger"> *</span></label>
                                 <input type="text" class="form-control" id="first_name" name="first_name" 
                                     value="{{ old('first_name', $intern->user->fname) }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="last_name" class="form-label">Last Name*</label>
+                                <label for="last_name" class="form-label">Last Name<span class="text-danger"> *</span></label>
                                 <input type="text" class="form-control" id="last_name" name="last_name" 
                                     value="{{ old('last_name', $intern->user->lname) }}" required>
                             </div>
@@ -74,12 +76,12 @@
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="birthdate" class="form-label">Birthdate*</label>
+                        <label for="birthdate" class="form-label">Birthdate<span class="text-danger"> *</span></label>
                         <input type="date" class="form-control" id="birthdate" name="birthdate" 
                             value="{{ old('birthdate', $intern->birthdate) }}" required>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label for="sex" class="form-label">Sex*</label>
+                        <label for="sex" class="form-label">Sex<span class="text-danger"> *</span></label>
                         <select class="form-select" id="sex" name="sex" required>
                             <option value="male" {{ old('sex', $intern->user->sex) == 'male' ? 'selected' : '' }}>Male</option>
                             <option value="female" {{ old('sex', $intern->user->sex) == 'female' ? 'selected' : '' }}>Female</option>
@@ -90,13 +92,13 @@
                 <!-- CONTACT INFORMATION -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="email" class="form-label">Email*</label>
+                        <label for="email" class="form-label">Email<span class="text-danger"> *</span></label>
                         <input type="email" class="form-control" id="email" name="email" 
                             value="{{ old('email', $intern->user->email) }}" required>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label for="contact" class="form-label">Contact Number*</label>
+                        <label for="contact" class="form-label">Contact Number<span class="text-danger"> *</span></label>
                         <input type="text" class="form-control" id="contact" name="contact" 
                             value="{{ old('contact', $intern->user->contact) }}" required>
                     </div>
@@ -105,21 +107,21 @@
                 <!-- STUDENT INFORMATION -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="student_id" class="form-label">Student ID*</label>
+                        <label for="student_id" class="form-label">Student ID<span class="text-danger"> *</span></label>
                         <input type="text" class="form-control" id="student_id" name="student_id" 
                             pattern="\d{4}-\d{5}" title="Format: XXXX-XXXXX (e.g. 2022-09709)" 
                             value="{{ old('student_id', $intern->student_id) }}" required>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="academic_year" class="form-label">Academic Year*</label>
+                        <label for="academic_year" class="form-label">Academic Year<span class="text-danger"> *</span></label>
                         <input type="text" class="form-control" id="academic_year" name="academic_year" 
                             pattern="\d{4}-\d{4}" title="Format: XXXX-XXXX (e.g. 2024-2025)" 
                             value="{{ old('academic_year', $intern->academic_year) }}" required>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="semester" class="form-label">Semester*</label>
+                        <label for="semester" class="form-label">Semester<span class="text-danger"> *</span></label>
                         <select class="form-select" id="semester" name="semester" required>
                             <option value="" disabled>Select Semester</option>
                             <option value="1st" {{ old('semester', $intern->semester) == '1st' ? 'selected' : '' }}>1st Semester</option>
@@ -140,7 +142,7 @@
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="year_level" class="form-label">Year Level*</label>
+                        <label for="year_level" class="form-label">Year Level<span class="text-danger"> *</span></label>
                         <select class="form-select" id="year_level" name="year_level" required>
                             <option value="" disabled>Select Year</option>
                             <option value="1" {{ old('year_level', $intern->year_level) == 1 ? 'selected' : '' }}>1st Year</option>
@@ -151,7 +153,7 @@
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="section" class="form-label">Section*</label>
+                        <label for="section" class="form-label">Section<span class="text-danger"> *</span></label>
                         <select class="form-select" id="section" name="section" required>
                             <option value="" disabled>Select Section</option>
                             <option value="a" {{ old('section', $intern->section) == 'a' ? 'selected' : '' }}>A</option>
@@ -165,7 +167,7 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="card-footer d-flex justify-content-between">
+                <div class="card-footer d-flex justify-content-between py-3 rounded-3">
                     <div>
                         <a href="{{ route('coordinator.interns') }}" class="btn btn-secondary mr-2">
                             Cancel
@@ -184,4 +186,5 @@
         </div>
     </div>
 </section>
+
 @endsection

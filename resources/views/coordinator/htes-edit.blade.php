@@ -5,6 +5,8 @@
 
 @section('content')
 <section class="content-header">
+@include('layouts.partials.scripts-main')
+
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-8">
@@ -146,4 +148,5 @@
         </div>
     </div>
 </section>
+
 @endsection

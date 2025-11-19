@@ -4,6 +4,8 @@
 
 @section('content')
 <div class="container-fluid">
+    @include('layouts.partials.scripts-main')
+
     <!-- MOA Preview Modal (Unchanged) -->
     <div class="modal fade" id="moaPreviewModal" tabindex="-1" role="dialog" aria-labelledby="moaPreviewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -66,7 +68,7 @@
             <div class="accordion" id="hteAccordion">
                 <!-- HTE Details Card -->
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-white text-dark" id="hteDetailsHeading">
+                    <div class="card-header text-dark" id="hteDetailsHeading">
                         <h3 class="card-title mb-0 d-flex justify-content-between align-items-center w-100">
                             <div class="title-left d-flex align-items-center">
                                 <button class="btn btn-link text-dark text-decoration-none p-0 mr-2 toggle-btn" type="button" data-toggle="collapse" data-target="#hteDetailsCollapse" aria-expanded="true" aria-controls="hteDetailsCollapse">
@@ -192,7 +194,7 @@
                                         @if($hte->skills->count() > 0)
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach($hte->skills as $skill)
-                                                    <span class="badge bg-secondary-subtle text-dark py-2 px-3 rounded-pill">{{ $skill->name }}</span>
+                                                    <span class="badge bg-secondary-subtle text-secondary py-2 px-3 rounded-pill">{{ $skill->name }}</span>
                                                 @endforeach
                                             </div>
                                         @else
@@ -366,6 +368,102 @@
             </div>
         </div>
     </div>
+
+    <!-- Coordinator: HTE/show - All Students Table with Rowspan -->
+    <script>
+    $(document).ready(function() {
+        // Wait a bit for the DOM to fully render the rowspan structure
+        setTimeout(function() {
+            try {
+                // Initialize DataTable with minimal configuration
+                $('#allStudentsTable').DataTable({
+                    "paging": true,
+                    "lengthChange": false,
+                    "searching": false,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": false, // Disable responsive for complex tables
+                    "pageLength": 10,
+                    "order": [], // No initial sorting to avoid conflicts
+                    "language": {
+                        "emptyTable": "No students endorsed to this HTE yet.",
+                        "lengthMenu": "",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ students",
+                        "infoEmpty": "Showing 0 to 0 of 0 students",
+                        "infoFiltered": "",
+                        "paginate": {
+                            "previous": "«",
+                            "next": "»"
+                        }
+                    },
+                    "initComplete": function() {
+                        console.log('DataTable initialized successfully');
+                        $('#allStudentsLoadingOverlay').fadeOut();
+                    },
+                    "drawCallback": function() {
+                        console.log('Table redrawn');
+                    }
+                });
+            } catch (error) {
+                console.error('DataTable initialization failed:', error);
+                // If DataTable fails, just hide the overlay and show the table as-is
+                $('#allStudentsLoadingOverlay').fadeOut();
+            }
+        }, 100); // Small delay to ensure DOM is ready
+        
+        // Fallback: Always hide overlay after 3 seconds
+        setTimeout(function() {
+            $('#allStudentsLoadingOverlay').fadeOut();
+        }, 3000);
+    });
+    </script>
+
+    <!-- Coordinator: HTE Preview -->
+    <script>
+    $(document).ready(function() {
+        // Toggle MOA status
+        $('#toggleMoaStatusBtn').click(function() {
+            const hteId = $(this).data('hte-id');
+            const button = $(this);
+            
+            // Correct URL construction
+            const url = '{{ route("coordinator.toggle_moa_status", ":id") }}'.replace(':id', hteId);
+            
+            $.ajax({
+                url: url,
+                type: 'PATCH',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success toast
+                        toastr.success(response.message, 'Success');
+                        
+                        // Close modal
+                        $('#evaluateModal' + deploymentId).modal('hide');
+                        
+                        // Reload page after short delay to show updated grade
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error(response.message, 'Error');
+                        submitBtn.prop('disabled', false);
+                        submitText.removeClass('d-none');
+                        spinner.addClass('d-none');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error updating MOA status:', xhr.responseText);
+                    toastr.error('Error updating MOA status: ' + xhr.responseText);
+                }
+            });
+        });
+    });
+    </script>
+
 
 <!-- CSS for dynamic + and - toggle (add to your stylesheet or <style> tag) -->
 <style>

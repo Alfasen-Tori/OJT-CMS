@@ -4,6 +4,9 @@
 
 @section('content')
 <div class="container-fluid">
+    
+@include('layouts.partials.scripts-main')
+
 <!-- Header -->
 <div class="row mb-4">
     <div class="col-md-12">
@@ -309,7 +312,7 @@
 
     <!-- Interns Table Section -->
     <div class="card shadow">
-        <div class="card-header bg-white text-dark" id="internsHeading">
+        <div class="card-header" id="internsHeading">
             <h3 class="card-title mb-0 d-flex align-items-center justify-content-between w-100">
                 <div class="d-flex align-items-center">
                     <button class="btn btn-link text-dark text-decoration-none p-0 mr-2 toggle-btn" type="button" data-toggle="collapse" data-target="#internsCollapse" aria-expanded="true" aria-controls="internsCollapse">
@@ -408,7 +411,7 @@
                                     </td>
                                     <td class="text-center px-2 align-middle">
                                         <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-dark rounded-pill dropdown-toggle" type="button" id="actionDropdown{{ $intern->id ?? $loop->index }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle" type="button" id="actionDropdown{{ $intern->id ?? $loop->index }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i class="ph-fill ph-gear custom-icons-i"></i>
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown{{ $intern->id ?? $loop->index }}">
@@ -653,76 +656,154 @@
         </div>
     </div>
 
-<!-- CSS for dynamic + and - toggle (add to your stylesheet or <style> tag) -->
-<style>
-    .toggle-btn .collapsed-icon {
-        display: inline;
-    }
-    .toggle-btn .expanded-icon {
-        display: none;
-    }
-    .toggle-btn:not(.collapsed) .collapsed-icon {
-        display: none;
-    }
-    .toggle-btn:not(.collapsed) .expanded-icon {
-        display: inline;
-    }
-    .toggle-btn i {
-        transition: opacity 0.2s ease-in-out;
-    }
-</style>
-
+    <!-- CSS for dynamic + and - toggle (add to your stylesheet or <style> tag) -->
+    <style>
+        .toggle-btn .collapsed-icon {
+            display: inline;
+        }
+        .toggle-btn .expanded-icon {
+            display: none;
+        }
+        .toggle-btn:not(.collapsed) .collapsed-icon {
+            display: none;
+        }
+        .toggle-btn:not(.collapsed) .expanded-icon {
+            display: inline;
+        }
+        .toggle-btn i {
+            transition: opacity 0.2s ease-in-out;
+        }
+    </style>
 
 </div>
-<script>
-    
-document.addEventListener('DOMContentLoaded', function() {
-    const startDateInput = document.getElementById('start_date');
-    const hoursInput = document.getElementById('no_of_hours');
-    const weeksInput = document.getElementById('no_of_weeks');
-    const endDateInput = document.getElementById('end_date');
 
-    function calculateDeployment() {
-        const hours = parseInt(hoursInput.value) || 0;
-        const weeks = Math.ceil(hours / 40); // 40 hours/week (8/day * 5 days)
-        weeksInput.value = weeks > 0 ? weeks + ' weeks' : '';
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDateInput = document.getElementById('start_date');
+            const hoursInput = document.getElementById('no_of_hours');
+            const weeksInput = document.getElementById('no_of_weeks');
+            const endDateInput = document.getElementById('end_date');
 
-        if (startDateInput.value && weeks > 0) {
-            const startDate = new Date(startDateInput.value);
-            const endDate = new Date(startDate);
-            endDate.setDate(endDate.getDate() + (weeks * 7)); // Add weeks * 7 days
-            endDateInput.value = endDate.toISOString().split('T')[0];
-        } else {
-            endDateInput.value = '';
-        }
-    }
+            function calculateDeployment() {
+                const hours = parseInt(hoursInput.value) || 0;
+                const weeks = Math.ceil(hours / 40); // 40 hours/week (8/day * 5 days)
+                weeksInput.value = weeks > 0 ? weeks + ' weeks' : '';
+
+                if (startDateInput.value && weeks > 0) {
+                    const startDate = new Date(startDateInput.value);
+                    const endDate = new Date(startDate);
+                    endDate.setDate(endDate.getDate() + (weeks * 7)); // Add weeks * 7 days
+                    endDateInput.value = endDate.toISOString().split('T')[0];
+                } else {
+                    endDateInput.value = '';
+                }
+            }
 
 
 
-    // Event listeners
-    hoursInput.addEventListener('input', calculateDeployment);
-    startDateInput.addEventListener('change', calculateDeployment);
+            // Event listeners
+            hoursInput.addEventListener('input', calculateDeployment);
+            startDateInput.addEventListener('change', calculateDeployment);
 
-    // Initial calculation
-    calculateDeployment();
+            // Initial calculation
+            calculateDeployment();
 
-    // Enable/Disable Confirm Deploy Button based on Checkbox
-    const checkbox = document.getElementById('confirm_deployment');
-    const submitBtn = document.getElementById('confirmDeployBtn');
-    
-    if (checkbox && submitBtn) {
-        checkbox.addEventListener('change', function() {
-            submitBtn.disabled = !this.checked;
+            // Enable/Disable Confirm Deploy Button based on Checkbox
+            const checkbox = document.getElementById('confirm_deployment');
+            const submitBtn = document.getElementById('confirmDeployBtn');
+            
+            if (checkbox && submitBtn) {
+                checkbox.addEventListener('change', function() {
+                    submitBtn.disabled = !this.checked;
+                });
+                
+                // Optional: If you want to re-enable/disable on modal show (in case of multiple opens)
+                const modal = document.getElementById('deployModal');
+                if (modal) {
+                    modal.addEventListener('shown.bs.modal', function() { // Bootstrap 4/5 event
+                        submitBtn.disabled = !checkbox.checked;
+                    });
+                }
+            }   
         });
-        
-        // Optional: If you want to re-enable/disable on modal show (in case of multiple opens)
-        const modal = document.getElementById('deployModal');
-        if (modal) {
-            modal.addEventListener('shown.bs.modal', function() { // Bootstrap 4/5 event
-                submitBtn.disabled = !checkbox.checked;
-            });
+    </script>
+
+        <!-- Coordinator Deployments Management Table -->
+    <script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#deploymentsTable').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "language": {
+            "emptyTable": "No deployments found.",
+            "search": "_INPUT_",
+            "searchPlaceholder": "Search...",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ deployments",
+            "paginate": {
+            "previous": "«",
+            "next": "»"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": [5] }
+        ],
+        "initComplete": function() {
+            // Hide loading overlay when table is ready
+            $('#tableLoadingOverlay').fadeOut();
         }
-    }   
-});
-</script>
+        });
+    });
+    </script>
+
+    <!-- Coordinator: HTE/show - Remove Endorsement -->
+    <script>
+        $(document).ready(function() {
+            // Handle Remove Endorsement button click inside modal
+            $('.btn-remove-endorsement').on('click', function() {
+                const internsHteId = $(this).data('interns-hte-id');
+                const rowId = $(this).data('row-id');
+                const $modal = $(this).closest('.modal');
+
+                $(this).prop('disabled', true).text('Removing...');
+
+                $.ajax({
+                    url: `/coordinator/remove-endorsement/${internsHteId}`,
+                    method: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#' + rowId).fadeOut(400, function() {
+                                $(this).remove();
+                            });
+                            toastr.success(response.message || 'Endorsement removed successfully.');
+                        } else {
+                            toastr.error(response.message || 'Failed to remove endorsement.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'Failed to remove endorsement. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        toastr.error(errorMsg);
+                    },
+                    complete: function() {
+                        $('.btn-remove-endorsement').prop('disabled', false).text('Remove Endorsement');
+                        $modal.modal('hide');
+                    }
+                });
+            });
+        });
+    </script>
+
+
 @endsection

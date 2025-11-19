@@ -5,6 +5,8 @@
 
 @section('content')
 <section class="content-header">
+    @include('layouts.partials.scripts-main')
+
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -46,22 +48,22 @@
                     <div class="col-md-6 mb-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="first_name" class="form-label">First Name*</label>
+                                <label for="first_name" class="form-label">First Name<span class="text-danger"> *</span></label>
                                 <input type="text" class="form-control" id="first_name" name="first_name" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="last_name" class="form-label">Last Name*</label>
+                                <label for="last_name" class="form-label">Last Name<span class="text-danger"> *</span></label>
                                 <input type="text" class="form-control" id="last_name" name="last_name" required>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="birthdate" class="form-label">Birthdate*</label>
+                        <label for="birthdate" class="form-label">Birthdate<span class="text-danger"> *</span></label>
                         <input type="date" class="form-control" id="birthdate" name="birthdate" required>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label for="sex" class="form-label">Sex*</label>
+                        <label for="sex" class="form-label">Sex<span class="text-danger"> *</span></label>
                         <select class="form-select" id="sex" name="sex" required>
                             <option class="d-none" value="" disabled selected>Select Sex</option>
                             <option value="male">Male</option>
@@ -73,12 +75,12 @@
                 <!-- CONTACT INFORMATION -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="email" class="form-label">Email*</label>
+                        <label for="email" class="form-label">Email<span class="text-danger"> *</span></label>
                         <input type="email" class="form-control" id="email" name="email" required>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label for="contact" class="form-label">Contact Number*</label>
+                        <label for="contact" class="form-label">Contact Number<span class="text-danger"> *</span></label>
                         <input type="text" class="form-control" id="contact" name="contact" required>
                     </div>
                 </div>
@@ -86,19 +88,19 @@
                 <!-- STUDENT INFORMATION -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="student_id" class="form-label">Student ID*</label>
+                        <label for="student_id" class="form-label">Student ID<span class="text-danger"> *</span></label>
                         <input type="text" class="form-control" id="student_id" name="student_id" 
                             pattern="\d{4}-\d{5}" title="Format: XXXX-XXXXX (e.g. 2022-09709)" required>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="academic_year" class="form-label">Academic Year*</label>
+                        <label for="academic_year" class="form-label">Academic Year<span class="text-danger"> *</span></label>
                         <input type="text" class="form-control" id="academic_year" name="academic_year" 
                             pattern="\d{4}-\d{4}" title="Format: XXXX-XXXX (e.g. 2024-2025)" required>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="semester" class="form-label">Semester*</label>
+                        <label for="semester" class="form-label">Semester<span class="text-danger"> *</span></label>
                         <select class="form-select" id="semester" name="semester" required>
                             <option value="" disabled selected>Select Semester</option>
                             <option value="1st">1st Semester</option>
@@ -119,7 +121,7 @@
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="year_level" class="form-label">Year Level*</label>
+                        <label for="year_level" class="form-label">Year Level<span class="text-danger"> *</span></label>
                         <select class="form-select" id="year_level" name="year_level" required>
                             <option value="" disabled selected>Select Year</option>
                             <option value="1">1st Year</option>
@@ -130,7 +132,7 @@
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label for="section" class="form-label">Section*</label>
+                        <label for="section" class="form-label">Section<span class="text-danger"> *</span></label>
                         <select class="form-select" id="section" name="section" required>
                             <option value="" disabled selected>Select Section</option>
                             <option value="a">A</option>
@@ -144,7 +146,7 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="card-footer d-flex justify-content-between">
+                <div class="card-footer d-flex justify-content-between py-3 rounded-3">
                     <div>
                         <button type="button" class="btn btn-secondary mr-2" onclick="window.history.back()">
                             Cancel
@@ -163,4 +165,5 @@
         </div>
     </div>
 </section>
+
 @endsection

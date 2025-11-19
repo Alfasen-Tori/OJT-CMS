@@ -8,6 +8,8 @@
 @endphp
 
 <section class="content-header">
+  @include('layouts.partials.scripts-main')
+
   <div class="container-fluid px-3">
     <div class="row mb-2">
       <div class="col-sm-8">
@@ -129,21 +131,24 @@
                 </td>
                 <td class="text-center px-2 align-middle">
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-dark rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="ph-fill ph-gear custom-icons-i"></i>
                         </button>
-                        <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
+                        <div class="dropdown-menu dropdown-menu-right shadow border-0 py-0" aria-labelledby="actionDropdown">
                             <!-- View Option -->
-                            <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.hte.show', $hte->id) }}">
+                            <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('coordinator.hte.show', $hte->id) }}">
                                 <i class="ph ph-eye custom-icons-i mr-2"></i>View
                             </a>
                             
                             <!-- Unregister Option (conditionally visible) -->
                             @if($canManageHTEs)
-                            <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('coordinator.edit_h', $hte->id) }}">
+                            <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('coordinator.edit_h', $hte->id) }}">
                                 <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
                             </a>
-                            <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#unregisterHTE{{ $hte->id }}">
+                            
+                            <div class="dropdown-divider my-1"></div>
+                            
+                            <a class="dropdown-item d-flex align-items-center py-2 text-danger" href="#" data-toggle="modal" data-target="#unregisterHTE{{ $hte->id }}">
                                 <i class="ph ph-trash custom-icons-i mr-2"></i>Unregister
                             </a>
                             @endif
@@ -188,6 +193,44 @@
     </div>
   </div>
 </section>
+
+    <!-- Coordinator HTE Management Table -->
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#htesTable').DataTable({
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No HTE data found.",
+                    "search": "_INPUT_",
+                    "searchPlaceholder": "Search...",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ HTEs",
+                    "paginate": {
+                        "previous": "«",
+                        "next": "»"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": [5] } // Disable sorting for Actions column
+                ],
+                "initComplete": function() {
+                    // Hide loading overlay when table is ready
+                    $('#tableLoadingOverlay').fadeOut();
+                }
+            });
+            
+            // Remove the manual search input
+            $('.card-header input[type="search"]').parent().remove();
+        });
+    </script>
+
 
 <!-- @if(!$canManageHTEs)
 <div class="alert alert-warning alert-dismissible fade show" role="alert">

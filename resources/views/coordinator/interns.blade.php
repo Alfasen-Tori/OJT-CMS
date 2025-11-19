@@ -5,6 +5,8 @@
 
 @section('content')
 <section class="content-header">
+  @include('layouts.partials.scripts-main')
+
   <div class="container-fluid px-3">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -106,8 +108,8 @@
                     {{ $intern->user->lname }}, {{ $intern->user->fname }} 
                 </td>       
                 <td class="align-middle small">{{ $intern->department->dept_name ?? 'N/A' }}</td>
-                <td class="text-center align-middle">{{ $intern->year_level }}</td>
-                <td class="text-center align-middle">{{ strtoupper($intern->section) }}</td>
+                <td class="align-middle">{{ $intern->year_level }}</td>
+                <td class="align-middle">{{ strtoupper($intern->section) }}</td>
                 <td class="align-middle">
                   @php
                     $statusClass = [
@@ -124,25 +126,27 @@
                 </td>
                 <td class="text-center px-2 align-middle">
                   <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-dark px-2 rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="ph-fill ph-gear custom-icons-i"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-right py-0" aria-labelledby="actionDropdown">
-                      <!-- View Option -->
-                      <a class="dropdown-item btn btn-outline-light text-dark" href="{{ route('coordinator.intern.show', $intern->id) }}">
-                        <i class="ph ph-eye custom-icons-i mr-2"></i>View
-                      </a>
-                      
-                      <!-- Update Option -->
-                      <a class="dropdown-item border-top border-bottom border-lightgray btn btn-outline-light text-dark" href="{{ route('coordinator.edit_i', $intern->id) }}">
-                        <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
-                      </a>
-                      
-                      <!-- Delete Option -->
-                      <a class="dropdown-item btn btn-outline-light text-danger" href="#" data-toggle="modal" data-target="#deleteIntern{{ $intern->id }}">
-                        <i class="ph ph-trash custom-icons-i mr-2"></i>Delete
-                      </a>
-                    </div>
+                      <button class="btn btn-sm btn-outline-primary px-2 rounded-pill dropdown-toggle" type="button" id="actionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          <i class="ph-fill ph-gear custom-icons-i"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-right shadow border-0 py-0" aria-labelledby="actionDropdown">
+                          <!-- View Option -->
+                          <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('coordinator.intern.show', $intern->id) }}">
+                              <i class="ph ph-eye custom-icons-i mr-2"></i>View
+                          </a>
+                          
+                          <!-- Update Option -->
+                          <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('coordinator.edit_i', $intern->id) }}">
+                              <i class="ph ph-wrench custom-icons-i mr-2"></i>Update
+                          </a>
+                          
+                          <div class="dropdown-divider my-1"></div>
+                          
+                          <!-- Delete Option -->
+                          <a class="dropdown-item d-flex align-items-center py-2 text-danger" href="#" data-toggle="modal" data-target="#deleteIntern{{ $intern->id }}">
+                              <i class="ph ph-trash custom-icons-i mr-2"></i>Delete
+                          </a>
+                      </div>
                   </div>
                   
                   <!-- Delete Confirmation Modal -->
@@ -200,13 +204,16 @@
                   <input type="hidden" name="dept_id" value="{{ auth()->user()->coordinator->dept_id }}">
                   
                   <div class="modal-body">
-                      <div class="mb-3">
+                      <div class="form-group">
                           <label for="importFile" class="form-label">Excel File</label>
-                          <input class="form-control" type="file" id="importFile" name="import_file" accept=".xlsx,.xls,.csv" required>
-                          <div class="form-text">Download the <a href="{{ asset('templates/intern_import_template.xlsx') }}" download>import template</a> for reference</div>
+                          <div class="custom-file">
+                              <input type="file" class="custom-file-input" id="importFile" name="import_file" accept=".xlsx,.xls,.csv" required>
+                              <label class="custom-file-label" for="importFile">Choose file</label>
+                          </div>
+                          <small class="form-text text-muted">Download the <a href="{{ asset('templates/intern_import_template.xlsx') }}" download>import template</a> for reference</small>
                       </div>
                       
-                      <div class="alert bg-success-subtle">
+                      <div class="alert bg-secondary-subtle text-secondary">
                           <strong>File Requirements:</strong>
                           <ul class="mb-0">
                               <li>File must be in Excel format (.xlsx, .xls, or .csv)</li>
@@ -230,7 +237,7 @@
                       <div id="importResults" class="d-none mt-3">
                           <h5>Import Summary</h5>
                           <div class="alert bg-success-subtle text-success">
-                              <i class="ph ph-check custom-icons-i"></i> Succesfully imported <span id="successCount" class="fw-bold">0</span> interns. 
+                              <i class="ph ph-check custom-icons-i"></i> Successfully imported <span id="successCount" class="fw-bold">0</span> interns. 
                           </div>
                           <div class="alert bg-danger-subtle text-danger">
                               <i class="ph ph-warning custom-icons-i"></i> Error importing: <span id="failCount" class="fw-bold">0</span> interns.
@@ -263,6 +270,188 @@
           </div>
       </div>
   </div>
+
+  <!-- Coordinator: Intern Import -->
+  <script>
+    // Import form handling
+    $('#importForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitBtn = $('#importSubmit');
+        const progress = $('#importProgress');
+        const results = $('#importResults');
+        const spinner = progress.find('.spinner-border');
+        
+        // Show progress, hide results
+        progress.removeClass('d-none');
+        results.addClass('d-none');
+        submitBtn.prop('disabled', true);
+        
+        // Prepare form data
+        const formData = new FormData(this);
+        
+        // AJAX request
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        $('.progress-bar').css('width', percent + '%');
+                    }
+                });
+                return xhr;
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Update results display
+                    $('#successCount').text(response.success_count);
+                    $('#failCount').text(response.fail_count);
+                    
+                    if (response.failures.length > 0) {
+                        const failBody = $('#failDetailsBody');
+                        failBody.empty();
+                        
+                        response.failures.forEach(failure => {
+                            failBody.append(`
+                                <tr>
+                                    <td>${failure.row}</td>
+                                    <td>${failure.student_id || 'N/A'}</td>
+                                    <td>${failure.name || 'N/A'}</td>
+                                    <td>${failure.errors.join('<br>')}</td>
+                                </tr>
+                            `);
+                        });
+                        
+                        $('#failDetails').removeClass('d-none');
+                    } else {
+                        $('#failDetails').addClass('d-none');
+                    }
+                    
+                    // Show results and hide spinner
+                    spinner.addClass('d-none');
+                    results.removeClass('d-none');
+                    
+                    // Remove Close button
+                    $('.modal-footer .btn-secondary').remove();
+                    
+                    // Change Import button to Complete button
+                    submitBtn
+                        .removeClass('btn-success')
+                        .addClass('btn-primary')
+                        .html('Complete')
+                        .prop('disabled', false)
+                        .off('click')
+                        .on('click', function(e) {
+                            e.preventDefault(); // Prevent form submission
+                            e.stopPropagation(); // Stop event bubbling
+                            
+                            // Close modal immediately
+                            $('#importModal').modal('hide');
+                            
+                            // Show success message if any interns were imported
+                            if (response.success_count > 0) {
+                                sessionStorage.setItem('importSuccess', response.success_count);
+                            }
+                            
+                            // Refresh page after modal is fully hidden
+                            $('#importModal').on('hidden.bs.modal', function() {
+                                window.location.reload();
+                            });
+                        });
+                }
+            },
+            error: function(xhr) {
+                let errorMsg = 'An error occurred during import.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                alert(errorMsg);
+                submitBtn.prop('disabled', false);
+            },
+            complete: function() {
+                $('#progressText').text('Import completed');
+                $('.progress-bar').removeClass('progress-bar-animated');
+                spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Reset modal when closed
+    $('#importModal').on('hidden.bs.modal', function() {
+        $('#importForm')[0].reset();
+        $('#importProgress').addClass('d-none');
+        $('#importResults').addClass('d-none');
+        $('.progress-bar').css('width', '0%').addClass('progress-bar-animated');
+        $('#progressText').text('Processing import...');
+        $('#importProgress').find('.spinner-border').removeClass('d-none');
+        
+        // Reset button to original state
+        $('#importSubmit')
+            .removeClass('btn-primary')
+            .addClass('btn-success')
+            .html('Import')
+            .off('click')
+            .prop('disabled', false);
+            
+        // Restore Close button if it was removed
+        if ($('.modal-footer .btn-secondary').length === 0) {
+            $('.modal-footer').prepend('<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>');
+        }
+    });
+
+    // Show success message after page reload if needed
+    $(document).ready(function() {
+        const importedCount = sessionStorage.getItem('importSuccess');
+        if (importedCount) {
+            toastr.success(`${importedCount} interns imported successfully`);
+            sessionStorage.removeItem('importSuccess');
+        }
+    });
+  </script>
+
+  <!-- Coordinator: Intern Management Table -->
+  <script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#internsTable').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "language": {
+            "emptyTable": "No intern data found.",
+            "search": "_INPUT_",
+            "searchPlaceholder": "Search...",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ interns",
+            "paginate": {
+            "previous": "«",
+            "next": "»"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": [6] } // Disable sorting for Actions column
+        ],
+        "initComplete": function() {
+            // Hide loading overlay when table is ready
+            $('#tableLoadingOverlay').fadeOut();
+        }
+        });
+    });
+  </script>
+
+
+
 
 </section>
 @endsection

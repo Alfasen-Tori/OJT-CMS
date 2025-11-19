@@ -4,11 +4,13 @@
 
 @section('content')
 <div class="container-fluid">
+    @include('layouts.partials.scripts-main')
+
     <!-- Intern Details Card -->
     <div class="row mb-1">
         <div class="col-md-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-white text-dark">
+                <div class="card-header text-dark">
                     <h3 class="card-title mb-0 d-flex justify-content-between align-items-center w-100">
                         <div>
                             <i class="ph ph-graduation-cap details-icons-i mr-2"></i>
@@ -124,7 +126,7 @@
                                 @if($intern->skills->count() > 0)
                                     <div class="d-flex flex-wrap gap-2">
                                         @foreach($intern->skills as $skill)
-                                            <span class="badge bg-primary-subtle text-dark py-2 px-3 rounded-pill">{{ $skill->name }}</span>
+                                            <span class="badge bg-secondary-subtle text-muted py-2 px-3 rounded-pill">{{ $skill->name }}</span>
                                         @endforeach
                                     </div>
                                 @else
@@ -190,7 +192,7 @@
         @if($currentDeployment)
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card shadow-sm h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
                         <i class="ph ph-chart-pie-slice custom-icons-i me-1"></i>
                         Progress
@@ -242,7 +244,7 @@
         <!-- 2. Weekly Reports Section -->
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card shadow-sm h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
                         <i class="ph ph-file-text custom-icons-i me-1"></i>
                         Weekly Reports
@@ -288,7 +290,7 @@
         <!-- 3. Evaluation Section - ALWAYS SHOW -->
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card shadow-sm h-100 d-flex flex-column">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">
                         <i class="ph ph-clipboard-text custom-icons-i me-1"></i>
                         Evaluation

@@ -4,6 +4,9 @@
 @section('title', 'Coordinator | Home')
 
 @section('content')
+
+@include('layouts.partials.scripts-main')
+
 <section class="content-header">
   <div class="container-fluid">
     <div class="row mb-2">
@@ -92,7 +95,7 @@
       <div class="col-lg-8 mb-4">
         <div class="card analytics-card h-100">
           <div class="card-header bg-white">
-            <h5 class="card-title mb-0">
+            <h5 class="card-title text-dark mb-0">
               <i class="ph ph-chart-pie-slice me-2"></i>Intern Status Overview
             </h5>
           </div>
@@ -252,7 +255,7 @@
       <div class="col-lg-4 mb-4">
         <div class="card quick-actions-card h-100">
           <div class="card-header bg-white">
-            <h5 class="card-title mb-0">
+            <h5 class="card-title text-dark mb-0">
               <i class="ph ph-lightning me-2"></i>Quick Actions
             </h5>
           </div>
@@ -558,6 +561,145 @@
   .quick-btn span {
     font-size: 0.9rem;
   }
+}
+
+/* Dark Mode for Custom Card Styles */
+
+
+html.dark-mode .card-text .count {
+  color: #ffffff;
+}
+
+html.dark-mode .card-text .label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+html.dark-mode .card-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+html.dark-mode .card-footer {
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.dark-mode .card-link {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+html.dark-mode .card-link:hover {
+  color: #ffffff;
+}
+
+/* Dark Mode for Enhanced Status Cards */
+html.dark-mode .status-card {
+  background: #343a40;
+  border: 1px solid #454d55;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+html.dark-mode .status-card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .status-count {
+  color: #ffffff;
+}
+
+html.dark-mode .status-label {
+  color: #6c757d;
+}
+
+html.dark-mode .status-progress .progress {
+  background-color: #2d3338;
+}
+
+html.dark-mode .status-percentage {
+  color: #6c757d;
+}
+
+/* Dark Mode for Summary Stats */
+html.dark-mode .summary-stats {
+  background: #2d3338;
+  border: 1px solid #454d55;
+}
+
+html.dark-mode .summary-label {
+  color: #6c757d;
+}
+
+html.dark-mode .summary-value {
+  color: #ffffff;
+}
+
+/* Dark Mode for Quick Actions */
+html.dark-mode .quick-actions-card,
+html.dark-mode .recent-activity-card {
+  background: #343a40;
+  border: 1px solid #454d55;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .quick-btn {
+  background: #2d3338 !important;
+  color: #ffffff;
+  border: 1px solid #454d55;
+}
+
+html.dark-mode .quick-btn:hover {
+  background: #007bff !important;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+}
+
+/* Dark Mode for Recent Activity */
+html.dark-mode .list-group-item {
+  background: #343a40;
+  border-bottom: 1px solid #454d55;
+  color: #ffffff;
+}
+
+html.dark-mode .list-group-item:last-child {
+  border-bottom: none;
+}
+
+html.dark-mode .activity-avatar {
+  background: #495057;
+  color: #ffffff;
+}
+
+/* Dark Mode for Activity Text */
+html.dark-mode .activity-text {
+  color: #ffffff;
+}
+
+html.dark-mode .activity-time {
+  color: #6c757d;
+}
+
+/* Dark Mode for any remaining light backgrounds */
+html.dark-mode .bg-white {
+  background-color: #343a40 !important;
+}
+
+html.dark-mode .bg-light {
+  background-color: #2d3338 !important;
+}
+
+html.dark-mode .text-dark {
+  color: #ffffff !important;
+}
+
+html.dark-mode .text-black {
+  color: #ffffff !important;
+}
+
+html.dark-mode .border {
+  border-color: #454d55 !important;
+}
+
+html.dark-mode .border-light {
+  border-color: #495057 !important;
 }
 </style>
 @endsection
