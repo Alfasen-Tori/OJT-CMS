@@ -148,13 +148,6 @@
             display: none;
         }
         
-        .login-footer {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e9ecef;
-            text-align: center;
-        }
-        
         .login-footer p {
             color: #6c757d;
             font-size: 0.9rem;
@@ -186,7 +179,7 @@
 </head>
 <body>
     <div class="container-fluid d-flex justify-content-center align-items-center min-vh-100 p-3">
-        <div class="login-card p-5 col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+        <div class="login-card px-5 py-3 col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
             <!-- Logo and Title -->
             <div class="logo-container text-center">
                 <img class="logo-img mb-3" src="{{ asset('assets/images/OJT-CMS logo.png') }}" alt="OJT-CMS Logo" height="120">
@@ -245,15 +238,15 @@
                 </div>
 
                 <!-- Login Button -->
-                <button type="submit" class="btn btn-login w-100 mt-4 mb-3">
-                    <i class="ph-fill ph-sign-in ph-icon me-2"></i>Login to Portal
+                <button type="submit" class="btn btn-login w-100 mt-2 mb-2">
+                    Login
                 </button>
             </form>
 
             <!-- Footer -->
-            <div class="login-footer">
-                <p class="text-muted">
-                    &copy; {{ date('Y') }} OJT Coordination & Management System
+            <div class="login-footer border-top border-lightgray border-1 mt-3 py-3 text-center">
+                <p class="text-muted w-100">
+                    <a href="{{ route('password.request') }}" class="small link-secondary text-decoration-none">Forgot Password</a>
                 </p>
             </div>
         </div>
