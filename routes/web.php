@@ -24,6 +24,7 @@ Route::get('/', function () {
     return view('home');
 });
 
+
 /*Login Routes*/
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -198,12 +199,21 @@ Route::middleware(['auth', 'hte'])->group(function() {
 });
 
 /* System */
-// For coordinators
-// Unified password setup routes
-Route::get('/setup-password/{token}/{role}', [AuthController::class, 'showSetupForm'])
-    ->where('role', 'coordinator|intern|hte') // Only accept these values
-    ->name('password.setup');
 
+// Forgot Password Routes
+Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])
+    ->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
+    ->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])
+    ->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+    ->name('password.update'); // This should be POST route
+
+// Password Setup Routes (for new registrations)
+Route::get('/setup-password/{token}/{role}', [AuthController::class, 'showSetupForm'])
+    ->where('role', 'coordinator|intern|hte')
+    ->name('password.setup');
 Route::post('/setup-password/{token}/{role}', [AuthController::class, 'processSetup'])
     ->where('role', 'coordinator|intern|hte');
 

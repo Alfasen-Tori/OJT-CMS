@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Set Your Password - OJT-CMS</title>
+    <title>Reset Password - OJT-CMS</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('assets/colors.css') }}">
@@ -48,12 +48,7 @@
             left: 0;
             right: 0;
             height: 6px;
-            /* Dynamic color based on role */
-            background: 
-                @if($role === 'coordinator') #198754 
-                @elseif($role === 'intern') #0d6efd 
-                @else #ffc107 
-            @endif;
+            background: #0dcaf0; /* Bootstrap info color for password reset */
         }
         
         .logo-container {
@@ -71,12 +66,7 @@
         }
         
         .portal-title {
-            /* Dynamic color based on role */
-            color: 
-                @if($role === 'coordinator') #198754 
-                @elseif($role === 'intern') #0d6efd 
-                @else #ffc107 
-            @endif;
+            color: #0dcaf0; /* Bootstrap info color */
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
@@ -95,17 +85,8 @@
         }
         
         .form-control:focus {
-            /* Dynamic border color based on role */
-            border-color: 
-                @if($role === 'coordinator') #198754 
-                @elseif($role === 'intern') #0d6efd 
-                @else #ffc107 
-            @endif;
-            box-shadow: 
-                @if($role === 'coordinator') 0 0 0 0.2rem rgba(25, 135, 84, 0.25)
-                @elseif($role === 'intern') 0 0 0 0.2rem rgba(13, 110, 253, 0.25)
-                @else 0 0 0 0.2rem rgba(255, 193, 7, 0.25)
-            @endif;
+            border-color: #0dcaf0; /* Bootstrap info color */
+            box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.25);
             transform: translateY(-2px);
         }
         
@@ -118,13 +99,8 @@
             font-weight: 500;
         }
         
-        .btn-setup {
-            /* Dynamic button color based on role */
-            background: 
-                @if($role === 'coordinator') #198754 
-                @elseif($role === 'intern') #0d6efd 
-                @else #ffc107 
-            @endif;
+        .btn-reset {
+            background: #0dcaf0; /* Bootstrap info color */
             border: none;
             border-radius: 12px;
             padding: 1rem 2rem;
@@ -136,19 +112,11 @@
             overflow: hidden;
         }
         
-        .btn-setup:hover {
-            /* Dynamic hover color based on role */
-            background: 
-                @if($role === 'coordinator') #157347 
-                @elseif($role === 'intern') #0b5ed7 
-                @else #ffca2c 
-            @endif;
+        .btn-reset:hover {
+            background: #0aa2c0;
             transform: translateY(-2px);
-            box-shadow: 
-                @if($role === 'coordinator') 0 8px 25px rgba(25, 135, 84, 0.4)
-                @elseif($role === 'intern') 0 8px 25px rgba(13, 110, 253, 0.4)
-                @else 0 8px 25px rgba(255, 193, 7, 0.4)
-            @endif;
+            box-shadow: 0 8px 25px rgba(13, 202, 240, 0.4);
+            color: #fff;
         }
         
         .password-toggle {
@@ -168,12 +136,7 @@
         }
         
         .password-toggle:hover {
-            /* Dynamic hover color based on role */
-            color: 
-                @if($role === 'coordinator') #198754 
-                @elseif($role === 'intern') #0d6efd 
-                @else #ffc107 
-            @endif;
+            color: #0dcaf0; /* Bootstrap info color */
         }
         
         /* Hide password toggle when there's validation error */
@@ -217,16 +180,8 @@
         <div class="password-card p-5 col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
             <!-- Logo and Title -->
             <div class="logo-container text-center">
-                <h2 class="portal-title">OJT-CMS</h2>
-                <p class="text-muted mb-4">
-                    @if($role === 'coordinator')
-                        Coordinator Password Setup
-                    @elseif($role === 'intern')
-                        Intern Password Setup
-                    @else
-                        HTE Password Setup
-                    @endif
-                </p>
+                <h2 class="portal-title">Password Reset</h2>
+                <p class="text-muted mb-4">Create a new secure password</p>
             </div>
 
             <!-- Error Messages -->
@@ -240,9 +195,18 @@
                 </div>
             @endif
 
-            <!-- Password Setup Form -->
-            <form method="POST" action="{{ route('password.setup', ['token' => $token, 'role' => $role]) }}" class="w-100" id="passwordForm">
+            <!-- Success Message from Previous Attempt -->
+            @if(session('status'))
+                <div class="alert alert-success">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            <!-- Password Reset Form -->
+            <form method="POST" action="{{ route('password.update') }}" class="w-100" id="passwordForm">
                 @csrf
+                <input type="hidden" name="token" value="{{ $token }}">
+                <input type="hidden" name="email" value="{{ $email }}">
                 
                 <!-- New Password Field -->
                 <div class="form-floating position-relative">
@@ -254,9 +218,10 @@
                         placeholder="New Password"
                         required
                         autocomplete="new-password"
+                        autofocus
                     >
                     <label for="floatingPassword">
-                        <i class="ph ph-lock me-1 custom-icons-i"></i>Set Password
+                        <i class="ph ph-lock me-1 custom-icons-i"></i>New Password
                     </label>
                     <button type="button" class="password-toggle" id="passwordToggle">
                         <i class="ph-fill ph-eye ph-icon"></i>
@@ -291,7 +256,7 @@
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="btn btn-setup w-100 mt-2 mb-3 py-3">
+                <button type="submit" class="btn btn-reset w-100 mt-2 mb-3 py-3">
                     Confirm
                 </button>
             </form>
@@ -361,6 +326,9 @@
             if (passwordField.classList.contains('is-invalid')) {
                 passwordToggle.style.display = 'none';
             }
+            
+            // Focus on password field
+            passwordInput.focus();
         });
     </script>
 </body>

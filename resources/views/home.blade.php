@@ -161,7 +161,7 @@
                         <img src="{{ asset('assets/images/ojtcms_logo3.png') }}" alt="OJT CMS Logo" class="logo-img mb-4">
                     </div>
                     <div>
-                        <h1 class="text-white welcome-text display-4 fw-bold mb-3">OJT Coordination & Management System</h1>
+                        <h1 class="text-white welcome-text display-6 fw-bold mb-3">OJT Coordination & Management System</h1>
                         <p class="text-white-50 lead mb-0">Streamlining internship programs for educational excellence</p>
                     </div>
                 </div>
@@ -249,14 +249,6 @@
 
                 </div>
                 
-                <!-- Footer Note -->
-                <div class="row mt-5">
-                    <div class="col-12 text-center">
-                        <p class="text-white-50 small mb-0">
-                            Select your role to access the OJT Coordination & Management System
-                        </p>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

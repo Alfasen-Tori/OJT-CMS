@@ -9,6 +9,7 @@ use App\Models\Intern;
 use App\Models\Coordinator;
 
 use Illuminate\Http\Request;
+use App\Mail\PasswordResetMail;
 use App\Services\AuditTrailService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -275,5 +276,152 @@ public function showSetupForm($token, $role)
 
             return redirect()->route("{$role}.dashboard")
                 ->with('success', 'Password set successfully!');
+    }
+
+        public function showForgotPasswordForm()
+    {
+        return view('auth.forgot-password');
+    }
+
+    /**
+     * Send password reset link
+     */
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ], [
+            'email.exists' => 'We could not find a user with that email address.'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'We could not find a user with that email address.']);
+        }
+
+        // Generate token
+        $token = Str::random(64);
+        
+        // Determine user role
+        $role = $this->determineUserRole($user);
+
+        // Store token in database (expires in 1 hour)
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            [
+                'token' => $token,
+                'role' => $role,
+                'created_at' => now()
+            ]
+        );
+
+        // Send email
+        Mail::to($user->email)->send(new PasswordResetMail($token, $role, $user->name));
+
+        return back()->with('status', 'We have emailed your password reset link!');
+    }
+
+    /**
+     * Show password reset form
+     */
+    public function showResetForm($token)
+    {
+        $tokenData = DB::table('password_reset_tokens')
+            ->where('token', $token)
+            ->where('created_at', '>', now()->subHours(1))
+            ->first();
+
+        if (!$tokenData) {
+            return redirect()->route('password.request')
+                ->with('error', 'Invalid or expired reset link.');
+        }
+
+        return view('auth.password-reset', [
+            'token' => $token,
+            'email' => $tokenData->email,
+            'role' => $tokenData->role
+        ]);
+    }
+
+    // In resetPassword method:
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        // Find the token
+        $tokenData = DB::table('password_reset_tokens')
+            ->where('token', $request->token)
+            ->where('email', $request->email)
+            ->where('created_at', '>', now()->subHours(1))
+            ->first();
+
+        if (!$tokenData) {
+            return back()->withErrors(['email' => 'Invalid or expired reset link.'])
+                        ->withInput();
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'User not found.'])
+                        ->withInput();
+        }
+
+        try {
+            // Update password ONLY
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            // Delete the token
+            DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->delete();
+
+            // Log the user in
+            Auth::login($user);
+
+            // Determine redirect route based on role
+            $redirectRoute = $this->getDashboardRoute($tokenData->role);
+
+            return redirect()->route($redirectRoute)
+                ->with('success', 'Password has been reset successfully!');
+
+        } catch (\Exception $e) {
+            \Log::error('Error resetting password: ' . $e->getMessage());
+            
+            return back()->withErrors(['error' => 'An error occurred. Please try again.'])
+                        ->withInput();
+        }
+    }
+
+    /**
+     * Determine user role
+     */
+    private function determineUserRole($user)
+    {
+        if ($user->admin) return 'admin';
+        if ($user->coordinator) return 'coordinator';
+        if ($user->intern) return 'intern';
+        if ($user->hte) return 'hte';
+        return 'user';
+    }
+
+    /**
+     * Get dashboard route based on role
+     */
+    private function getDashboardRoute($role)
+    {
+        return match($role) {
+            'admin' => 'admin.dashboard',
+            'coordinator' => 'coordinator.dashboard',
+            'intern' => 'intern.dashboard',
+            'hte' => 'hte.dashboard',
+            default => 'home'
+        };
     }
 }
