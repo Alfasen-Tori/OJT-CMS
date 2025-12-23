@@ -143,7 +143,6 @@
           <input type="hidden" name="week_no" id="week_no">
 
           <div class="form-group">
-            <label for="report_file" class="font-weight-bold">Select PDF File</label>
             <div class="mb-3">
                 <label for="report_file" class="fw-bold">Select PDF File</label>
                 <input 
