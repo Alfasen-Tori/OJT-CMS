@@ -96,7 +96,7 @@
                     <div class="d-flex align-items-start">
                         {{-- Intern Information --}}
                         <div class="flex-grow-1">
-                            <h4 class="mb-1 fw-bold text-break">{{ auth()->user()->fname }} {{ auth()->user()->lname }}</h4>
+                            <h4 class="mb-1 fw-bold text-break">Welcome back, {{ auth()->user()->fname }} {{ auth()->user()->lname }}!</h4>
                             
                             {{-- Student ID --}}
                             <div class="d-flex align-items-center mb-2">
