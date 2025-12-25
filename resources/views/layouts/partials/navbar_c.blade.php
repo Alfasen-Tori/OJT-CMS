@@ -68,10 +68,10 @@
           <small class="text-muted">Coordinator</small>
         </div>
         
-        <a href="" class="dropdown-item d-flex align-items-center py-2">
+        <a href="{{ route('coordinator.profile') }}" class="dropdown-item d-flex align-items-center py-2">
           <i class="ph ph-user-gear custom-icons-i mr-2"></i>Manage Profile
         </a>
-        
+                
         <div class="dropdown-divider my-1"></div>
         
         <form method="POST" action="{{ route('logout') }}">

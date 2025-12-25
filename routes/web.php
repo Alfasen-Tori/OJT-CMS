@@ -130,6 +130,8 @@ Route::middleware(['auth:web', 'coordinator'])->prefix('coordinator')->group(fun
     Route::get('/honorarium', [CoordinatorController::class, 'documents'])->name('coordinator.documents');
     Route::post('/honorarium/upload', [CoordinatorController::class, 'uploadDocument'])->name('coordinator.documents.upload');
     Route::delete('/honorarium/{id}', [CoordinatorController::class, 'deleteDocument'])->name('coordinator.documents.delete');
+
+    Route::get('/user-guide', [CoordinatorController::class, 'userGuide'])->name('coordinator.user-guide');
 });
 
 // Protected intern routes

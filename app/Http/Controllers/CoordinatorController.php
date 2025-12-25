@@ -692,180 +692,180 @@ public function registerHTE(Request $request)
     }
 }
 
-public function updateHte(Request $request, $id)
-{
-    // Find the HTE
-    $hte = Hte::findOrFail($id);
-    
-    // Validation rules (same as registration)
-    $validated = $request->validate([
-        'contact_first_name' => 'required|string|max:255',
-        'contact_last_name' => 'required|string|max:255',
-        'contact_email' => 'required|email|unique:users,email,' . $hte->user_id,
-        'contact_number' => 'required|string|max:20',
-        'address' => 'required|string|max:500',
-        'organization_name' => 'required|string|max:255',
-        'organization_type' => 'required|in:private,government,ngo,educational,other',
-        'description' => 'nullable|string',
-    ]);
-    
-    try {
-        DB::beginTransaction();
+    public function updateHte(Request $request, $id)
+    {
+        // Find the HTE
+        $hte = Hte::findOrFail($id);
         
-        // Store old data for audit trail
-        $oldUserData = [
-            'fname' => $hte->user->fname,
-            'lname' => $hte->user->lname,
-            'email' => $hte->user->email,
-            'contact' => $hte->user->contact
-        ];
-
-        $oldHteData = [
-            'organization_name' => $hte->organization_name,
-            'type' => $hte->type,
-            'address' => $hte->address,
-            'description' => $hte->description
-        ];
-        
-        // Update user information
-        $user = User::findOrFail($hte->user_id);
-        $user->update([
-            'fname' => $validated['contact_first_name'],
-            'lname' => $validated['contact_last_name'],
-            'email' => $validated['contact_email'],
-            'contact' => $validated['contact_number'],
+        // Validation rules (same as registration)
+        $validated = $request->validate([
+            'contact_first_name' => 'required|string|max:255',
+            'contact_last_name' => 'required|string|max:255',
+            'contact_email' => 'required|email|unique:users,email,' . $hte->user_id,
+            'contact_number' => 'required|string|max:20',
+            'address' => 'required|string|max:500',
+            'organization_name' => 'required|string|max:255',
+            'organization_type' => 'required|in:private,government,ngo,educational,other',
+            'description' => 'nullable|string',
         ]);
         
-        // Update HTE information
-        $hte->update([
-            'organization_name' => $validated['organization_name'],
-            'type' => $validated['organization_type'],
-            'address' => $validated['address'],
-            'description' => $validated['description'] ?? null,
-        ]);
+        try {
+            DB::beginTransaction();
+            
+            // Store old data for audit trail
+            $oldUserData = [
+                'fname' => $hte->user->fname,
+                'lname' => $hte->user->lname,
+                'email' => $hte->user->email,
+                'contact' => $hte->user->contact
+            ];
 
-        // AUDIT TRAIL: Log user profile update
-        UserAuditTrailService::logUserUpdate(
-            $hte->user_id,
-            $oldUserData,
-            [
+            $oldHteData = [
+                'organization_name' => $hte->organization_name,
+                'type' => $hte->type,
+                'address' => $hte->address,
+                'description' => $hte->description
+            ];
+            
+            // Update user information
+            $user = User::findOrFail($hte->user_id);
+            $user->update([
                 'fname' => $validated['contact_first_name'],
                 'lname' => $validated['contact_last_name'],
                 'email' => $validated['contact_email'],
-                'contact' => $validated['contact_number']
-            ],
-            $request
-        );
+                'contact' => $validated['contact_number'],
+            ]);
+            
+            // Update HTE information
+            $hte->update([
+                'organization_name' => $validated['organization_name'],
+                'type' => $validated['organization_type'],
+                'address' => $validated['address'],
+                'description' => $validated['description'] ?? null,
+            ]);
 
-        // AUDIT TRAIL: Log HTE-specific updates
-        $hteChanges = [];
-        if ($oldHteData['organization_name'] != $validated['organization_name']) {
-            $hteChanges[] = "Organization Name: {$oldHteData['organization_name']} → {$validated['organization_name']}";
-        }
-        if ($oldHteData['type'] != $validated['organization_type']) {
-            $hteChanges[] = "Organization Type: {$oldHteData['type']} → {$validated['organization_type']}";
-        }
-        if ($oldHteData['address'] != $validated['address']) {
-            $hteChanges[] = "Address updated";
-        }
-        if ($oldHteData['description'] != $validated['description']) {
-            $hteChanges[] = "Description updated";
-        }
-
-        if (!empty($hteChanges)) {
-            UserAuditTrailService::logRoleUpdate(
+            // AUDIT TRAIL: Log user profile update
+            UserAuditTrailService::logUserUpdate(
                 $hte->user_id,
-                'hte',
-                $oldHteData,
+                $oldUserData,
                 [
-                    'organization_name' => $validated['organization_name'],
-                    'type' => $validated['organization_type'],
-                    'address' => $validated['address'],
-                    'description' => $validated['description'] ?? null
+                    'fname' => $validated['contact_first_name'],
+                    'lname' => $validated['contact_last_name'],
+                    'email' => $validated['contact_email'],
+                    'contact' => $validated['contact_number']
                 ],
                 $request
             );
+
+            // AUDIT TRAIL: Log HTE-specific updates
+            $hteChanges = [];
+            if ($oldHteData['organization_name'] != $validated['organization_name']) {
+                $hteChanges[] = "Organization Name: {$oldHteData['organization_name']} → {$validated['organization_name']}";
+            }
+            if ($oldHteData['type'] != $validated['organization_type']) {
+                $hteChanges[] = "Organization Type: {$oldHteData['type']} → {$validated['organization_type']}";
+            }
+            if ($oldHteData['address'] != $validated['address']) {
+                $hteChanges[] = "Address updated";
+            }
+            if ($oldHteData['description'] != $validated['description']) {
+                $hteChanges[] = "Description updated";
+            }
+
+            if (!empty($hteChanges)) {
+                UserAuditTrailService::logRoleUpdate(
+                    $hte->user_id,
+                    'hte',
+                    $oldHteData,
+                    [
+                        'organization_name' => $validated['organization_name'],
+                        'type' => $validated['organization_type'],
+                        'address' => $validated['address'],
+                        'description' => $validated['description'] ?? null
+                    ],
+                    $request
+                );
+            }
+            
+            DB::commit();
+            
+            return redirect()->route('coordinator.htes')->with('success', 'HTE updated successfully.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update HTE: ' . $e->getMessage());
         }
-        
-        DB::commit();
-        
-        return redirect()->route('coordinator.htes')->with('success', 'HTE updated successfully.');
-        
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Failed to update HTE: ' . $e->getMessage());
-    }
-}   
+    }   
 
-public function destroyHTE($id)
-{
-    try {
-        DB::beginTransaction();
+    public function destroyHTE($id)
+    {
+        try {
+            DB::beginTransaction();
 
-        // Find the HTE
-        $hte = HTE::findOrFail($id);
+            // Find the HTE
+            $hte = HTE::findOrFail($id);
 
-        // Store user data for audit trail before deletion
-        $userData = [
-            'fname' => $hte->user->fname,
-            'lname' => $hte->user->lname,
-            'email' => $hte->user->email,
-            'contact' => $hte->user->contact,
-            'organization_name' => $hte->organization_name
-        ];
+            // Store user data for audit trail before deletion
+            $userData = [
+                'fname' => $hte->user->fname,
+                'lname' => $hte->user->lname,
+                'email' => $hte->user->email,
+                'contact' => $hte->user->contact,
+                'organization_name' => $hte->organization_name
+            ];
 
-        // Store user ID for later check
-        $userId = $hte->user_id;
+            // Store user ID for later check
+            $userId = $hte->user_id;
 
-        // Delete the HTE record (cascade will handle related records like hte_skill)
-        $hte->delete();
+            // Delete the HTE record (cascade will handle related records like hte_skill)
+            $hte->delete();
 
-        // Check if user has other roles
-        $hasOtherRoles = DB::table('admins')
-            ->where('user_id', $userId)
-            ->orWhereExists(function ($query) use ($userId) {
-                $query->select(DB::raw(1))
-                      ->from('coordinators')
-                      ->where('user_id', $userId);
-            })
-            ->orWhereExists(function ($query) use ($userId) {
-                $query->select(DB::raw(1))
-                      ->from('interns')
-                      ->where('user_id', $userId);
-            })
-            ->exists();
+            // Check if user has other roles
+            $hasOtherRoles = DB::table('admins')
+                ->where('user_id', $userId)
+                ->orWhereExists(function ($query) use ($userId) {
+                    $query->select(DB::raw(1))
+                        ->from('coordinators')
+                        ->where('user_id', $userId);
+                })
+                ->orWhereExists(function ($query) use ($userId) {
+                    $query->select(DB::raw(1))
+                        ->from('interns')
+                        ->where('user_id', $userId);
+                })
+                ->exists();
 
-        // Delete user only if they don't have other roles
-        if (!$hasOtherRoles) {
-            User::where('id', $userId)->delete();
+            // Delete user only if they don't have other roles
+            if (!$hasOtherRoles) {
+                User::where('id', $userId)->delete();
+            }
+
+            // AUDIT TRAIL: Log HTE deletion
+            UserAuditTrailService::logUserDeletion(
+                $userId,
+                $userData,
+                'hte',
+                request()
+            );
+
+            DB::commit();
+
+            return redirect()->route('coordinator.htes')
+                ->with('success', 'HTE account unregistered successfully.');
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('HTE not found: ' . $e->getMessage());
+            return redirect()->route('coordinator.htes')
+                ->with('error', 'HTE account not found.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting HTE: ' . $e->getMessage());
+            return redirect()->route('coordinator.htes')
+                ->with('error', 'An error occurred while unregistering the HTE: ' . $e->getMessage());
         }
-
-        // AUDIT TRAIL: Log HTE deletion
-        UserAuditTrailService::logUserDeletion(
-            $userId,
-            $userData,
-            'hte',
-            request()
-        );
-
-        DB::commit();
-
-        return redirect()->route('coordinator.htes')
-            ->with('success', 'HTE account unregistered successfully.');
-
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        DB::rollBack();
-        Log::error('HTE not found: ' . $e->getMessage());
-        return redirect()->route('coordinator.htes')
-            ->with('error', 'HTE account not found.');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error deleting HTE: ' . $e->getMessage());
-        return redirect()->route('coordinator.htes')
-            ->with('error', 'An error occurred while unregistering the HTE: ' . $e->getMessage());
     }
-}
 
     public function showHTE($id)
     {
@@ -943,33 +943,33 @@ public function destroyHTE($id)
         }
     }
 
-public function cancelEndorsement($hteId)
-{
-    try {
-        // Find all intern_hte records for this HTE
-        $internHtes = InternsHte::where('hte_id', $hteId)->get();
-        
-        if ($internHtes->isEmpty()) {
-            return redirect()->back()->with('error', 'No endorsement records found for this HTE.');
+    public function cancelEndorsement($hteId)
+    {
+        try {
+            // Find all intern_hte records for this HTE
+            $internHtes = InternsHte::where('hte_id', $hteId)->get();
+            
+            if ($internHtes->isEmpty()) {
+                return redirect()->back()->with('error', 'No endorsement records found for this HTE.');
+            }
+            
+            // Get all intern IDs before deletion
+            $internIds = $internHtes->pluck('intern_id')->toArray();
+            
+            // Delete all intern_hte records for this HTE
+            InternsHte::where('hte_id', $hteId)->delete();
+            
+            // Update all interns status back to "ready for deployment"
+            Intern::whereIn('id', $internIds)->update([
+                'status' => 'ready for deployment'
+            ]);
+            
+            return redirect()->route('coordinator.deployments')->with('success', 'Endorsement cancelled successfully. All interns status have been reverted to "Ready for Deployment".');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
         }
-        
-        // Get all intern IDs before deletion
-        $internIds = $internHtes->pluck('intern_id')->toArray();
-        
-        // Delete all intern_hte records for this HTE
-        InternsHte::where('hte_id', $hteId)->delete();
-        
-        // Update all interns status back to "ready for deployment"
-        Intern::whereIn('id', $internIds)->update([
-            'status' => 'ready for deployment'
-        ]);
-        
-        return redirect()->route('coordinator.deployments')->with('success', 'Endorsement cancelled successfully. All interns status have been reverted to "Ready for Deployment".');
-        
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'An error occurred while cancelling the endorsement: ' . $e->getMessage());
     }
-}
 
     public function showImportForm()
     {
@@ -1009,28 +1009,28 @@ public function cancelEndorsement($hteId)
         }
     }
 
-public function endorse() {
-    $coordinatorId = auth()->user()->coordinator->id;
-    
-    $htes = \App\Models\Hte::with('skills')
-        ->where('moa_is_signed', 'yes')
-        ->withCount('internsHte')
-        ->where(function($query) use ($coordinatorId) {
-            // Include HTEs that have NO endorsements from this coordinator
-            $query->whereDoesntHave('internsHte', function($q) use ($coordinatorId) {
-                $q->where('coordinator_id', $coordinatorId);
+    public function endorse() {
+        $coordinatorId = auth()->user()->coordinator->id;
+        
+        $htes = \App\Models\Hte::with('skills')
+            ->where('moa_is_signed', 'yes')
+            ->withCount('internsHte')
+            ->where(function($query) use ($coordinatorId) {
+                // Include HTEs that have NO endorsements from this coordinator
+                $query->whereDoesntHave('internsHte', function($q) use ($coordinatorId) {
+                    $q->where('coordinator_id', $coordinatorId);
+                })
+                // OR include HTEs that have endorsements with status 'endorsed' from this coordinator
+                ->orWhereHas('internsHte', function($q) use ($coordinatorId) {
+                    $q->where('coordinator_id', $coordinatorId)
+                    ->where('status', 'endorsed');
+                });
             })
-            // OR include HTEs that have endorsements with status 'endorsed' from this coordinator
-            ->orWhereHas('internsHte', function($q) use ($coordinatorId) {
-                $q->where('coordinator_id', $coordinatorId)
-                  ->where('status', 'endorsed');
-            });
-        })
-        ->havingRaw('slots > interns_hte_count')
-        ->get();
+            ->havingRaw('slots > interns_hte_count')
+            ->get();
 
-    return view('coordinator.endorse', compact('htes'));
-}
+        return view('coordinator.endorse', compact('htes'));
+    }
 
     public function getRecommendedInterns(Request $request) {
         $hteId = $request->input('hte_id');
@@ -1592,5 +1592,10 @@ public function endorse() {
             'status' => $coordinator->fresh()->status,
             'document_count' => $coordinator->documents()->count()
         ]);
+    }
+
+    public function userGuide()
+    {
+        return view('coordinator.user-guide');
     }
 }

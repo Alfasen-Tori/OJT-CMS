@@ -87,6 +87,14 @@
             </a>
           </li>
 
+          <div class="dropdown-divider border-dark"></div> 
+          <li class="nav-item float-bottom">
+            <a href="{{route('coordinator.user-guide')}}" class="nav-link {{ Request::is('coordinator/user-guide') ? 'current-page' : '' }}">
+              <i class="ph{{ Request::is('coordinator/user-guide*') ? '-fill' : '' }} ph-question nav-link-i"></i>
+              <p>Guide</p>
+            </a>
+          </li>
+
         </ul>
       </nav>
       <!-- /.sidebar-menu -->
