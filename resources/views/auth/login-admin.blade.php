@@ -246,8 +246,9 @@
 
             <!-- Footer -->
             <div class="login-footer border-top border-lightgray border-1 mt-3 py-3 text-center">
-                <p class="text-muted">
-                    <a href="{{ route('password.request') }}" class="small link-secondary text-decoration-none">Forgot Password</a>
+                <p class="text-muted w-100 d-flex justify-content-between">
+                    <a href="/" class="small link-secondary text-decoration-none"><i class="ph ph-arrow-left me-1"></i>Return to Menu</a>
+                    <a href="{{ route('password.request') }}" class="small link-info text-decoration-none">Forgot Password</a>
                 </p>
             </div>
         </div>
