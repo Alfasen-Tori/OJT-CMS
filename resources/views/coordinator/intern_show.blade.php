@@ -185,6 +185,150 @@
         </div>
     </div>
 
+    <!-- Pre-Deployment Requirements Table for Pending/Ready for Deployment Status -->
+    @if($intern->status === 'pending requirements' || $intern->status === 'ready for deployment')
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="ph ph-clipboard-text custom-icons-i me-1"></i>
+                            Pre-Deployment Requirements
+                        </h5>
+                        <div class="card-tools">
+                            <span class="badge bg-{{ $intern->status === 'pending requirements' ? 'danger-subtle text-danger' : 'warning-subtle text-warning' }} py-2 px-3 rounded-pill">
+                                {{ ucfirst($intern->status) }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Document Counter -->
+                    <!-- <div class="mt-2">
+                        @php
+                            $uploadedCount = $intern->documents->count();
+                            $totalCount = count(App\Models\InternDocument::typeLabels());
+                            $percentage = $totalCount > 0 ? round(($uploadedCount / $totalCount) * 100) : 0;
+                        @endphp
+                        <span class="badge py-2 px-3 
+                            @if($uploadedCount >= $totalCount)
+                                bg-success-subtle text-success
+                            @else
+                                bg-warning-subtle text-warning
+                            @endif">
+                            <i class="ph-fill custom-icons-i
+                                @if($uploadedCount >= $totalCount)
+                                    ph-seal-check
+                                @else
+                                    ph-seal-question
+                                @endif 
+                                mr-1"></i>
+                            <span>
+                                @if($uploadedCount >= $totalCount)
+                                    Complete
+                                @else
+                                    Incomplete
+                                @endif
+                            </span>
+                            ({{ $uploadedCount }}/{{ $totalCount }})
+                        </span>
+                    </div> -->
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead class="thead-white bg-light">
+                                <tr>
+                                    <th width="45%" class="ps-3">Document Name</th>
+                                    <th width="">Description</th>
+                                    <th width="10%" class="text-center">Status</th>
+                                    <th width="13%" class="text-center" style="white-space: nowrap;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(App\Models\InternDocument::typeLabels() as $type => $label)
+                                @php 
+                                    $document = $intern->documents->where('type', $type)->first();
+                                    $hasDocument = $document !== null;
+                                @endphp
+                                <tr data-document-type="{{ $type }}">
+                                    <td class="align-middle ps-3">{{ $label }}</td>
+                                    <td class="text-muted small align-middle">
+                                        @switch($type)
+                                            @case('requirements_checklist') Signed checklist of all required documents @break
+                                            @case('certificate_of_registration') Current semester registration certificate @break
+                                            @case('report_of_grades') Latest official transcript with OJT qualification @break
+                                            @case('application_resume') Formal application letter with updated resume @break
+                                            @case('medical_certificate') Health clearance from university clinic @break
+                                            @case('parent_consent') Notarized consent form from parent/guardian @break
+                                            @case('insurance_certificate') Proof of valid insurance coverage @break
+                                            @case('pre_deployment_certification') Certification of orientation attendance @break
+                                            @case('ojt_fee_reciept') Official receipt of paid internship fee @break
+                                        @endswitch
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        @if($hasDocument)
+                                            <span class="badge bg-success-subtle text-success py-2 px-3 rounded-4 w-100 status-badge">
+                                                <i class="ph ph-check-circle me-1"></i>Submitted
+                                            </span>
+                                            <br>
+                                            <small class="text-muted">{{ $document->created_at->format('Y-m-d') }}</small>
+                                        @else
+                                            <span class="badge bg-danger-subtle text-danger py-2 px-3 rounded-pill w-100 status-badge">
+                                                <i class="ph ph-x-circle me-1"></i>Missing
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        @if($hasDocument)
+                                            <button class="btn btn-outline-primary rounded-pill px-3 fw-medium view-document-btn" 
+                                                    data-toggle="modal" 
+                                                    data-target="#documentModal"
+                                                    data-url="{{ asset('storage/' . $document->file_path) }}"
+                                                    data-name="{{ $label }}"
+                                                    data-download-url="{{ asset('storage/' . $document->file_path) }}"
+                                                    data-original-name="{{ $document->original_name }}">
+                                                <i class="ph ph-eye custom-icons-i me-1"></i>
+                                                <span>View</span>
+                                            </button>
+                                        @else
+                                            <span class="text-muted small">Awaiting upload</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Progress Summary -->
+                <!-- <div class="card-footer">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <strong>Summary:</strong> {{ $uploadedCount }} of {{ $totalCount }} requirements uploaded
+                        </div>
+                        <div class="col-md-6">
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar {{ $percentage >= 100 ? 'bg-success' : ($percentage >= 50 ? 'bg-warning' : 'bg-danger') }}" 
+                                     role="progressbar" 
+                                     style="width: {{ $percentage }}%;"
+                                     aria-valuenow="{{ $percentage }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ $percentage }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+                
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Internship Progress, Reports & Evaluation Cards -->
     @if($intern->status === 'deployed' || $intern->status === 'completed')
     <div class="row">
@@ -407,6 +551,32 @@
     </div>
 </div>
 
+<!-- Document Preview Modal -->
+<div class="modal fade" id="documentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="documentModalTitle">Document Preview</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="documentFrame" src="" style="width:100%; height:70vh;" frameborder="0"></iframe>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-primary text-white" onclick="printDocument()">
+                    <i class="ph ph-printer me-1"></i>Print
+                </button>
+                <a id="downloadLink" href="#" class="btn bg-success">
+                    <i class="ph ph-download-simple me-1"></i>Download
+                </a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .knob-container {
     position: relative;
@@ -461,5 +631,96 @@
 .list-group-flush::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* Table styling */
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+/* View button styling */
+.view-document-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+
+/* Progress bar styling */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    border-radius: 4px;
+    font-size: 0.75rem;
+    line-height: 20px;
+}
+
+/* Badge styling */
+.status-badge {
+    font-size: 0.85rem;
+}
+
+/* Modal styling */
+.modal-xl {
+    max-width: 90%;
+}
+
+.embed-responsive-16by9 {
+    padding-bottom: 56.25%;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle document preview modal
+    $('.view-document-btn').on('click', function() {
+        const url = $(this).data('url');
+        const name = $(this).data('name');
+        const downloadUrl = $(this).data('download-url');
+        const originalName = $(this).data('original-name');
+        
+        // Set modal title
+        $('#documentModalTitle').text(name);
+        
+        // Set iframe source
+        $('#documentFrame').attr('src', url);
+        
+        // Set download link
+        $('#downloadLink').attr('href', downloadUrl);
+        $('#downloadLink').attr('download', originalName);
+    });
+    
+    // Clear iframe source when modal is hidden to prevent memory leaks
+    $('#documentModal').on('hidden.bs.modal', function() {
+        $('#documentFrame').attr('src', '');
+    });
+});
+
+function printDocument() {
+    const iframe = document.getElementById('documentFrame');
+    iframe.contentWindow.print();
+}
+</script>
 @endsection
