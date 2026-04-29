@@ -35,10 +35,16 @@ class HteController extends Controller
         }
 
         $moaStatus = $user->hte->moa_path ? 'Submitted' : 'Missing';
-
         
+        // Count deployed interns assigned to this HTE
+        $internsCount = \DB::table('interns_hte')
+            ->where('hte_id', $user->hte->id)
+            ->where('status', 'deployed')
+            ->count();
+
         return view('hte.dashboard', [
-            'moaStatus' => $moaStatus
+            'moaStatus' => $moaStatus,
+            'internsCount' => $internsCount,
         ]);
     }
 
