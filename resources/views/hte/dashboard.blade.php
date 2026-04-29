@@ -24,24 +24,24 @@
   <div class="container-fluid">
     <div class="row">
       <!-- Status Card -->
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="custom-card bg-primary">
-          <div class="card-content">
-            <div class="card-text">
-              <h3 class="count">0</h3>
-              <p class="label">Interns</p>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="custom-card bg-primary">
+                <div class="card-content">
+                    <div class="card-text">
+                        <h3 class="count">{{ $internsCount }}</h3>
+                        <p class="label">Interns</p>
+                    </div>
+                    <div class="card-icon">
+                        <i class="ph ph-users"></i>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="#" class="card-link">
+                        View <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-            <div class="card-icon">
-              <i class="ph ph-users"></i>
-            </div>
-          </div>
-          <div class="card-footer">
-            <a href="#" class="card-link">
-              View <i class="ph ph-arrow-right"></i>
-            </a>
-          </div>
         </div>
-      </div>
 
       <!-- MOA Status Card -->
       <div class="col-lg-4 col-md-6 mb-4">
